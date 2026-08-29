@@ -554,6 +554,21 @@ Mọi cập nhật phải ghi trực tiếp trong:
 docs/Members/TV1/report.md
 ```
 
+Cuối file duy trì bảng:
+
+| Ngày | Công việc | File/Module | Trạng thái | Test | Vấn đề | Bàn giao |
+| ---- | --------- | ----------- | ---------- | ---- | ------ | -------- |
+|      |           |             | ⬜/🟨/✅     |      |        |          |
+
+Quy ước:
+
+```text
+⬜ Chưa làm
+🟨 Đang làm
+✅ Hoàn thành
+❌ Có lỗi/chờ xử lý
+```
+
 Khi hoàn thành một nhóm chức năng, TV1 phải ghi rõ **đã làm gì, tạo/sửa file nào, API nào chạy được, test nào pass và đã bàn giao cho ai**.
 
 ---
