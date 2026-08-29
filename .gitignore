@@ -1,0 +1,76 @@
+# ==============================
+# Maven
+# ==============================
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# ==============================
+# IntelliJ IDEA
+# ==============================
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# ==============================
+# Eclipse / STS
+# ==============================
+.classpath
+.project
+.settings/
+.springBeans
+.sts4-cache/
+
+# ==============================
+# VS Code
+# ==============================
+.vscode/
+
+# ==============================
+# Java
+# ==============================
+*.class
+*.log
+hs_err_pid*
+replay_pid*
+
+# ==============================
+# OS generated files
+# ==============================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==============================
+# Environment / Secrets
+# ==============================
+.env
+.env.*
+!.env.example
+
+# ==============================
+# Application local configuration
+# ==============================
+application-local.properties
+application-local.yml
+
+# ==============================
+# Database local files
+# ==============================
+*.db
+*.sqlite
+*.sqlite3
+
+# ==============================
+# Temporary files
+# ==============================
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# ==============================
+# Upload / generated files
+# ==============================
+uploads/
