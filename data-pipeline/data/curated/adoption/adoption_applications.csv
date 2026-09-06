@@ -1,0 +1,5 @@
+seed_key,adoption_post_seed_key,applicant_user_key,message,status
+application_milo_pending,post_milo_available,user_customer_mai,Tôi muốn tìm hiểu thêm về lịch chăm sóc của Milo.,PENDING
+application_bong_rejected,post_bong_available,user_customer_nam,Tôi quan tâm đến Bông và có thể chăm sóc thường xuyên.,REJECTED
+application_lucky_approved,post_lucky_closed,user_customer_mai,Tôi đã sẵn sàng nhận nuôi Lucky trong dữ liệu demo.,APPROVED
+application_lucky_rejected,post_lucky_closed,user_customer_nam,Tôi muốn đăng ký nhận nuôi Lucky nếu còn phù hợp.,REJECTED

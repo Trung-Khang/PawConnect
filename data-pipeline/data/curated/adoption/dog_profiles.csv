@@ -1,0 +1,6 @@
+seed_key,name,breed,size,age_months,weight_kg,gender,vaccination_status,image_url,description,branch_code
+dog_milo,Milo,Poodle,SMALL,24,5,MALE,FULLY_VACCINATED,https://placehold.co/800x600/png?text=PawConnect+Milo,Chó nhỏ hiền và quen sinh hoạt trong nhà.,BR_HCM_01
+dog_bong,Bông,Corgi,MEDIUM,18,12,FEMALE,PARTIALLY_VACCINATED,https://placehold.co/800x600/png?text=PawConnect+Bong,Chó cỡ vừa năng động phù hợp gia đình có sân nhỏ.,BR_HN_01
+dog_lucky,Lucky,Golden Retriever,LARGE,30,29,MALE,FULLY_VACCINATED,https://placehold.co/800x600/png?text=PawConnect+Lucky,Chó lớn thân thiện và dễ làm quen với người mới.,BR_DN_01
+dog_mun,Mun,Chó Phú Quốc,MEDIUM,20,16,FEMALE,NOT_VACCINATED,https://placehold.co/800x600/png?text=PawConnect+Mun,Chó nhanh nhẹn cần người nhận nuôi có thời gian chăm sóc.,BR_HCM_01
+dog_kiki,Kiki,French Bulldog,SMALL,16,10,FEMALE,PARTIALLY_VACCINATED,https://placehold.co/800x600/png?text=PawConnect+Kiki,Chó nhỏ thân thiện phù hợp không gian sống vừa phải.,BR_HN_01
