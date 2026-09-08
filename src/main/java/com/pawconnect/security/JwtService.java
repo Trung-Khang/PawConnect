@@ -12,6 +12,7 @@ import java.security.Key;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Date;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -22,6 +23,7 @@ public class JwtService {
     private final Key signingKey;
     private final Clock clock;
 
+    @Autowired
     public JwtService(JwtProperties properties) {
         this(properties, Clock.systemUTC());
     }
