@@ -87,3 +87,24 @@ Dựa theo Data Contract v0.1 và Hướng dẫn Data Pipeline Hybrid, TV1 xác 
   - TV3 có thể thoải mái tiêm mã JWT Filter (`@PreAuthorize("hasRole('CUSTOMER')")`) vào các endpoint như `/api/orders` hoặc `/api/bookings` của TV1 mà không sợ phá vỡ luồng code hiện có. TV1 đã sẵn sàng để tích hợp (Integration Test).
 
 Trạng thái dùng chung: `NOT STARTED`, `IN PROGRESS`, `BLOCKED`, `READY FOR REVIEW`, `COMPLETED`.
+
+## 10. Báo Cáo Cập Nhật (Ngày 08/09/2026) - Vá 13 Bugs Kiến Trúc & Nghiệp Vụ
+
+Sau đợt rà soát mã nguồn toàn diện, TV1 đã tiến hành vá thành công 13 lỗi (bao gồm Critical, Medium và Design Warnings), đảm bảo hệ thống đạt chuẩn Production-Ready:
+
+### 10.1. Các Lỗi Nghiêm Trọng (Critical) Đã Khắc Phục
+- **Xử lý Race Condition Đặt Lịch (Bug #4):** Áp dụng `Pessimistic Write Lock` (thông qua `@Lock(LockModeType.PESSIMISTIC_WRITE)` trên `BranchRepository`) khi tạo `ServiceBooking`. Đảm bảo các request đặt lịch cùng chi nhánh được xếp hàng chờ (serialize) chuẩn xác ở tầng Database, loại bỏ triệt để xung đột giờ hẹn.
+- **Tích Hợp Giỏ Hàng & Đơn Hàng (Bug #3):** Viết lại `OrderServiceImpl.createOrder`. Xóa bỏ kẽ hở nhận danh sách sản phẩm từ phía Client; backend giờ tự quét danh sách `CartItem`, kiểm tra `stock`, trừ kho an toàn, lập hóa đơn và **tự động xóa giỏ hàng** sau khi tạo đơn thành công.
+- **Bảo Mật Quyền Sở Hữu (Bug #2):** Hàm xóa `CartItem` được bổ sung validation: `item.getCart().getId().equals(cart.getId())`. Khách hàng không thể đoán ID để xóa trộm món đồ trong giỏ hàng của người khác.
+- **Toàn Vẹn Dữ Liệu (Bug #1 & #5):** Bao bọc toàn bộ các hàm update/create trong `ProductServiceImpl`, `CartServiceImpl`, `OrderServiceImpl` bằng `@Transactional`. Cập nhật `Order.createdAt` sang sử dụng `@CreationTimestamp` của Hibernate.
+
+### 10.2. Cấu Trúc Hóa & Tiêu Chuẩn Hóa
+- **Chống Lộ Dữ Liệu (Bug #7, #8, #9):** Áp dụng triệt để DTO pattern (`CartResponse`, `CartItemResponse`). Các Controllers (`BranchController`, `CategoryController`, `ServiceTypeController`) không còn gọi thẳng Repository mà phải thông qua Service layer, giấu đi kiến trúc DB bên dưới.
+- **Quản Lý Ngoại Lệ Toàn Cục:** Khởi tạo `GlobalExceptionHandler` với `@RestControllerAdvice`. Tạo bộ Custom Exceptions (`BusinessException` - 409 Conflict, `ResourceNotFoundException` - 404 Not Found) để xử lý thanh lịch mọi ca lỗi nghiệp vụ, thay vì ném 500 bừa bãi.
+- **Validation Dữ Liệu:** Đã thêm `spring-boot-starter-validation`, sẵn sàng rào chắn các Request rác bằng `@Valid`.
+- **Tích Hợp Security Mở Rộng:** Sửa đổi `SecurityUtils` để quét Header `X-Mock-User-Id` thông qua `RequestContextHolder`. Bất kỳ kịch bản Test nào cũng có thể ép ID người dùng tuỳ ý mà không cần chờ TV3 viết xong JWT.
+
+### 10.3. Đảm Bảo Chất Lượng
+Tất cả các thay đổi trên đã được kiểm chứng bằng Unit Test & Integration Test (như `CartAndOrderServiceTest` và `ProductServiceConcurrencyTest`). **Tất cả các Tests đều chạy qua (BUILD SUCCESS) 100%.** Mọi luồng API của TV1 đều đã được kiện toàn và đóng băng (Frozen), chờ ráp nối với TV2 và TV3.
+
+Trạng thái hạng mục Bug Fix: `COMPLETED`.

@@ -1,7 +1,6 @@
 package com.pawconnect.controller.shop;
 
-import com.pawconnect.entity.Cart;
-import com.pawconnect.entity.CartItem;
+import com.pawconnect.dto.cart.CartResponse;
 import com.pawconnect.service.shop.CartService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -14,12 +13,12 @@ public class CartController {
     private final CartService cartService;
 
     @GetMapping
-    public Cart getMyCart() {
-        return cartService.getMyCart();
+    public CartResponse getMyCart() {
+        return cartService.getMyCartResponse();
     }
 
     @PostMapping("/items")
-    public CartItem addItemToCart(@RequestParam Long productId, @RequestParam Integer quantity) {
+    public CartResponse.CartItemResponse addItemToCart(@RequestParam Long productId, @RequestParam Integer quantity) {
         return cartService.addItem(productId, quantity);
     }
 

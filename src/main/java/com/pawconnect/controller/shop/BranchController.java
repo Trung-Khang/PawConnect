@@ -1,7 +1,7 @@
 package com.pawconnect.controller.shop;
 
 import com.pawconnect.entity.Branch;
-import com.pawconnect.repository.BranchRepository;
+import com.pawconnect.service.shop.BranchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,10 +14,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BranchController {
 
-    private final BranchRepository branchRepository;
+    private final BranchService branchService;
 
     @GetMapping
     public List<Branch> getAllBranches() {
-        return branchRepository.findAll();
+        return branchService.getAllBranches();
     }
 }

@@ -1,8 +1,20 @@
 package com.pawconnect.security;
 
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 public class SecurityUtils {
     public static Long getCurrentUserId() {
-        // Mock ID until TV3 implements JWT security
-        return 1L;
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attributes != null) {
+            HttpServletRequest request = attributes.getRequest();
+            String mockUserId = request.getHeader("X-Mock-User-Id");
+            if (mockUserId != null && !mockUserId.isEmpty()) {
+                return Long.parseLong(mockUserId);
+            }
+        }
+        return 1L; // Fallback default
     }
 }

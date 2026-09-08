@@ -5,6 +5,8 @@ import com.pawconnect.dto.booking.BookingResponse;
 import com.pawconnect.entity.Branch;
 import com.pawconnect.entity.ServiceBooking;
 import com.pawconnect.entity.ServiceType;
+import com.pawconnect.exception.BusinessException;
+import com.pawconnect.exception.ResourceNotFoundException;
 import com.pawconnect.repository.BranchRepository;
 import com.pawconnect.repository.ServiceBookingRepository;
 import com.pawconnect.repository.ServiceTypeRepository;
@@ -29,45 +31,40 @@ public class BookingServiceImpl implements BookingService {
     @Transactional
     public BookingResponse createBooking(BookingRequest request) {
         Long userId = SecurityUtils.getCurrentUserId();
-        Branch branch = branchRepository.findById(request.getBranchId())
-                .orElseThrow(() -> new RuntimeException("Branch not found"));
+
+        // Use pessimistic write lock on Branch to prevent race condition across multiple bookings
+        Branch branch = branchRepository.findByIdWithPessimisticLock(request.getBranchId())
+                .orElseThrow(() -> new ResourceNotFoundException("Branch not found"));
         ServiceType serviceType = serviceTypeRepository.findById(request.getServiceTypeId())
-                .orElseThrow(() -> new RuntimeException("Service Type not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Service type not found"));
 
-        // Check for conflicts
-        LocalDateTime start = request.getBookingTime();
-        LocalDateTime end = start.plusMinutes(serviceType.getDuration());
+        LocalDateTime requestedTime = request.getBookingTime();
+        LocalDateTime endTime = requestedTime.plusMinutes(serviceType.getDuration());
 
-        // Fetch bookings for the same day to filter in memory
-        LocalDateTime startOfDay = start.toLocalDate().atStartOfDay();
-        LocalDateTime endOfDay = startOfDay.plusDays(1);
+        // Now safe from race conditions for this branch because of pessimistic lock
+        List<ServiceBooking> existingBookings = bookingRepository.findByBranchIdAndBookingTimeBetween(
+                branch.getId(), requestedTime.minusHours(2), requestedTime.plusHours(2));
 
-        List<ServiceBooking> bookings = bookingRepository.findByBranchIdAndBookingTimeBetween(
-                branch.getId(), startOfDay, endOfDay);
-        
-        // Filter out canceled or rejected bookings, and check overlap
-        // overlap condition: (StartA < EndB) and (EndA > StartB)
-        boolean hasConflict = bookings.stream()
-                .filter(b -> !b.getStatus().equals("CANCELED") && !b.getStatus().equals("REJECTED"))
-                .anyMatch(b -> {
-                    LocalDateTime oldStart = b.getBookingTime();
-                    LocalDateTime oldEnd = oldStart.plusMinutes(b.getServiceType().getDuration());
-                    return start.isBefore(oldEnd) && end.isAfter(oldStart);
-                });
+        for (ServiceBooking existing : existingBookings) {
+            if (existing.getStatus().equals("CANCELLED")) continue;
+            LocalDateTime exStart = existing.getBookingTime();
+            LocalDateTime exEnd = exStart.plusMinutes(existing.getServiceType().getDuration());
 
-        if (hasConflict) {
-            throw new RuntimeException("Booking time conflict at this branch.");
+            if (requestedTime.isBefore(exEnd) && endTime.isAfter(exStart)) {
+                throw new BusinessException("Time slot is already booked");
+            }
         }
 
         ServiceBooking booking = ServiceBooking.builder()
                 .userId(userId)
                 .branch(branch)
                 .serviceType(serviceType)
-                .bookingTime(request.getBookingTime())
+                .bookingTime(requestedTime)
                 .status("PENDING")
                 .build();
 
         bookingRepository.save(booking);
+
         return mapToResponse(booking);
     }
 
@@ -80,9 +77,10 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional
     public BookingResponse updateBookingStatus(Long bookingId, String status) {
         ServiceBooking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new RuntimeException("Booking not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
         
         // Optmistic locking will trigger here if concurrently updated
         booking.setStatus(status);
