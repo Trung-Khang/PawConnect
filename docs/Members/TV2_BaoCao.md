@@ -137,3 +137,9 @@ Crawler chạy theo offline-first: network bị khóa mặc định và chỉ cr
 | Ngày | Giai đoạn | Hạng mục | File đã sửa | Test | Kết quả | Bàn giao | Blocker |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 08/09/2026 | Giai đoạn 1B | Commercial Cleaner + Deduplication | `data-pipeline/src/clean_commercial_observations.py`; candidate CSV; quarantine/validation report | `py_compile`; `--dry-run`; cleaning; `--self-test`; `git diff --check` | COMPLETED - Pet Mart: 73 candidate, 23 `invalid_price` quarantine; Chợ Tốt không bàn giao listing cá thể; 3 market price bands; 4 duplicate; 64 `age_unverified` | Candidate product, aggregate price band và báo cáo cho bước candidate review | Chưa Product generator, DB import, SQL/migration hoặc backend; `category_code` Pet Mart vẫn rỗng do raw không chứng minh được |
+
+## 14. Progress log - Giai đoạn 1C Product Demo Generator
+
+| Ngày | Giai đoạn | Hạng mục | File đã sửa | Test | Kết quả | Bàn giao | Blocker |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 08/09/2026 | Giai đoạn 1C | Product Demo Generator | `generate_product_demo.py`; generated Product CSV; validation report; Data Contract v0.2 | `py_compile`; generator hai lần cùng seed; `--self-test`; `git diff --check` | COMPLETED - 27 Product: 3 branch x (3 PUPPY + 3 FOOD + 3 ACCESSORY); 3 market price bands; validation PASS, 5 lỗi tạm được bắt | Generated Product CSV cho dev/test/demo; `image_url` rỗng, không copy listing Chợ Tốt | Chưa DB import, backend mapping, SQL/migration hoặc Cloudinary; Product entity/DTO chưa có full commercial v0.2 fields |

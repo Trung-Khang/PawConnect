@@ -491,6 +491,24 @@ life_stage: PUPPY | ADULT | UNKNOWN
 size: SMALL | MEDIUM | LARGE
 ```
 
+### 12.2.1. Generated Product kind
+
+Generated Product profile dung enum sau de tach ro Product puppy va Product khong
+phai ca the cho:
+
+```text
+product_kind: PUPPY | FOOD | ACCESSORY
+```
+
+Rule:
+
+- `product_kind` chi ap dung cho generated Product profile trong `dev`, `test`, `demo`.
+- `PUPPY` phai dung commercial puppy fields theo muc 12.2.
+- `FOOD` va `ACCESSORY` phai de trong toan bo commercial puppy fields; khong duoc
+  mo ta nhu mot ca the cho.
+- Generated Product demo duoc phep de trong `image_url`; khong dung placeholder,
+  Cloudinary hay anh crawl khi chua co tai san duoc cap phep.
+
 Quy tac:
 
 - Product puppy co `stock=1`.
