@@ -11,7 +11,7 @@ TV2 phụ trách phân hệ nhận nuôi (`DogProfile`, `AdoptionPost`, `Adoptio
 | Giai đoạn 1A - Data Foundation | Data contract, reference seed, breed catalog, DogProfile, User fixture, AdoptionPost/Application, manual validation | COMPLETED |
 | Giai đoạn 1B - Data Pipeline Core | Cleaner, normalize, validate, deduplicate, quarantine, manifest | NOT STARTED |
 | Giai đoạn 2A - Controlled Crawler | Crawl nguồn đã được duyệt | NOT STARTED |
-| Giai đoạn 2B - Synthetic Generator | Faker và rule-based generator | NOT STARTED |
+| Giai đoạn 2B - Synthetic Generator | Python synthetic generator adoption demo đã sinh 12 DogProfile, 8 AdoptionPost, 12 AdoptionApplication; validation PASS, 0 lỗi | COMPLETED |
 | Giai đoạn 3 - Database Integration | Mapping ID, migration/seed, import idempotent | NOT STARTED |
 | Giai đoạn 4 - Module Development | API/chức năng TV1, TV2, TV3 dùng dữ liệu | NOT STARTED |
 | Giai đoạn 5 - Integration, Test và Demo | Tích hợp, test và demo | NOT STARTED |
@@ -79,7 +79,7 @@ TV2 phụ trách phân hệ nhận nuôi (`DogProfile`, `AdoptionPost`, `Adoptio
 ## 8. Công việc gần nhất tiếp theo
 
 - Giai đoạn 1B: thiết kế cleaner/normalizer/validator/deduplicate/quarantine/manifest.
-- Chưa bắt đầu crawler, Faker generator, SQL/migration/import DB.
+- Chưa bắt đầu crawler, SQL/migration/import DB.
 - Chỉ chuyển sang DB integration sau khi TV1/TV3 xác nhận contract và schema.
 
 ## 9. Quy trình cập nhật báo cáo về sau
@@ -98,6 +98,7 @@ TV2 phụ trách phân hệ nhận nuôi (`DogProfile`, `AdoptionPost`, `Adoptio
 | Ngày | Giai đoạn | Hạng mục | File đã sửa | Dữ liệu nhận | Test | Kết quả | Bàn giao | Blocker |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 |  | Giai đoạn 1A | Data Foundation | CSV/Markdown curated | Contract v0.1 | Manual validation | COMPLETED | TV1/TV3 review | Chờ xác nhận schema/mapping |
+| 08/09/2026 | Giai doan 2B | Synthetic Generator adoption demo | `data-pipeline/src/generate_adoption_demo.py`; `data-pipeline/data/generated/adoption/*.csv`; `data-pipeline/reports/generated_adoption_validation.md` | Contract v0.1, curated breed/branch/role/user fixture | `python data-pipeline/src/generate_adoption_demo.py`; `python data-pipeline/src/generate_adoption_demo.py --self-test-invalid` | COMPLETED - 12 DogProfile, 8 AdoptionPost, 12 AdoptionApplication, validation PASS, 0 loi | Generated CSV/report cho dev/test/demo; chua crawler, chua SQL/migration, chua DB import | Cho TV1/TV3 xac nhan schema/import truoc Giai doan DB |
 
 Trạng thái dùng chung: `NOT STARTED`, `IN PROGRESS`, `BLOCKED`, `READY FOR REVIEW`, `COMPLETED`.
 
@@ -105,7 +106,7 @@ Trạng thái dùng chung: `NOT STARTED`, `IN PROGRESS`, `BLOCKED`, `READY FOR R
 
 - Chưa có crawler.
 - Chưa có cleaner/normalizer tự động.
-- Chưa có Faker generator.
+- Python synthetic generator adoption demo đã sinh 12 DogProfile, 8 AdoptionPost, 12 AdoptionApplication; validation PASS, 0 lỗi.
 - Chưa có SQL/migration/import DB.
 - Chưa có entity, service, controller hoặc API được triển khai từ data pipeline.
 - URL ảnh hiện là placeholder, chưa phải Cloudinary hay ảnh crawl chính thức.

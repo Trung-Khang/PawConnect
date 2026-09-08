@@ -1,0 +1,9 @@
+seed_key,dog_profile_seed_key,created_by_user_key,title,description,health_note,status,created_at
+post_gen_01_poodle,dog_gen_poodle,user_manager_hcm,Mochi san sang trong du lieu demo,Tin nhan nuoi demo cho Poodle tai PawConnect.,Da hoan tat lich tiem phong theo ho so demo.,AVAILABLE,2026-09-06T11:00:00+07:00
+post_gen_02_chihuahua,dog_gen_chihuahua,user_manager_hn,Bingo san sang trong du lieu demo,Tin nhan nuoi demo cho Chihuahua tai PawConnect.,Ho so tiem phong chua duoc cap nhat trong du lieu demo.,AVAILABLE,2026-09-06T11:05:00+07:00
+post_gen_03_pug,dog_gen_pug,user_manager_dn,Nori san sang trong du lieu demo,Tin nhan nuoi demo cho Pug tai PawConnect.,Da co mot phan lich tiem phong trong du lieu demo.,AVAILABLE,2026-09-06T11:10:00+07:00
+post_gen_04_corgi,dog_gen_corgi,user_manager_hcm,Bim san sang trong du lieu demo,Tin nhan nuoi demo cho Corgi tai PawConnect.,Da hoan tat lich tiem phong theo ho so demo.,AVAILABLE,2026-09-06T11:15:00+07:00
+post_gen_05_shiba_inu,dog_gen_shiba_inu,user_manager_hn,Susu san sang trong du lieu demo,Tin nhan nuoi demo cho Shiba Inu tai PawConnect.,Ho so tiem phong chua duoc cap nhat trong du lieu demo.,AVAILABLE,2026-09-06T11:20:00+07:00
+post_gen_06_beagle,dog_gen_beagle,user_manager_dn,Ken san sang trong du lieu demo,Tin nhan nuoi demo cho Beagle tai PawConnect.,Da co mot phan lich tiem phong trong du lieu demo.,CLOSED,2026-09-06T11:25:00+07:00
+post_gen_07_phu_quoc,dog_gen_phu_quoc,user_manager_hcm,Mika san sang trong du lieu demo,Tin nhan nuoi demo cho Chó Phú Quốc tai PawConnect.,Da hoan tat lich tiem phong theo ho so demo.,CLOSED,2026-09-06T11:30:00+07:00
+post_gen_08_french_bulldog,dog_gen_french_bulldog,user_manager_hn,Bo san sang trong du lieu demo,Tin nhan nuoi demo cho French Bulldog tai PawConnect.,Ho so tiem phong chua duoc cap nhat trong du lieu demo.,CLOSED,2026-09-06T11:35:00+07:00
