@@ -211,7 +211,8 @@ Build / run / deploy ✅
 
 | Ngày | Hạng mục | File/Module | API/Feature | Test | Trạng thái | Người liên quan |
 | ---- | -------- | ----------- | ----------- | ---- | ---------- | --------------- |
-|      |          |             |             |      | ⬜/🟨/✅     |                 |
+| 2026-09-08 | Khởi tạo nền tảng dùng chung | Maven/Spring Boot, `User`, `Role`, repositories, H2 dev config | 3 role chuẩn `CUSTOMER` / `BRANCH_MANAGER` / `ADMIN`; email duy nhất | `git diff --check` ✅; chờ môi trường có JDK/Maven để chạy build | 🟨 | TV1, TV2 |
+| 2026-09-08 | Xác thực và phân quyền JWT | `config`, `security`, `controller/auth`, `service/auth`, `dto/auth` | `POST /api/auth/register`, `/login`, `/refresh-token`; `GET /me`; BCrypt, stateless JWT, method security | Đã thêm `AuthFlowIntegrationTest`; chờ môi trường có JDK/Maven để chạy | 🟨 | TV1, TV2 |
 
 Đối với mỗi lần tích hợp, ghi rõ: đã nhận gì từ TV1/TV2 → đã tích hợp gì → có conflict không → test đã chạy → bug còn tồn tại → đã báo ai → đã fix chưa.
 
