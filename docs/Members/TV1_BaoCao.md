@@ -87,3 +87,18 @@ Dựa theo Data Contract v0.1 và Hướng dẫn Data Pipeline Hybrid, TV1 xác 
   - TV3 có thể thoải mái tiêm mã JWT Filter (`@PreAuthorize("hasRole('CUSTOMER')")`) vào các endpoint như `/api/orders` hoặc `/api/bookings` của TV1 mà không sợ phá vỡ luồng code hiện có. TV1 đã sẵn sàng để tích hợp (Integration Test).
 
 Trạng thái dùng chung: `NOT STARTED`, `IN PROGRESS`, `BLOCKED`, `READY FOR REVIEW`, `COMPLETED`.
+
+## 10. Handoff Data Contract v0.2 Draft - Commercial Puppy
+
+TV2 đề xuất commercial profile cho Product gồm `breed_code`, `breed_type`,
+`life_stage`, `age_months`, `current_weight_kg`, `current_size` và
+`expected_adult_size`. Product puppy là Product riêng, `stock=1`; `suitable_size`
+cũ vẫn giữ nguyên nghĩa cho food/accessory.
+
+TV1 có trách nhiệm triển khai mapping các cột mới vào Product entity/DTO, giữ tương
+thích với `age` legacy String và `suitableSize`, cùng quy tắc `PUREBRED`, `MIXED`,
+`UNKNOWN`. Trạng thái contract: `APPROVED FOR DEV/TEST/DEMO` do TV2/Data Engineer
+chốt làm chuẩn dữ liệu chung; chưa approved cho production/DB import.
+
+DogProfile adoption và Product thương mại là hai dataset/entity nghiệp vụ khác nhau.
+Nếu conflict với code, TV1 báo lại TV2; không tự đổi stable code, enum hoặc contract.

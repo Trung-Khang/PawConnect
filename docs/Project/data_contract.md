@@ -454,3 +454,76 @@ REJECTED
 - Xac nhan `BRANCH_MANAGER` co lien ket chi nhanh bang truong nao de validate rule cung `branch_code` voi DogProfile.
 - Xac nhan khi `AdoptionApplication` duoc approve, Conversation/Chat cua TV3 can trang thai hoac trigger nao tu TV2 khong.
 - Xac nhan viec `AdoptionPost` suy ra chi nhanh tu `DogProfile` co du cho phan quyen va admin dashboard khong.
+
+---
+
+## 12. Data Contract v0.2 Draft - Commercial Puppy Data
+
+Trang thai: `APPROVED FOR DEV/TEST/DEMO` - TV2/Data Engineer chot lam chuan du lieu chung.
+Trang thai nay chua approved cho production hoac DB import.
+
+Muc tieu cua phan nay la mo ta cho con ban tai pet shop ma khong lam thay doi y nghia
+cua breed reference truong thanh va cac curated adoption data v0.1.
+
+### 12.1. Breed reference truong thanh
+
+Trong `data-pipeline/data/curated/catalog/breeds.csv`, cac cot hien co giu nguyen header
+va gia tri. Contract v0.2 lam ro y nghia:
+
+- `default_size` la adult breed reference size.
+- `min_weight_kg` va `max_weight_kg` la adult breed reference weight range.
+- Khong dung adult weight range de validate `current_weight_kg` cua puppy.
+- Khong doi ten, doi gia tri hoac ghi de `breeds.csv` hien co trong Draft nay.
+
+### 12.2. Commercial Dog profile tren Product
+
+Product cho con la Product rieng trong module thuong mai. Phan commercial profile moi:
+
+```text
+breed_code,breed_type,life_stage,age_months,current_weight_kg,current_size,expected_adult_size
+```
+
+Enum:
+
+```text
+breed_type: PUREBRED | MIXED | UNKNOWN
+life_stage: PUPPY | ADULT | UNKNOWN
+size: SMALL | MEDIUM | LARGE
+```
+
+Quy tac:
+
+- Product puppy co `stock=1`.
+- `age_months` la so nguyen va `age_months >= 0`.
+- `current_weight_kg` la can nang tai thoi diem ghi nhan, khong phai adult weight.
+- `current_size` la size hien tai neu nguon xac dinh ro.
+- `expected_adult_size` la size truong thanh du kien.
+- `PUREBRED` bat buoc co `breed_code` ton tai trong `breeds.csv`.
+- Khi `PUREBRED`, `expected_adult_size` lay tu `default_size` cua breed reference.
+- `MIXED` va `UNKNOWN` khong duoc suy doan breed, expected adult size hoac adult weight.
+- `Product.suitable_size` cu khong doi nghia khi dung cho thuc an/phu kien.
+- `Product.age` kieu String la legacy display; pipeline chuan dung `age_months`.
+- `is_breeding_dog` khong thay the cho `breed_type`.
+
+De tuong thich, cac cot v0.1 va stable code hien co duoc giu nguyen. Cac cot v0.2
+chi duoc them sau khi TV1 xac nhan mapping entity/DTO.
+
+### 12.3. Validation va raw commercial observation
+
+- Puppy khong bi bat buoc `current_weight_kg` nam trong adult weight range.
+- Adult purebred moi duoc doi chieu adult weight range khi du lieu can nang co ro rang.
+- Mixed/unknown chi validate enum va reference duoc cung cap; khong suy doan adult values.
+- Raw commercial data chi la observation, khong ghi de curated catalog, Product curated hoac DB.
+- Crawler chi ghi `age_months`, `current_weight_kg` va `price` khi trang cong khai the hien ro.
+  Truong thieu hoac khong chac chan phai de trong; khong suy doan.
+
+### 12.4. Handoff va diem can xac nhan
+
+- TV1 co trach nhiem trien khai mapping cac cot commercial moi vao Product entity/DTO.
+- TV1 xac nhan `suitable_size` cu giu nguyen nghia cho food/accessory.
+- TV3 co trach nhiem ho tro enum Java, migration sau nay va backward compatibility khi integration.
+- TV3 xac nhan commercial Product co tach khoi DogProfile hay khong.
+- DogProfile adoption va Product thuong mai la hai dataset/entity nghiep vu khac nhau.
+- Neu conflict voi code, TV1/TV3 bao lai TV2; khong tu doi stable code, enum hoac contract.
+- Chua duoc sua entity/backend, SQL/migration, CSV curated/generated hoac import DB.
+- Contract nay chua approved cho production hoac DB import.

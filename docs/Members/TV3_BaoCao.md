@@ -135,3 +135,20 @@ Trạng thái đề xuất:
 | Giai đoạn 3 - Database Integration | NOT STARTED |
 | Giai đoạn 4 - Module Development | NOT VERIFIED trong báo cáo này |
 | Giai đoạn 5 - Integration, Test và Demo | NOT STARTED |
+
+## 10. Handoff Data Contract v0.2 Draft - Commercial Puppy
+
+TV2 đề xuất commercial Product profile với các cột `breed_code`, `breed_type`,
+`life_stage`, `age_months`, `current_weight_kg`, `current_size` và
+`expected_adult_size`. Product puppy là Product riêng, `stock=1`; raw commercial
+chỉ là observation và không ghi đè curated/DB.
+
+TV3 có trách nhiệm hỗ trợ enum Java cho `PUREBRED`, `MIXED`, `UNKNOWN`, `PUPPY`,
+`ADULT`, `UNKNOWN`, mapping migration sau này và backward compatibility với
+`Product.age` legacy khi integration. TV3 cũng cần xác nhận commercial Product có
+tách khỏi DogProfile hay không.
+
+Trạng thái handoff: `APPROVED FOR DEV/TEST/DEMO` do TV2/Data Engineer chốt làm chuẩn
+dữ liệu chung; chưa approved cho production/DB import. DogProfile adoption và Product
+thương mại là hai dataset/entity nghiệp vụ khác nhau. Nếu conflict với code, TV3 báo
+lại TV2; không tự đổi stable code, enum hoặc contract.

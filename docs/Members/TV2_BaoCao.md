@@ -2,7 +2,7 @@
 
 ## 1. Vai trò và phạm vi của TV2
 
-TV2 phụ trách phân hệ nhận nuôi (`DogProfile`, `AdoptionPost`, `AdoptionApplication`) và kiêm Data Engineer cho shared data pipeline. Trong giai đoạn hiện tại, TV2 chỉ chuẩn bị contract, reference seed, catalog và curated fixture thủ công; chưa triển khai crawler, cleaner, generator, SQL/import DB hay backend.
+TV2 phụ trách phân hệ nhận nuôi (`DogProfile`, `AdoptionPost`, `AdoptionApplication`) và kiêm Data Engineer cho shared data pipeline. Trong giai đoạn hiện tại, TV2 đã chuẩn bị contract, reference seed, catalog, curated fixture thủ công, raw crawler demo có kiểm soát cho catalog giống chó và synthetic generator; cleaner/dedup, candidate/curated merge, SQL/import DB và backend chưa triển khai.
 
 ## 2. Tóm tắt trạng thái hiện tại
 
@@ -10,7 +10,7 @@ TV2 phụ trách phân hệ nhận nuôi (`DogProfile`, `AdoptionPost`, `Adoptio
 | --- | --- | --- |
 | Giai đoạn 1A - Data Foundation | Data contract, reference seed, breed catalog, DogProfile, User fixture, AdoptionPost/Application, manual validation | COMPLETED |
 | Giai đoạn 1B - Data Pipeline Core | Cleaner, normalize, validate, deduplicate, quarantine, manifest | NOT STARTED |
-| Giai đoạn 2A - Controlled Crawler | Crawl nguồn đã được duyệt | NOT STARTED |
+| Giai đoạn 2A - Controlled Crawler | Wikipedia raw breed crawler demo: 3 URL allowlist, 3 raw records, validation PASS | COMPLETED |
 | Giai đoạn 2B - Synthetic Generator | Python synthetic generator adoption demo đã sinh 12 DogProfile, 8 AdoptionPost, 12 AdoptionApplication; validation PASS, 0 lỗi | COMPLETED |
 | Giai đoạn 3 - Database Integration | Mapping ID, migration/seed, import idempotent | NOT STARTED |
 | Giai đoạn 4 - Module Development | API/chức năng TV1, TV2, TV3 dùng dữ liệu | NOT STARTED |
@@ -79,7 +79,7 @@ TV2 phụ trách phân hệ nhận nuôi (`DogProfile`, `AdoptionPost`, `Adoptio
 ## 8. Công việc gần nhất tiếp theo
 
 - Giai đoạn 1B: thiết kế cleaner/normalizer/validator/deduplicate/quarantine/manifest.
-- Chưa bắt đầu crawler, SQL/migration/import DB.
+- Cleaner/normalizer/deduplicate/quarantine và SQL/migration/import DB chưa bắt đầu.
 - Chỉ chuyển sang DB integration sau khi TV1/TV3 xác nhận contract và schema.
 
 ## 9. Quy trình cập nhật báo cáo về sau
@@ -98,15 +98,42 @@ TV2 phụ trách phân hệ nhận nuôi (`DogProfile`, `AdoptionPost`, `Adoptio
 | Ngày | Giai đoạn | Hạng mục | File đã sửa | Dữ liệu nhận | Test | Kết quả | Bàn giao | Blocker |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 |  | Giai đoạn 1A | Data Foundation | CSV/Markdown curated | Contract v0.1 | Manual validation | COMPLETED | TV1/TV3 review | Chờ xác nhận schema/mapping |
+| 08/09/2026 | Giai đoạn 2A | Controlled Breed Crawler raw demo | `data-pipeline/src/crawlers/crawl_breeds.py`; `sources.json`; raw Wikipedia JSONL; validation report | Wikipedia English, 3 URL article allowlist | dry-run, self-test, crawl 3 trang, checksum/rate-limit/curated hash | COMPLETED - fetched 3, accepted 3, skipped 0 | Raw only; chưa cleaner, dedup, candidate/curated merge hoặc DB import | Review nguồn và mapping trước khi mở rộng allowlist |
 | 08/09/2026 | Giai doan 2B | Synthetic Generator adoption demo | `data-pipeline/src/generate_adoption_demo.py`; `data-pipeline/data/generated/adoption/*.csv`; `data-pipeline/reports/generated_adoption_validation.md` | Contract v0.1, curated breed/branch/role/user fixture | `python data-pipeline/src/generate_adoption_demo.py`; `python data-pipeline/src/generate_adoption_demo.py --self-test-invalid` | COMPLETED - 12 DogProfile, 8 AdoptionPost, 12 AdoptionApplication, validation PASS, 0 loi | Generated CSV/report cho dev/test/demo; chua crawler, chua SQL/migration, chua DB import | Cho TV1/TV3 xac nhan schema/import truoc Giai doan DB |
 
 Trạng thái dùng chung: `NOT STARTED`, `IN PROGRESS`, `BLOCKED`, `READY FOR REVIEW`, `COMPLETED`.
 
 ## Việc chưa làm
 
-- Chưa có crawler.
+- Đã có controlled raw crawler demo cho 3 URL Wikipedia; chưa có cleaner, dedup hoặc candidate/curated merge.
 - Chưa có cleaner/normalizer tự động.
 - Python synthetic generator adoption demo đã sinh 12 DogProfile, 8 AdoptionPost, 12 AdoptionApplication; validation PASS, 0 lỗi.
 - Chưa có SQL/migration/import DB.
 - Chưa có entity, service, controller hoặc API được triển khai từ data pipeline.
 - URL ảnh hiện là placeholder, chưa phải Cloudinary hay ảnh crawl chính thức.
+
+## 11. Progress log - Data Contract v0.2 Draft
+
+| Ngày | Giai đoạn | Hạng mục | File đã sửa | Test | Kết quả | Bàn giao | Blocker |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 08/09/2026 | Contract v0.2 | Commercial puppy/Product profile | `docs/Project/data_contract.md`; báo cáo TV1/TV2/TV3 | `git diff --check` | APPROVED FOR DEV/TEST/DEMO - TV2/Data Engineer chốt chuẩn dữ liệu chung | Adult breed reference tách khỏi puppy observation; chưa approved production/DB import | TV1 triển khai mapping Product/DTO; TV3 hỗ trợ enum, migration và backward compatibility |
+
+Contract v0.2 bổ sung `breed_type`, `life_stage`, `age_months`, `current_weight_kg`,
+`current_size`, `expected_adult_size` và `breed_code` cho commercial Product. Raw
+commercial chỉ là observation; dữ liệu thiếu để trống, không ghi đè curated/DB.
+DogProfile adoption và Product thương mại là hai dataset/entity nghiệp vụ khác nhau.
+Nếu conflict với code, TV1/TV3 báo lại TV2; không tự đổi stable code, enum hoặc contract.
+
+## 12. Progress log - Commercial crawler raw observation
+
+| Ngày | Giai đoạn | Hạng mục | File đã sửa | Test | Kết quả | Bàn giao | Blocker |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 08/09/2026 | Giai đoạn 2A.2 | Commercial raw crawler | `data-pipeline/config/commercial_sources.json`; `data-pipeline/src/crawlers/crawl_commercial.py`; CSV raw theo source | `py_compile`; fixture Chợ Tốt 19 record; smoke crawl network | COMPLETED - Chợ Tốt search: 38 record/2 trang/3 request; Chợ Tốt cho-giong: 54 record/3 trang/3 request; Pet Mart: 96 record/8 trang/8 request | Raw market observation cho bước Cleaner + Dedup; chưa candidate/curated merge hay DB import | Cần chuẩn hóa và dedup trước khi dùng làm candidate |
+
+Crawler chạy theo offline-first: network bị khóa mặc định và chỉ crawl thật khi truyền `--allow-network`. Parser ưu tiên JSON-LD/`__NEXT_DATA__`, fallback HTML bằng `html.parser`; phân trang dùng `page_url_pattern` và `max_pages` trong config hoặc CLI override. Retry áp dụng cho HTTP 408/429/5xx, redirect chỉ cùng domain, rate limit tối thiểu 2 giây. Raw commercial chỉ thu thập trường observation cho phép, không lấy PII, ảnh hay secret.
+
+## 13. Progress log - Giai đoạn 1B Commercial Cleaner + Deduplication
+
+| Ngày | Giai đoạn | Hạng mục | File đã sửa | Test | Kết quả | Bàn giao | Blocker |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 08/09/2026 | Giai đoạn 1B | Commercial Cleaner + Deduplication | `data-pipeline/src/clean_commercial_observations.py`; candidate CSV; quarantine/validation report | `py_compile`; `--dry-run`; cleaning; `--self-test`; `git diff --check` | COMPLETED - Pet Mart: 73 candidate, 23 `invalid_price` quarantine; Chợ Tốt không bàn giao listing cá thể; 3 market price bands; 4 duplicate; 64 `age_unverified` | Candidate product, aggregate price band và báo cáo cho bước candidate review | Chưa Product generator, DB import, SQL/migration hoặc backend; `category_code` Pet Mart vẫn rỗng do raw không chứng minh được |
