@@ -8,19 +8,19 @@
 
 ## Output files
 
-- `data-pipeline/data/generated/adoption/dog_profiles.csv`: sha256 `36f6326ef54ed6e33276f1509f8e7631a5ef3369db7d46e7bfa65006be8ff5b0`
-- `data-pipeline/data/generated/adoption/adoption_posts.csv`: sha256 `af3bea9496a3f2f409d60f652656e74f39f13ee780080952ee1f0b1862dbfe9c`
-- `data-pipeline/data/generated/adoption/adoption_applications.csv`: sha256 `045aebd033ac99f180d661edafec80eb8321745fe87d2e2562cd0fadec4bfe99`
+- `data-pipeline/data/generated/adoption/dog_profiles.csv`: sha256 `ea0e1247e66822b08989605d314a9d6646d71d19a626bfede380164b8b0338e0`
+- `data-pipeline/data/generated/adoption/adoption_posts.csv`: sha256 `373bda83ea440f0ef1bfbee0de2450de75584f791064e511e799128290150f2e`
+- `data-pipeline/data/generated/adoption/adoption_applications.csv`: sha256 `fd1b89c3b4e1815438a2fcd4db67aca23aebc1054a1826bd6c6fb2742eca79d6`
 
 ## Record counts
 
 | Dataset | Records |
 | --- | ---: |
-| DogProfile generated | 12 |
+| DogProfile generated | 28 |
 | AdoptionPost generated | 8 |
 | AdoptionApplication generated | 12 |
-| Total generated | 32 |
-| Valid records | 32 |
+| Total generated | 48 |
+| Valid records | 48 |
 | Error/quarantined records | 0 |
 
 ## Validation checks

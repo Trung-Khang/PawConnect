@@ -545,3 +545,24 @@ chi duoc them sau khi TV1 xac nhan mapping entity/DTO.
 - Neu conflict voi code, TV1/TV3 bao lai TV2; khong tu doi stable code, enum hoac contract.
 - Chua duoc sua entity/backend, SQL/migration, CSV curated/generated hoac import DB.
 - Contract nay chua approved cho production hoac DB import.
+
+## 13. Seed Release v1
+
+`data-pipeline/data/curated/` la master data chinh thuc. Seed Release la snapshot
+synthetic bat bien cua curated master va build output da validation, dung cho `dev`,
+`test`, `demo` va bootstrap DB sau khi importer duoc review.
+
+- Release v1 dung `release_id=pawconnect-seed-v1`, random seed `20260908` va trang thai
+  `APPROVED_FOR_DEV_TEST_DEMO`.
+- `data-pipeline/data/seed/v1/` la importer input; `data-pipeline/data/generated/` la
+  workspace build output, khong phai importer input.
+- Release da phat hanh khong duoc ghi de. Thay doi du lieu can release moi (`v2`),
+  manifest moi va validation moi.
+- Raw/candidate commercial chi la evidence/observation. Khong import truc tiep vao DB
+  va khong dua raw URL, listing title, contact, anh crawl hoac secret vao release.
+- `breeds.csv` giu y nghia adult reference. Breed moi chi duoc admission khi co stable
+  code, adult size/weight, maturity rule, provenance PASS va evidence reference duoc
+  review. Truong hop thieu evidence phai nam trong `breed_proposals.csv`, khong dung
+  cho seed/generator.
+- Seed Product v0.2 van chua san sang DB import cho den khi TV1/TV3 hoan thanh mapping
+  Entity/DTO, enum, migration va backward compatibility.

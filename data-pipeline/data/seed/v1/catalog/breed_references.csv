@@ -1,0 +1,13 @@
+breed_code,source_name,source_url,retrieved_at,content_sha256,license_note,evidence_status
+BREED_POODLE,CURATED_LEGACY_V0_1,,,7d704b93f9dbddbcade23ecf2eb33b717115407af6aadf8075d275b5813e8b51,Canonical JSON SHA-256 of legacy curated master row; no external source asserted,LEGACY_ACCEPTED
+BREED_CHIHUAHUA,CURATED_LEGACY_V0_1,,,240722c748eb361544bbc9c055e72750e51a48b3f004072eb11079aaef4c676d,Canonical JSON SHA-256 of legacy curated master row; no external source asserted,LEGACY_ACCEPTED
+BREED_PUG,CURATED_LEGACY_V0_1,,,c0ced7f8c9c8716b97ded82b7caab6fe65276a690d65794b5ff09e810bcdb6db,Canonical JSON SHA-256 of legacy curated master row; no external source asserted,LEGACY_ACCEPTED
+BREED_CORGI,CURATED_LEGACY_V0_1,,,806f621e39ce3a7b24b74e5b821e9e3bdf7631636fcf395470a9c5aaef226231,Canonical JSON SHA-256 of legacy curated master row; no external source asserted,LEGACY_ACCEPTED
+BREED_SHIBA_INU,CURATED_LEGACY_V0_1,,,16fe1f0f2fc3a973abbef635cb4c12cf4a5c7b18b62edd396976729f2c84f8f9,Canonical JSON SHA-256 of legacy curated master row; no external source asserted,LEGACY_ACCEPTED
+BREED_BEAGLE,CURATED_LEGACY_V0_1,,,262f6c182e6bbbaf4e0dedcf8fa42a28ef8e7cdd40f0e4ffb3d7eaca078c9910,Canonical JSON SHA-256 of legacy curated master row; no external source asserted,LEGACY_ACCEPTED
+BREED_PHU_QUOC,CURATED_LEGACY_V0_1,,,dbeeee199eaf06ce68501b56ff3084dee276ad3047329a929063d7726feec075,Canonical JSON SHA-256 of legacy curated master row; no external source asserted,LEGACY_ACCEPTED
+BREED_FRENCH_BULLDOG,CURATED_LEGACY_V0_1,,,2c8cfd047588d7d5dd9dc538c09ea8bf12faa0e45352602ea2ab1bf44ff255bd,Canonical JSON SHA-256 of legacy curated master row; no external source asserted,LEGACY_ACCEPTED
+BREED_HUSKY_SIBERIAN,CURATED_LEGACY_V0_1,,,6b2da7381fd8f6939c5db40e6991c561b61383eb18516cb95db6a7751130e6c1,Canonical JSON SHA-256 of legacy curated master row; no external source asserted,LEGACY_ACCEPTED
+BREED_ALASKAN_MALAMUTE,CURATED_LEGACY_V0_1,,,ab595226ded0424bb712e0a455c22e5ec9d2781e64a08bb59ae311283361ea7d,Canonical JSON SHA-256 of legacy curated master row; no external source asserted,LEGACY_ACCEPTED
+BREED_GOLDEN_RETRIEVER,CURATED_LEGACY_V0_1,,,e654c88c53668998336f0f2b206c23d111b1d4709a17b21a1e56614a1d94a7d0,Canonical JSON SHA-256 of legacy curated master row; no external source asserted,LEGACY_ACCEPTED
+BREED_LABRADOR_RETRIEVER,CURATED_LEGACY_V0_1,,,96649380922f3db113c60bfe8a4365481392bd29584a0a83a71224e7074d2597,Canonical JSON SHA-256 of legacy curated master row; no external source asserted,LEGACY_ACCEPTED

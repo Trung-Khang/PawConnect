@@ -1,0 +1,3 @@
+proposal_key,breed_code,breed_name,source_name,market_evidence_status,reason
+breed_proposal_pomeranian,BREED_POMERANIAN,Pomeranian / Phoc Soc,Cho Tot local raw,MARKET_CONFIRMED_ADULT_REFERENCE_MISSING,Canonical market labels are present locally but no trusted adult size/weight reference is recorded for catalog admission.
+breed_proposal_hmong_coc_duoi,BREED_HMONG_COC_DUOI,H'Mong coc duoi,No approved reference,NOT_CONFIRMED,No trusted adult size/weight reference and no confirmed local raw mapping are available for catalog admission.

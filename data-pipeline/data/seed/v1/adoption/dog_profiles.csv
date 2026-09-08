@@ -1,0 +1,25 @@
+seed_key,name,breed,size,age_months,weight_kg,gender,vaccination_status,image_url,description,branch_code
+dog_milo,Milo,Poodle,SMALL,24,5,MALE,FULLY_VACCINATED,https://placehold.co/800x600/png?text=PawConnect+Milo,Chó nhỏ hiền và quen sinh hoạt trong nhà.,BR_HCM_01
+dog_bong,Bông,Corgi,MEDIUM,18,12,FEMALE,PARTIALLY_VACCINATED,https://placehold.co/800x600/png?text=PawConnect+Bong,Chó cỡ vừa năng động phù hợp gia đình có sân nhỏ.,BR_HN_01
+dog_lucky,Lucky,Golden Retriever,LARGE,30,29,MALE,FULLY_VACCINATED,https://placehold.co/800x600/png?text=PawConnect+Lucky,Chó lớn thân thiện và dễ làm quen với người mới.,BR_DN_01
+dog_mun,Mun,Chó Phú Quốc,MEDIUM,20,16,FEMALE,NOT_VACCINATED,https://placehold.co/800x600/png?text=PawConnect+Mun,Chó nhanh nhẹn cần người nhận nuôi có thời gian chăm sóc.,BR_HCM_01
+dog_kiki,Kiki,French Bulldog,SMALL,16,10,FEMALE,PARTIALLY_VACCINATED,https://placehold.co/800x600/png?text=PawConnect+Kiki,Chó nhỏ thân thiện phù hợp không gian sống vừa phải.,BR_HN_01
+dog_gen_poodle,Mochi,Poodle,SMALL,74,4,MALE,FULLY_VACCINATED,https://placehold.co/800x600/png?text=PawConnect+Mochi+1,Ho so demo cho Poodle phuc vu luong nhan nuoi PawConnect.,BR_HCM_01
+dog_gen_chihuahua,Bingo,Chihuahua,SMALL,102,1,FEMALE,NOT_VACCINATED,https://placehold.co/800x600/png?text=PawConnect+Bingo+2,Ho so demo cho Chihuahua phuc vu luong nhan nuoi PawConnect.,BR_HN_01
+dog_gen_pug,Nori,Pug,SMALL,60,9,MALE,PARTIALLY_VACCINATED,https://placehold.co/800x600/png?text=PawConnect+Nori+3,Ho so demo cho Pug phuc vu luong nhan nuoi PawConnect.,BR_DN_01
+dog_gen_corgi,Bim,Corgi,MEDIUM,101,12,FEMALE,FULLY_VACCINATED,https://placehold.co/800x600/png?text=PawConnect+Bim+4,Ho so demo cho Corgi phuc vu luong nhan nuoi PawConnect.,BR_HCM_01
+dog_gen_shiba_inu,Susu,Shiba Inu,MEDIUM,15,9,MALE,NOT_VACCINATED,https://placehold.co/800x600/png?text=PawConnect+Susu+5,Ho so demo cho Shiba Inu phuc vu luong nhan nuoi PawConnect.,BR_HN_01
+dog_gen_beagle,Ken,Beagle,MEDIUM,135,9,FEMALE,PARTIALLY_VACCINATED,https://placehold.co/800x600/png?text=PawConnect+Ken+6,Ho so demo cho Beagle phuc vu luong nhan nuoi PawConnect.,BR_DN_01
+dog_gen_phu_quoc,Mika,Chó Phú Quốc,MEDIUM,141,15,MALE,FULLY_VACCINATED,https://placehold.co/800x600/png?text=PawConnect+Mika+7,Ho so demo cho Chó Phú Quốc phuc vu luong nhan nuoi PawConnect.,BR_HCM_01
+dog_gen_french_bulldog,Bo,French Bulldog,SMALL,117,11,FEMALE,NOT_VACCINATED,https://placehold.co/800x600/png?text=PawConnect+Bo+8,Ho so demo cho French Bulldog phuc vu luong nhan nuoi PawConnect.,BR_HN_01
+dog_gen_husky_siberian,Toto,Husky Siberian,LARGE,129,25,MALE,PARTIALLY_VACCINATED,https://placehold.co/800x600/png?text=PawConnect+Toto+9,Ho so demo cho Husky Siberian phuc vu luong nhan nuoi PawConnect.,BR_DN_01
+dog_gen_alaskan_malamute,Nana,Alaskan Malamute,LARGE,130,35,FEMALE,FULLY_VACCINATED,https://placehold.co/800x600/png?text=PawConnect+Nana+10,Ho so demo cho Alaskan Malamute phuc vu luong nhan nuoi PawConnect.,BR_HCM_01
+dog_gen_golden_retriever,Rin,Golden Retriever,LARGE,46,31,MALE,NOT_VACCINATED,https://placehold.co/800x600/png?text=PawConnect+Rin+11,Ho so demo cho Golden Retriever phuc vu luong nhan nuoi PawConnect.,BR_HN_01
+dog_gen_labrador_retriever,Bun,Labrador Retriever,LARGE,108,31,FEMALE,PARTIALLY_VACCINATED,https://placehold.co/800x600/png?text=PawConnect+Bun+12,Ho so demo cho Labrador Retriever phuc vu luong nhan nuoi PawConnect.,BR_DN_01
+dog_seed_v1_chihuahua_1,Demo 2-1,Chihuahua,SMALL,24,2,FEMALE,NOT_VACCINATED,https://placehold.co/800x600/png?text=PawConnect+Seed+2-1,Synthetic seed profile for PawConnect dev/test/demo.,BR_DN_01
+dog_seed_v1_pug_1,Demo 3-1,Pug,SMALL,24,8,MALE,FULLY_VACCINATED,https://placehold.co/800x600/png?text=PawConnect+Seed+3-1,Synthetic seed profile for PawConnect dev/test/demo.,BR_DN_01
+dog_seed_v1_shiba_inu_1,Demo 5-1,Shiba Inu,MEDIUM,24,10,MALE,NOT_VACCINATED,https://placehold.co/800x600/png?text=PawConnect+Seed+5-1,Synthetic seed profile for PawConnect dev/test/demo.,BR_HCM_01
+dog_seed_v1_beagle_1,Demo 6-1,Beagle,MEDIUM,24,12,FEMALE,FULLY_VACCINATED,https://placehold.co/800x600/png?text=PawConnect+Seed+6-1,Synthetic seed profile for PawConnect dev/test/demo.,BR_HN_01
+dog_seed_v1_husky_siberian_1,Demo 9-1,Husky Siberian,LARGE,30,21.5,MALE,FULLY_VACCINATED,https://placehold.co/800x600/png?text=PawConnect+Seed+9-1,Synthetic seed profile for PawConnect dev/test/demo.,BR_DN_01
+dog_seed_v1_alaskan_malamute_1,Demo 10-1,Alaskan Malamute,LARGE,30,37.5,FEMALE,PARTIALLY_VACCINATED,https://placehold.co/800x600/png?text=PawConnect+Seed+10-1,Synthetic seed profile for PawConnect dev/test/demo.,BR_HCM_01
+dog_seed_v1_labrador_retriever_1,Demo 12-1,Labrador Retriever,LARGE,30,30.5,FEMALE,FULLY_VACCINATED,https://placehold.co/800x600/png?text=PawConnect+Seed+12-1,Synthetic seed profile for PawConnect dev/test/demo.,BR_HN_01

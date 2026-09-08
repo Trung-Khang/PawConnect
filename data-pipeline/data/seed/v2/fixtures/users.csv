@@ -1,0 +1,7 @@
+seed_key,full_name,email,password_placeholder,phone,avatar_url,role_code,branch_code,created_at
+user_admin_demo,Admin Demo,admin.demo@pawconnect.test,TV3_SEED_REQUIRED,,,ROLE_ADMIN,,2026-09-06T09:00:00+07:00
+user_manager_hcm,Manager HCM Demo,manager.hcm@pawconnect.test,TV3_SEED_REQUIRED,,,ROLE_BRANCH_MANAGER,BR_HCM_01,2026-09-06T09:05:00+07:00
+user_manager_hn,Manager Ha Noi Demo,manager.hn@pawconnect.test,TV3_SEED_REQUIRED,,,ROLE_BRANCH_MANAGER,BR_HN_01,2026-09-06T09:10:00+07:00
+user_manager_dn,Manager Da Nang Demo,manager.dn@pawconnect.test,TV3_SEED_REQUIRED,,,ROLE_BRANCH_MANAGER,BR_DN_01,2026-09-06T09:15:00+07:00
+user_customer_mai,Customer Mai Demo,customer.mai@pawconnect.example,TV3_SEED_REQUIRED,,,ROLE_CUSTOMER,,2026-09-06T09:20:00+07:00
+user_customer_nam,Customer Nam Demo,customer.nam@pawconnect.example,TV3_SEED_REQUIRED,,,ROLE_CUSTOMER,,2026-09-06T09:25:00+07:00

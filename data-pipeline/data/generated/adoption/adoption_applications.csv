@@ -1,13 +1,13 @@
 seed_key,adoption_post_seed_key,applicant_user_key,message,status
 application_gen_01_01,post_gen_01_poodle,user_customer_mai,Don demo khong chua thong tin lien he ca nhan.,PENDING
 application_gen_01_02,post_gen_01_poodle,user_customer_nam,Don demo khong chua thong tin lien he ca nhan.,REJECTED
-application_gen_02_01,post_gen_02_chihuahua,user_customer_nam,Don demo khong chua thong tin lien he ca nhan.,PENDING
-application_gen_03_01,post_gen_03_pug,user_customer_mai,Don demo khong chua thong tin lien he ca nhan.,REJECTED
-application_gen_04_01,post_gen_04_corgi,user_customer_mai,Don demo khong chua thong tin lien he ca nhan.,PENDING
-application_gen_05_01,post_gen_05_shiba_inu,user_customer_nam,Don demo khong chua thong tin lien he ca nhan.,REJECTED
-application_gen_06_01,post_gen_06_beagle,user_customer_mai,Don demo khong chua thong tin lien he ca nhan.,APPROVED
-application_gen_06_02,post_gen_06_beagle,user_customer_nam,Don demo khong chua thong tin lien he ca nhan.,REJECTED
-application_gen_07_01,post_gen_07_phu_quoc,user_customer_nam,Don demo khong chua thong tin lien he ca nhan.,APPROVED
-application_gen_07_02,post_gen_07_phu_quoc,user_customer_mai,Don demo khong chua thong tin lien he ca nhan.,REJECTED
-application_gen_08_01,post_gen_08_french_bulldog,user_customer_mai,Don demo khong chua thong tin lien he ca nhan.,APPROVED
-application_gen_08_02,post_gen_08_french_bulldog,user_customer_nam,Don demo khong chua thong tin lien he ca nhan.,REJECTED
+application_gen_02_01,post_gen_02_poodle_2,user_customer_nam,Don demo khong chua thong tin lien he ca nhan.,PENDING
+application_gen_03_01,post_gen_03_chihuahua,user_customer_mai,Don demo khong chua thong tin lien he ca nhan.,REJECTED
+application_gen_04_01,post_gen_04_chihuahua_2,user_customer_mai,Don demo khong chua thong tin lien he ca nhan.,PENDING
+application_gen_05_01,post_gen_05_pug,user_customer_nam,Don demo khong chua thong tin lien he ca nhan.,REJECTED
+application_gen_06_01,post_gen_06_pug_2,user_customer_mai,Don demo khong chua thong tin lien he ca nhan.,APPROVED
+application_gen_06_02,post_gen_06_pug_2,user_customer_nam,Don demo khong chua thong tin lien he ca nhan.,REJECTED
+application_gen_07_01,post_gen_07_corgi,user_customer_nam,Don demo khong chua thong tin lien he ca nhan.,APPROVED
+application_gen_07_02,post_gen_07_corgi,user_customer_mai,Don demo khong chua thong tin lien he ca nhan.,REJECTED
+application_gen_08_01,post_gen_08_corgi_2,user_customer_mai,Don demo khong chua thong tin lien he ca nhan.,APPROVED
+application_gen_08_02,post_gen_08_corgi_2,user_customer_nam,Don demo khong chua thong tin lien he ca nhan.,REJECTED

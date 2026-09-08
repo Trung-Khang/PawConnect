@@ -1,0 +1,4 @@
+seed_key,role_code,name
+role_customer,ROLE_CUSTOMER,CUSTOMER
+role_branch_manager,ROLE_BRANCH_MANAGER,BRANCH_MANAGER
+role_admin,ROLE_ADMIN,ADMIN

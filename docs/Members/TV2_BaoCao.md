@@ -143,3 +143,9 @@ Crawler chạy theo offline-first: network bị khóa mặc định và chỉ cr
 | Ngày | Giai đoạn | Hạng mục | File đã sửa | Test | Kết quả | Bàn giao | Blocker |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 08/09/2026 | Giai đoạn 1C | Product Demo Generator | `generate_product_demo.py`; generated Product CSV; validation report; Data Contract v0.2 | `py_compile`; generator hai lần cùng seed; `--self-test`; `git diff --check` | COMPLETED - 27 Product: 3 branch x (3 PUPPY + 3 FOOD + 3 ACCESSORY); 3 market price bands; validation PASS, 5 lỗi tạm được bắt | Generated Product CSV cho dev/test/demo; `image_url` rỗng, không copy listing Chợ Tốt | Chưa DB import, backend mapping, SQL/migration hoặc Cloudinary; Product entity/DTO chưa có full commercial v0.2 fields |
+
+## 15. Progress log - Seed Release v1
+
+| Ngày | Giai đoạn | Hạng mục | File đã sửa | Test | Kết quả | Bàn giao | Blocker |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 09/09/2026 | Seed Release v1 | Immutable synthetic seed snapshot | `build_seed_release.py`; `data/seed/v1`; catalog provenance/proposals; validation report | `py_compile`; build; `--verify v1`; `--self-test`; `git diff --check` | COMPLETED - catalog giữ 12 breed; 24 DogProfile, 24 AdoptionPost, 32 AdoptionApplication, 27 Product; validation PASS | `seed/v1` là input dev/test/demo và bootstrap DB sau khi importer được review; raw/candidate không import trực tiếp | Chưa có importer, backend mapping, SQL/migration hay Cloudinary; Product v0.2 chưa DB-ready |

@@ -186,9 +186,9 @@ def validate_sources(breeds, branches, roles, users):
     for breed in breeds:
         if breed["default_size"] not in SIZE_ENUM:
             errors.append(f"breeds: invalid default_size for {breed['seed_key']}")
-        if int(breed["min_weight_kg"]) <= 0:
+        if float(breed["min_weight_kg"]) <= 0:
             errors.append(f"breeds: min_weight_kg must be positive for {breed['seed_key']}")
-        if int(breed["max_weight_kg"]) < int(breed["min_weight_kg"]):
+        if float(breed["max_weight_kg"]) < float(breed["min_weight_kg"]):
             errors.append(f"breeds: invalid weight range for {breed['seed_key']}")
         if int(breed["min_age_months"]) < 0:
             errors.append(f"breeds: invalid min_age_months for {breed['seed_key']}")
@@ -231,27 +231,30 @@ def generate_dog_profiles(breeds, branches, rng):
         name = DOG_NAMES[index % len(DOG_NAMES)]
         min_age = int(breed["min_age_months"])
         max_age = int(breed["max_age_months"])
-        min_weight = int(breed["min_weight_kg"])
-        max_weight = int(breed["max_weight_kg"])
-        age_months = rng.randint(min_age, max_age)
-        weight_kg = rng.randint(min_weight, max_weight)
-        vaccination_status = vaccination_statuses[index % len(vaccination_statuses)]
-        rows.append(
-            {
-                "seed_key": f"dog_gen_{slug}",
-                "name": name,
-                "breed": breed_name,
-                "size": breed["default_size"],
-                "age_months": str(age_months),
-                "weight_kg": str(weight_kg),
-                "gender": "MALE" if index % 2 == 0 else "FEMALE",
-                "vaccination_status": vaccination_status,
-                "image_url": "https://placehold.co/800x600/png?text="
-                + quote_plus(f"PawConnect {name} {index + 1}"),
-                "description": f"Ho so demo cho {breed_name} phuc vu luong nhan nuoi PawConnect.",
-                "branch_code": branch_codes[index % len(branch_codes)],
-            }
-        )
+        min_weight = float(breed["min_weight_kg"])
+        max_weight = float(breed["max_weight_kg"])
+        for ordinal in range(2):
+            profile_index = index * 2 + ordinal
+            profile_name = DOG_NAMES[profile_index % len(DOG_NAMES)]
+            age_months = rng.randint(min_age, max_age)
+            weight_kg = round(rng.uniform(min_weight, max_weight), 1)
+            vaccination_status = vaccination_statuses[profile_index % len(vaccination_statuses)]
+            rows.append(
+                {
+                    "seed_key": f"dog_gen_{slug}" if ordinal == 0 else f"dog_gen_{slug}_2",
+                    "name": profile_name,
+                    "breed": breed_name,
+                    "size": breed["default_size"],
+                    "age_months": str(age_months),
+                    "weight_kg": f"{weight_kg:g}",
+                    "gender": "MALE" if profile_index % 2 == 0 else "FEMALE",
+                    "vaccination_status": vaccination_status,
+                    "image_url": "https://placehold.co/800x600/png?text="
+                    + quote_plus(f"PawConnect {profile_name} {profile_index + 1}"),
+                    "description": f"Ho so demo cho {breed_name} phuc vu luong nhan nuoi PawConnect.",
+                    "branch_code": branch_codes[profile_index % len(branch_codes)],
+                }
+            )
     return rows
 
 
@@ -320,10 +323,12 @@ def validate_generated(dog_profiles, adoption_posts, adoption_applications, bree
     require_unique(adoption_posts, "seed_key", "generated adoption_posts", errors)
     require_unique(adoption_applications, "seed_key", "generated adoption_applications", errors)
 
-    if len(dog_profiles) != 12:
-        errors.append(f"dog_profiles: expected 12 records, got {len(dog_profiles)}")
-    if len(adoption_posts) != 8:
-        errors.append(f"adoption_posts: expected 8 records, got {len(adoption_posts)}")
+    expected_dog_profiles = 2 * len(breeds)
+    expected_adoption_posts = min(8, expected_dog_profiles)
+    if len(dog_profiles) != expected_dog_profiles:
+        errors.append(f"dog_profiles: expected {expected_dog_profiles} records, got {len(dog_profiles)}")
+    if len(adoption_posts) != expected_adoption_posts:
+        errors.append(f"adoption_posts: expected {expected_adoption_posts} records, got {len(adoption_posts)}")
     if len(adoption_applications) != 12:
         errors.append(f"adoption_applications: expected 12 records, got {len(adoption_applications)}")
 
@@ -345,17 +350,17 @@ def validate_generated(dog_profiles, adoption_posts, adoption_applications, bree
         if not row["image_url"].startswith("https://"):
             errors.append(f"dog_profiles: image_url must be HTTPS for {row['seed_key']}")
         age = int(row["age_months"])
-        weight = int(row["weight_kg"])
+        weight = float(row["weight_kg"])
         if not int(breed["min_age_months"]) <= age <= int(breed["max_age_months"]):
             errors.append(f"dog_profiles: age out of breed range for {row['seed_key']}")
-        if not int(breed["min_weight_kg"]) <= weight <= int(breed["max_weight_kg"]):
+        if not float(breed["min_weight_kg"]) <= weight <= float(breed["max_weight_kg"]):
             errors.append(f"dog_profiles: weight out of breed range for {row['seed_key']}")
         valid_records += 1
 
     for breed in breeds:
-        if breed_usage[breed["breed_name"]] != 1:
+        if breed_usage[breed["breed_name"]] != 2:
             errors.append(
-                f"dog_profiles: breed {breed['breed_name']} must appear once, got {breed_usage[breed['breed_name']]}"
+                f"dog_profiles: breed {breed['breed_name']} must appear twice, got {breed_usage[breed['breed_name']]}"
             )
 
     available_by_dog = defaultdict(int)
@@ -423,6 +428,9 @@ def validate_generated(dog_profiles, adoption_posts, adoption_applications, bree
     total_records = len(dog_profiles) + len(adoption_posts) + len(adoption_applications)
     return {
         "total_records": total_records,
+        "dog_profile_count": len(dog_profiles),
+        "adoption_post_count": len(adoption_posts),
+        "adoption_application_count": len(adoption_applications),
         "valid_records": total_records if not errors else max(0, total_records - len(errors)),
         "error_count": len(errors),
         "errors": errors,
@@ -462,9 +470,9 @@ def write_report(path, seed, validation, output_files, self_test):
             "",
             "| Dataset | Records |",
             "| --- | ---: |",
-            "| DogProfile generated | 12 |",
-            "| AdoptionPost generated | 8 |",
-            "| AdoptionApplication generated | 12 |",
+            f"| DogProfile generated | {validation['dog_profile_count']} |",
+            f"| AdoptionPost generated | {validation['adoption_post_count']} |",
+            f"| AdoptionApplication generated | {validation['adoption_application_count']} |",
             f"| Total generated | {validation['total_records']} |",
             f"| Valid records | {validation['valid_records']} |",
             f"| Error/quarantined records | {validation['error_count']} |",
@@ -610,9 +618,9 @@ def main():
 
         output_files, report_path, validation = generate(args.seed)
         print("PASS generated adoption demo data")
-        print(f"DogProfile records: 12")
-        print(f"AdoptionPost records: 8")
-        print(f"AdoptionApplication records: 12")
+        print(f"DogProfile records: {validation['dog_profile_count']}")
+        print(f"AdoptionPost records: {validation['adoption_post_count']}")
+        print(f"AdoptionApplication records: {validation['adoption_application_count']}")
         print(f"Validation errors: {validation['error_count']}")
         print(f"Report: {report_path.relative_to(project_root()).as_posix()}")
         return 0
