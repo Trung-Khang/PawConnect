@@ -1,0 +1,4 @@
+seed_key,dog_profile_seed_key,created_by_user_key,title,description,health_note,status,created_at
+post_milo_available,dog_milo,user_manager_hcm,Milo tìm gia đình mới,Hồ sơ demo cho chó nhỏ tại chi nhánh TP.HCM.,Đã tiêm đủ theo hồ sơ demo.,AVAILABLE,2026-09-06T10:00:00+07:00
+post_bong_available,dog_bong,user_manager_hn,Bông sẵn sàng nhận nuôi,Hồ sơ demo cho chó cỡ vừa tại chi nhánh Hà Nội.,Cần hoàn tất mũi tiêm tiếp theo.,AVAILABLE,2026-09-06T10:10:00+07:00
+post_lucky_closed,dog_lucky,user_manager_dn,Lucky đã có người nhận nuôi,Hồ sơ demo đã đóng tại chi nhánh Đà Nẵng.,Sức khỏe ổn định trong hồ sơ demo.,CLOSED,2026-09-06T10:20:00+07:00
