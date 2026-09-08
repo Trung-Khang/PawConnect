@@ -45,6 +45,45 @@ Mỗi lần làm chức năng, TV1 cần ghi: file đã sửa, API/chức năng,
 
 | Ngày | Giai đoạn | Chức năng/API | File đã sửa | Dữ liệu đầu vào | Test | Kết quả | Bàn giao | Blocker |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-|  |  |  |  |  |  | NOT STARTED |  |  |
+| 07/09/2026 | Tuần 3-5 | Khởi tạo Cơ sở dữ liệu, Cấu trúc dự án chung | `application.properties`, `pom.xml`, các file cấu trúc chung | URL DB: `jdbc:h2:mem:pawconnectdb` | Maven build, chạy Spring Boot H2 Console | COMPLETED | H2 DB sẵn sàng, Entity quét tự động tạo bảng (ddl-auto=update) | Không có |
+| 07/09/2026 | Tuần 3-5 | Chi nhánh (Branch) & Danh mục (Category) | `Branch.java`, `Category.java`, `BranchController.java`, `CategoryController.java`, các Service tương ứng | 3 chi nhánh seed (`BR_HCM_01`, `BR_HN_01`, `BR_DN_01`), 4 danh mục seed (`CAT_BREEDING_DOG`, v.v.) | Test API GET `/api/branches`, `/api/categories` qua Postman | COMPLETED | API trả JSON danh sách chi nhánh và danh mục | Không có |
+| 07/09/2026 | Tuần 3-5 | Sản phẩm & Chó giống (Product) | `Product.java`, `ProductRepository.java`, `ProductController.java`, `ProductServiceImpl.java` | Form request chứa: `name`, `price`, `stock`, `imageUrl`, `suitableSize`, `isBreedingDog`, `branchId` | POST `/api/products` giả lập chó độc bản (`stock=1`), Test lọc sản phẩm qua HQL trong Repository | COMPLETED | Bàn giao API CRUD Sản phẩm. Chống Race Condition bằng truy vấn nguyên tử: `UPDATE p SET p.stock = p.stock-1 WHERE stock>=1` | Không có |
+| 07/09/2026 | Tuần 3-5 | Giỏ hàng (Cart) & Đặt mua (Order) | `Cart.java`, `CartItem.java`, `Order.java`, `OrderItem.java`, `OrderController.java` | `userId` (giả lập), danh sách `productId`, `quantity` | Đẩy nhiều sản phẩm vào giỏ hàng `POST /api/cart/items`, sau đó Checkout | COMPLETED | API Giỏ hàng, Đặt đơn. Đã giải quyết triệt để lỗi StackOverflow do JSON tuần hoàn. Entity `Order` chừa sẵn `user_id` để ráp JWT. | Không có |
+| 07/09/2026 | Tuần 3-5 | Dịch vụ (ServiceType) & Lịch hẹn (ServiceBooking) | `ServiceType.java`, `ServiceBooking.java`, `ServiceBookingController.java` | 3 dịch vụ seed, `bookingTime`, `branchId` | Đặt lịch khám, Test kỹ thuật Optimistic Locking (dùng `@Version`) để chặn trùng giờ | COMPLETED | Bàn giao API Đặt lịch chống trùng, có luồng duyệt lịch cho Branch Manager. | Không có |
+| 07/09/2026 | Tuần 8 (Làm sớm) | Giao diện UI/UX Frontend (Premium Store & Booking) | `index.html`, `booking.html`, `shop.css`, `shop.js` | Dữ liệu thật từ Database (H2) | Test luồng nhấp vào chó cưng hiển thị Glassmorphism Modal, đặt hàng trực tiếp. | COMPLETED | Bàn giao UI đẹp, hoàn thiện với hiệu ứng micro-animations, Cloudinary image support. | Không có |
+
+## 9. Phản hồi và Xác nhận Kỹ thuật Chi tiết từ TV1 (Data Contract)
+
+Dựa theo Data Contract v0.1 và Hướng dẫn Data Pipeline Hybrid, TV1 xác nhận chi tiết về sự tương thích của toàn bộ module Thương mại & Dịch vụ (Shop & Service):
+
+### 9.1. Về Database & Hệ quản trị (MySQL 8)
+- **Kiến trúc DB:** TV1 xác nhận thiết kế **MySQL 8** là hoàn toàn phù hợp. Hiện tại, TV1 đang code và chạy bằng H2 in-memory Database (tự động gen schema bằng Hibernate) để tiện quá trình kiểm thử độc lập. Khi ráp DB chung (Integration phase), chỉ cần đổi cấu hình `application.properties` là hệ thống sẽ tạo schema tương đương trên MySQL 8 mà không cần sửa Entity.
+- **Data Types:** 
+  - Tiền tệ (`price`, `totalAmount`) được cấu hình kiểu `BigDecimal` (lưu số nguyên VND) như contract yêu cầu.
+  - Chuỗi (`description`, `careInstructions`) dùng độ dài an toàn (`VARCHAR(1000)` hoặc `TEXT` khi lên MySQL).
+  - Tình trạng tiêm chủng / sức khỏe được quản lý bằng `String` hỗ trợ Enum về sau.
+
+### 9.2. Phản hồi về Dữ liệu Seed & Tham chiếu
+- **Branch Code:** TV1 cam kết tuân thủ nghiêm ngặt 3 mã `BR_HCM_01`, `BR_HN_01`, `BR_DN_01`. `branch_id` đã được gắn làm khóa ngoại cho các bảng `Product`, `Order`, và `ServiceBooking` nhằm đảm bảo tính phân tách chi nhánh trong hệ cơ sở dữ liệu dùng chung (Shared Database).
+- **Category Code:** Xác nhận sử dụng và ánh xạ chính xác 4 mã: `CAT_BREEDING_DOG` (Dành riêng cho chó giống độc bản), `CAT_FOOD`, `CAT_ACCESSORY`, `CAT_MEDICAL_SUPPLY`.
+- **ServiceType Seed:** Xác nhận 3 gói dịch vụ nền:
+  1. `SERVICE_SPA`: 60 phút, 150000 VND
+  2. `SERVICE_CHECKUP`: 45 phút, 200000 VND
+  3. `SERVICE_VACCINATION`: 30 phút, 250000 VND. Mọi API liên quan đến `duration` và `price` đã hoạt động tốt.
+
+### 9.3. Phản hồi về Entity Product & Cloudinary
+- Bảng `Product` của TV1 đã được bổ sung đầy đủ các cột tương đương theo Contract v0.1:
+  - `name`, `description`, `price` (VND), `stock`.
+  - Hỗ trợ biến cún cưng (isBreedingDog=true): thêm `breed` (Giống), `age` (Tuổi - số tháng), `healthStatus`, `careInstructions`.
+  - Khóa ngoại: `branch_id`, `category_id`.
+  - **Size Enum:** Cột `suitable_size` mặc định hỗ trợ chuẩn Enum (`SMALL`, `MEDIUM`, `LARGE`).
+  - **Cloudinary:** Cột `image_url` chuẩn bị sẵn sàng lưu trữ liên kết ảnh HTTPS do Data Pipeline cấp (Có fallback sang ảnh tĩnh ở frontend nếu `image_url` bị rỗng).
+  - **Quản trị tồn kho Cún giống (Stock = 1):** Đây là rủi ro lớn vì chó độc bản chỉ có 1 con. TV1 đã giải quyết dứt điểm bằng **Atomic Update Query** (`@Modifying UPDATE Product p SET p.stock = p.stock - 1 WHERE p.id = :id AND p.stock >= 1`). Kỹ thuật này an toàn ở cấp độ Database, chặn 100% hiện tượng Race Condition thay vì đọc/ghi truyền thống.
+
+### 9.4. Góp ý và Xác nhận cho TV2 & TV3
+- **Về `DogProfile.branch_id` (Gửi TV2):** TV1 **HOÀN TOÀN ĐỒNG Ý** việc `DogProfile` và `AdoptionPost` buộc phải có `branch_id`. Vì trong một hệ thống lai ghép, người dùng có vai trò `BRANCH_MANAGER` của chi nhánh A chỉ được quyền duyệt đơn xin nhận nuôi, cấp nhật lịch hẹn, xem đơn hàng của cơ sở A. Nếu thiếu `branch_id`, hệ thống phân quyền sẽ phải viết query vòng vèo và dễ lọt dữ liệu.
+- **Về User & Phân quyền JWT (Gửi TV3):** 
+  - Toàn bộ Entity liên quan đến người mua (`Order`, `ServiceBooking`) đều đã có sẵn thuộc tính `Long userId`. 
+  - TV3 có thể thoải mái tiêm mã JWT Filter (`@PreAuthorize("hasRole('CUSTOMER')")`) vào các endpoint như `/api/orders` hoặc `/api/bookings` của TV1 mà không sợ phá vỡ luồng code hiện có. TV1 đã sẵn sàng để tích hợp (Integration Test).
 
 Trạng thái dùng chung: `NOT STARTED`, `IN PROGRESS`, `BLOCKED`, `READY FOR REVIEW`, `COMPLETED`.

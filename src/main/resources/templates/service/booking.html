@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Appointment - PawConnect</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/shop.css">
+</head>
+<body>
+
+    <!-- TOP BAR (Copied from index for standalone layout) -->
+    <div class="top-bar">
+        <div class="container">
+            <div class="top-bar-left">
+                <span><i class="fas fa-phone-alt"></i> 24/7 Emergency: +1 (800) 123-4567</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN HEADER -->
+    <header class="main-header">
+        <div class="container">
+            <a href="/shop" class="logo">
+                <i class="fas fa-paw"></i> PawConnect
+            </a>
+            <ul class="nav-menu">
+                <li><a href="/shop">Home</a></li>
+                <li><a href="/shop#shop-section">Shop</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <section class="section container">
+        <div class="section-header">
+            <h2>Book an Appointment</h2>
+            <p style="color:var(--text-muted)">Schedule a visit for your furry friend in just a few steps.</p>
+        </div>
+
+        <div class="booking-form-wrapper">
+            <div class="step-indicator">
+                <div class="step active" id="indicator-1">1</div>
+                <div class="step" id="indicator-2">2</div>
+                <div class="step" id="indicator-3">3</div>
+            </div>
+
+            <!-- STEP 1 -->
+            <div class="step-content active" id="step-1">
+                <h3 style="margin-bottom:1.5rem">Select Service</h3>
+                <div class="form-group">
+                    <label>Branch</label>
+                    <select id="branchSelect" class="form-control"></select>
+                </div>
+                <div class="form-group">
+                    <label>Service Type</label>
+                    <select id="serviceSelect" class="form-control"></select>
+                </div>
+                <div class="form-actions" style="justify-content: flex-end;">
+                    <button class="btn-pill" onclick="nextStep(2)">Next Step <i class="fas fa-arrow-right"></i></button>
+                </div>
+            </div>
+
+            <!-- STEP 2 -->
+            <div class="step-content" id="step-2">
+                <h3 style="margin-bottom:1.5rem">Select Date & Time</h3>
+                <div class="form-group">
+                    <label>Preferred Time Slot</label>
+                    <input type="datetime-local" id="bookingTime" class="form-control">
+                </div>
+                <div class="form-actions">
+                    <button class="btn-pill btn-outline" onclick="prevStep(1)"><i class="fas fa-arrow-left"></i> Back</button>
+                    <button class="btn-pill" onclick="nextStep(3)">Next Step <i class="fas fa-arrow-right"></i></button>
+                </div>
+            </div>
+
+            <!-- STEP 3 -->
+            <div class="step-content" id="step-3">
+                <h3 style="margin-bottom:1.5rem">Confirm Booking</h3>
+                <div style="background:var(--bg-color); padding:1.5rem; border-radius:10px; margin-bottom:1.5rem;">
+                    <p><strong>Branch:</strong> <span id="confirmBranch"></span></p>
+                    <p><strong>Service:</strong> <span id="confirmService"></span></p>
+                    <p><strong>Date & Time:</strong> <span id="confirmTime"></span></p>
+                </div>
+                <div id="bookingResult" style="margin-bottom: 1rem; font-weight: 700;"></div>
+                <div class="form-actions">
+                    <button class="btn-pill btn-outline" onclick="prevStep(2)"><i class="fas fa-arrow-left"></i> Back</button>
+                    <button class="btn-pill" id="submitBtn" onclick="submitBooking()">Confirm Appointment</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom" style="border:none">
+                <p>&copy; 2026 PawConnect. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/js/shop.js"></script>
+</body>
+</html>
