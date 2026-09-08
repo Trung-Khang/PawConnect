@@ -211,9 +211,16 @@ Build / run / deploy ✅
 
 | Ngày | Hạng mục | File/Module | API/Feature | Test | Trạng thái | Người liên quan |
 | ---- | -------- | ----------- | ----------- | ---- | ---------- | --------------- |
-|      |          |             |             |      | ⬜/🟨/✅     |                 |
+| 2026-09-08 | Khởi tạo nền tảng dùng chung | Maven/Spring Boot, `User`, `Role`, repositories, H2 dev config | 3 role chuẩn `CUSTOMER` / `BRANCH_MANAGER` / `ADMIN`; email duy nhất | `mvn test` ✅ (5/5 tests pass) | ✅ | TV1, TV2 |
+| 2026-09-08 | Xác thực và phân quyền JWT | `config`, `security`, `controller/auth`, `service/auth`, `dto/auth` | `POST /api/auth/register`, `/login`, `/refresh-token`; `GET /me`; BCrypt, stateless JWT, method security | `AuthFlowIntegrationTest` ✅ | ✅ | TV1, TV2 |
+| 2026-09-08 | Chat nhận nuôi real-time | `Conversation`, `ChatMessage`, STOMP/SockJS, `controller/chat`, `service/chat` | JWT ở STOMP CONNECT; chỉ 2 thành viên hội thoại được subscribe/send; lịch sử có phân trang | `ConversationServiceIntegrationTest` ✅ | ✅ | TV2 |
+| 2026-09-08 | Dashboard tài khoản | `controller/admin`, `service/admin` | `GET /api/admin/users` chỉ `ADMIN`, response không chứa password hash | `AdminUserControllerSecurityTest` ✅ | ✅ | TV1, TV2 |
 
 Đối với mỗi lần tích hợp, ghi rõ: đã nhận gì từ TV1/TV2 → đã tích hợp gì → có conflict không → test đã chạy → bug còn tồn tại → đã báo ai → đã fix chưa.
+
+| Ngày | Đã nhận | Đã tích hợp | Conflict / blocker | Test | Phản hồi |
+| ---- | ------- | ----------- | ------------------ | ---- | -------- |
+| 2026-09-08 | Chưa có entity/API đã bàn giao từ TV1/TV2 trên nhánh `TV3` | Chat giữ `adoptionPostId` là khóa tích hợp, không tạo entity hoặc FK giả | Chờ TV2 bàn giao AdoptionPost/Application để chỉ mở Conversation theo đúng trạng thái đơn; chờ TV1 bàn giao Branch để thêm `/api/admin/branches` | Chưa thể chạy integration liên module | Cần TV1/TV2 bàn giao contract/entity trước giai đoạn ghép hệ thống |
 
 ---
 
