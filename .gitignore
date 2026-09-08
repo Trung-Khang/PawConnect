@@ -74,3 +74,10 @@ application-local.yml
 # Upload / generated files
 # ==============================
 uploads/
+__pycache__/
+*.pyc
+
+# Local crawl artifacts
+/data-pipeline/data/raw/
+/chotot_*_sample.html
+/chotot_*_sample.htmlcurl.exe
