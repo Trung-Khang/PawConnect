@@ -2,9 +2,10 @@
 
 ## 1. Mục đích và phạm vi
 
-data-pipeline/data/seed/v3/ là bộ dữ liệu bootstrap duy nhất để khởi tạo một database PawConnect dùng chung cho TV1, TV2 và TV3. Mỗi thành viên phụ trách nhóm bảng riêng nhưng dùng cùng stable code, seed_key và database ID sau khi importer map dữ liệu. Không tạo database riêng hoặc seed riêng cho từng module.
-
-CSV không phải database chạy trực tiếp: importer đọc CSV, kiểm tra manifest rồi ghi vào database. Sau import, website đọc dữ liệu đang vận hành từ database. V3 là release bất biến và chỉ là dữ liệu khởi tạo có kiểm soát, không phải dữ liệu giao dịch thực tế hay dữ liệu người dùng phát sinh.
+data-pipeline/data/seed/v3/ là bộ bootstrap duy nhất để khởi tạo một database
+PawConnect chung cho TV1, TV2 và TV3. CSV được importer đọc rồi ghi vào database;
+sau import, website đọc dữ liệu vận hành từ database. V3 là release bất biến,
+không phải dữ liệu giao dịch thực tế.
 
 ## 2. Cây thư mục V3 và số lượng bản ghi
 
@@ -56,48 +57,108 @@ Importer cần import registry hoặc unique key để idempotent, không dùng 
 
 ## 5. Bàn giao cho TV1
 
-TV1 nhận Branch, Category, ServiceType, Breed, products.csv, puppy_listings.csv và manifest.json. Cần đối chiếu các bảng Branch, Category, ServiceType, Breed, Product và PuppyListing. PuppyListing là entity riêng, không gộp Product hoặc DogProfile; Product chỉ FOOD/ACCESSORY.
+TV1 phụ trách database chung và module thương mại.
 
-PuppyListing bán theo giống/số lượng. stock là số puppy còn lại; price_per_puppy_vnd là giá mỗi bé. Bán thành công phải giảm stock bằng transaction an toàn, không cho stock âm; stock bằng 0 thì status thành SOLD_OUT. Branch Manager chỉ sửa dữ liệu thuộc chi nhánh được phân quyền; Admin quản lý toàn hệ thống.
+**File CSV sử dụng**
 
-name trong products.csv, cùng listing_title và description trong puppy_listings.csv, chỉ là nội dung khởi tạo ban đầu. Sau import, Branch Manager/Admin sửa title/mô tả qua giao diện; dữ liệu mới lưu trong database và website hiển thị dữ liệu hiện tại từ database. Không cần sửa CSV hay build lại Seed V3. Seed không tự chạy lại để ghi đè nội dung đã sửa.
+- reference/branches.csv: tạo dữ liệu Branch.
+- reference/categories.csv: tạo Category cho sản phẩm.
+- reference/service_types.csv: tạo loại dịch vụ.
+- catalog/breeds.csv: tạo Breed để PuppyListing tham chiếu.
+- commerce/products.csv: tạo Product FOOD/ACCESSORY.
+- commerce/puppy_listings.csv: tạo PuppyListing bán chó theo giống, giá và stock.
 
-| Nhóm | Field |
-| --- | --- |
-| PuppyListing ổn định | seed_key; breed_code sau khi listing đã có lịch sử |
-| PuppyListing có thể sửa | listing_title, description, price_per_puppy_vnd, stock, status, image_url, health_status, care_instructions |
-| Product ổn định | seed_key; product_kind sau khi có giao dịch |
-| Product có thể sửa | name, description, price, stock, image_url, suitable_size, health_status, care_instructions |
+**Công việc**
 
-Nếu đổi breed của listing, ưu tiên tạo listing mới và đóng listing cũ để giữ lịch sử. Không viết CommandLineRunner hoặc startup hook luôn upsert field có thể sửa khi Spring Boot khởi động. Chỉ reset/reseed khi người vận hành gọi rõ ràng trong môi trường được phép.
+1. Đối chiếu CSV với Entity/schema hiện tại.
+2. Tạo hoặc cập nhật bảng Branch, Category, ServiceType, Breed, Product và PuppyListing.
+3. Viết importer đọc Seed V3 và map stable code/seed_key sang database ID.
+4. Dùng Product cho chức năng xem, thêm, sửa, xóa sản phẩm.
+5. Dùng PuppyListing cho chức năng bán puppy theo giống và chi nhánh.
+6. Khi bán thành công, giảm stock; stock bằng 0 thì chuyển SOLD_OUT.
+7. Phân quyền Branch Manager quản lý chi nhánh của mình, Admin quản lý toàn hệ thống.
+
+name, listing_title và description chỉ là nội dung khởi tạo. Sau import,
+Admin/Branch Manager sửa title, description, price, stock, status và image trong
+database; website đọc từ database, không sửa CSV hoặc build lại Seed V3. Giữ ổn
+định seed_key và breed_code; muốn đổi breed thì nên tạo listing mới và đóng
+listing cũ.
+
+**Cách báo cáo lại nhóm**
+
+- File CSV đã sử dụng.
+- Entity/bảng đã tạo hoặc đối chiếu.
+- Mapping đã thực hiện.
+- Phần chưa khớp với dataset.
+- File code đã sửa.
+- Chức năng đã hoàn thành và chức năng còn thiếu.
 
 ## 6. Bàn giao cho TV2
 
-TV2 nhận breeds.csv, ba CSV adoption, branches.csv, users.csv để hiểu khóa tham chiếu và manifest.json. DogProfile map Breed/Branch; Post map DogProfile/User; Application map Post/User. Không dùng PuppyListing làm DogProfile.
+TV2 phụ trách catalog chó và module nhận nuôi.
 
-AVAILABLE không có APPROVED. CLOSED có tối đa một APPROVED và không còn PENDING. Quản trị viên có thể sửa nội dung bài nhận nuôi trong database; không chạy lại seed để cập nhật bài. Khi website phát sinh dữ liệu mới, database là nguồn sự thật vận hành.
+**File CSV sử dụng**
+
+- catalog/breeds.csv: danh mục giống chó.
+- adoption/dog_profiles.csv: hồ sơ từng chú chó.
+- adoption/adoption_posts.csv: bài đăng nhận nuôi.
+- adoption/adoption_applications.csv: đơn đăng ký nhận nuôi.
+- fixtures/users.csv và reference/branches.csv: dùng khóa để liên kết User/Branch.
+
+**Công việc**
+
+1. Tạo hoặc đối chiếu Entity DogProfile, AdoptionPost và AdoptionApplication.
+2. Map breed_code sang Breed ID.
+3. Map created_by_user_key và applicant_user_key sang User ID.
+4. Map dog_profile_seed_key và adoption_post_seed_key sang đúng bản ghi liên quan.
+5. Làm chức năng xem/tìm kiếm hồ sơ chó và bài nhận nuôi.
+6. Làm chức năng tạo, sửa, đóng bài nhận nuôi.
+7. Làm chức năng gửi, duyệt và từ chối đơn nhận nuôi.
+8. Khi một đơn được APPROVED, đóng bài và xử lý các đơn còn lại theo contract.
+9. Không dùng PuppyListing thương mại thay cho DogProfile nhận nuôi.
+
+**Cách báo cáo lại nhóm**
+
+- File CSV đã sử dụng.
+- Entity/bảng đã tạo hoặc đối chiếu.
+- Mapping đã thực hiện.
+- Phần chưa khớp với dataset.
+- File code đã sửa.
+- Chức năng đã hoàn thành và chức năng còn thiếu.
 
 ## 7. Bàn giao cho TV3
 
-TV3 nhận roles.csv, branches.csv, users.csv, các image_url rỗng và manifest.json. TV3 map User–Role, map BRANCH_MANAGER–Branch, và cung cấp User ID mapping cho importer chung/TV1/TV2 khi cần.
+TV3 phụ trách User, Role, bảo mật và Cloudinary.
 
-Credential phải được tạo/hash runtime từ cấu hình local không commit. Không import credential placeholder. 
+**File CSV sử dụng**
 
-Cloudinary tích hợp theo schema nhóm duyệt; không ghi secret vào CSV/Git, không tạo URL giả. Khi upload ảnh thật, lưu secure URL/public ID vào database, không sửa Seed V3.
+- reference/roles.csv: tạo Role.
+- reference/branches.csv: liên kết Branch Manager với Branch.
+- fixtures/users.csv: tạo các User bootstrap.
+- Các cột image_url đang trống trong DogProfile, Product và PuppyListing.
+
+**Công việc**
+
+1. Tạo hoặc đối chiếu User, Role và quan hệ User–Branch.
+2. Map role_code và branch_code sang database ID.
+3. Tạo và hash credential tại runtime; không lấy password từ CSV.
+4. Cung cấp User ID mapping để TV1 và TV2 liên kết dữ liệu.
+5. Tích hợp Cloudinary cho ảnh User, DogProfile, AdoptionPost, Product và PuppyListing.
+6. Khi upload ảnh, lưu secure URL và public ID vào database.
+7. Khi thay hoặc xóa ảnh, cập nhật Cloudinary và database, không sửa Seed V3.
+8. Không đưa Cloudinary secret, token hoặc API key vào CSV/Git.
+
+**Cách báo cáo lại nhóm**
+
+- File CSV đã sử dụng.
+- Entity/bảng đã tạo hoặc đối chiếu.
+- Mapping đã thực hiện.
+- Phần chưa khớp với dataset.
+- File code đã sửa.
+- Chức năng đã hoàn thành và chức năng còn thiếu.
 
 ## 8. Vận hành sau import
 
-- Seed V3: bootstrap bất biến.
-- Database: nguồn dữ liệu đang vận hành.
-- Website/Admin UI: nơi người dùng được phân quyền cập nhật dữ liệu.
-
-Seed không đồng bộ hai chiều với database; sửa DB không đổi CSV. Không sửa CSV V3 sau phát hành. Muốn đổi bootstrap cho môi trường mới phải tạo release kế tiếp. Importer không ghi đè field có thể sửa của record đã tồn tại; reset có chủ đích cần backup hoặc transaction.
-
-## 9. Checklist xác nhận
-
-| TV1 | TV2 | TV3 |
-| --- | --- | --- |
-| Schema/enum Product và PuppyListing tương thích | Schema/enum adoption tương thích | Schema User/Role/Branch tương thích |
-| Mapping code/key và thứ tự import đúng | FK/status/count đúng | Credential runtime, không secret |
-| Import idempotent, không overwrite DB | Không lẫn commerce/adoption | Cloudinary cập nhật DB, không sửa seed |
-| Ghi điểm chưa khớp trước khi đổi contract | Ghi điểm chưa khớp trước khi đổi contract | Ghi điểm chưa khớp trước khi đổi contract |
+Seed V3 là bootstrap bất biến; database là nguồn dữ liệu vận hành; Website/Admin
+UI là nơi dữ liệu được cập nhật. Seed không đồng bộ hai chiều với database.
+Không sửa CSV V3 sau phát hành; muốn đổi bootstrap phải tạo release kế tiếp.
