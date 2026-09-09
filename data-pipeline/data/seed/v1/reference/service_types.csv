@@ -1,4 +1,0 @@
-seed_key,service_type_code,name,duration_minutes,price
-service_spa,SERVICE_SPA,Spa chó,60,150000
-service_checkup,SERVICE_CHECKUP,Khám bệnh,45,200000
-service_vaccination,SERVICE_VACCINATION,Tiêm phòng,30,250000
