@@ -79,5 +79,8 @@ __pycache__/
 
 # Local crawl artifacts
 /data-pipeline/data/raw/
+/data-pipeline/data/candidate/
+/data-pipeline/data/generated/
+**/__pycache__/
 /chotot_*_sample.html
 /chotot_*_sample.htmlcurl.exe

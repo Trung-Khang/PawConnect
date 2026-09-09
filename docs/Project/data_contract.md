@@ -546,17 +546,15 @@ chi duoc them sau khi TV1 xac nhan mapping entity/DTO.
 - Chua duoc sua entity/backend, SQL/migration, CSV curated/generated hoac import DB.
 - Contract nay chua approved cho production hoac DB import.
 
-## 13. Seed Release v1
+## 13. Seed Release Policy
 
 `data-pipeline/data/curated/` la master data chinh thuc. Seed Release la snapshot
-synthetic bat bien cua curated master va build output da validation, dung cho `dev`,
+bat bien cua curated master va build output da validation, dung cho `dev`,
 `test`, `demo` va bootstrap DB sau khi importer duoc review.
 
-- Release v1 dung `release_id=pawconnect-seed-v1`, random seed `20260908` va trang thai
-  `APPROVED_FOR_DEV_TEST_DEMO`.
-- `data-pipeline/data/seed/v1/` la importer input; `data-pipeline/data/generated/` la
-  workspace build output, khong phai importer input.
-- Release da phat hanh khong duoc ghi de. Thay doi du lieu can release moi (`v2`),
+- `data-pipeline/data/seed/v3/` la importer input duy nhat, dung random seed
+  `20260908` va trang thai `APPROVED_FOR_DEV_TEST_DEMO`.
+- Release da phat hanh khong duoc ghi de. Thay doi du lieu can release moi voi
   manifest moi va validation moi.
 - Raw/candidate commercial chi la evidence/observation. Khong import truc tiep vao DB
   va khong dua raw URL, listing title, contact, anh crawl hoac secret vao release.
@@ -566,3 +564,78 @@ synthetic bat bien cua curated master va build output da validation, dung cho `d
   cho seed/generator.
 - Seed Product v0.2 van chua san sang DB import cho den khi TV1/TV3 hoan thanh mapping
   Entity/DTO, enum, migration va backward compatibility.
+
+## 14. Final Seed v3 - Commerce Bootstrap
+
+Trang thai: **APPROVED FOR DEV/TEST/DEMO**. Seed `data-pipeline/data/seed/v3/`
+la bootstrap chung duy nhat khi importer duoc ban giao; raw, candidate va release
+cu khong duoc import truc tiep vao DB.
+
+### 14.1. Catalog va commercial price rule
+
+- `breeds.csv` la adult breed reference: `default_size` va weight range chi mo ta
+  kich co, can nang truong thanh. Catalog hien co 15 breed, bao gom
+  `BREED_SAMOYED` va `BREED_PHU_QUOC`.
+- `data-pipeline/data/curated/commerce/puppy_price_rules.csv` la curated rule
+  duoc review cho gia ban puppy. Builder v3 chi doc curated catalog, reference,
+  fixture va price rule nay; khong doc `raw/` hoac `candidate/`.
+- `BREED_HUSKY_SIBERIAN` la stable-code chinh thuc cho nhan hien thi Husky.
+
+### 14.2. Puppy listing
+
+Puppy sale la commerce listing theo lo, khong phai `DogProfile` nhan nuoi va
+khong phai `Product` FOOD/ACCESSORY. Header chinh thuc:
+
+```text
+seed_key,listing_title,description,branch_code,category_code,breed_code,breed_type,life_stage,age_months,current_weight_kg,current_size,expected_adult_size,price_per_puppy_vnd,stock,status,image_url,health_status,care_instructions
+```
+
+- `breed_type`: `PUREBRED`, `MIXED`, `UNKNOWN`; v3 listing curated dung
+  `PUREBRED`.
+- `life_stage`: `PUPPY`, `ADULT`, `UNKNOWN`; v3 listing curated dung `PUPPY`.
+- `current_size` va `expected_adult_size`: `SMALL`, `MEDIUM`, `LARGE`.
+- `stock` la integer tu 1 den 20; `price_per_puppy_vnd` la VND integer duong
+  cho mot be. `AVAILABLE` chi hop le khi `stock > 0`; enum `status` la
+  `AVAILABLE`, `SOLD_OUT`.
+- 14 breed commercial bat buoc la `BREED_HMONG_COC_DUOI`, `BREED_POMERANIAN`,
+  `BREED_CORGI`, `BREED_SHIBA_INU`, `BREED_GOLDEN_RETRIEVER`,
+  `BREED_LABRADOR_RETRIEVER`, `BREED_HUSKY_SIBERIAN`, `BREED_SAMOYED`,
+  `BREED_ALASKAN_MALAMUTE`, `BREED_BEAGLE`, `BREED_FRENCH_BULLDOG`,
+  `BREED_POODLE`, `BREED_CHIHUAHUA`, `BREED_PUG`. `BREED_PHU_QUOC` van la
+  catalog reference nhung khong co puppy listing v3.
+- `current_weight_kg` la can nang tai thoi diem ghi nhan. No duoc sinh tu
+  progress phat trien va phai lon hon 0, nho hon adult target; khong validate
+  bang adult weight range nhu mot ca the da truong thanh.
+
+### 14.3. Product v3 va UI text
+
+- `seed/v3/commerce/products.csv` chi chua `FOOD` va `ACCESSORY`. Tat ca
+  puppy/breed fields cua hai loai nay phai rong; `is_breeding_dog=false`.
+- `product_kind` cua profile Product generated: `PUPPY`, `FOOD`, `ACCESSORY`.
+  `PUPPY` duoc ban giao qua `puppy_listings.csv`; `products.csv` final khong
+  duoc chua `PUPPY`.
+- Cac field hien thi UI nhu name, title, description va message trong seed v3
+  khong duoc chua cac tu `demo`, `synthetic`, `generated` (khong phan biet hoa
+  thuong). Provenance chi nam trong manifest/report, khong nam trong UI data.
+
+### 14.4. Handoff cho TV1/TV3
+
+- TV1 can tao mapping bang rieng cho puppy listing, dung header o 14.2 va enum
+  `AVAILABLE|SOLD_OUT`, `PUREBRED|MIXED|UNKNOWN`, `PUPPY|ADULT|UNKNOWN`,
+  `SMALL|MEDIUM|LARGE`; khong map puppy listing vao DogProfile adoption.
+- TV1 giu Product FOOD/ACCESSORY tu `commerce/products.csv` va khong doi stable
+  code trong seed.
+- TV3 can bao dam enum, migration va backward compatibility khi importer DB
+  duoc tich hop. Conflict voi code phai bao lai TV2 truoc khi doi contract hay
+  stable code.
+
+### 14.5. Fixture va adoption bootstrap v3
+
+- `seed/v3/fixtures/users.csv` khong co password, password hash, token, secret
+  hoac password placeholder. Importer tao credential phat trien tai runtime tu
+  bien moi truong hay cau hinh local khong commit; `credential_mode=RUNTIME_ENV`
+  chi la huong dan importer, khong phai credential.
+- Bootstrap v3 co 30 `DogProfile`, 30 `AdoptionPost` va 36
+  `AdoptionApplication`: moi breed catalog co hai ho so. Sau post CLOSED co mot
+  APPROVED va mot REJECTED; post AVAILABLE co mot PENDING. DogProfile adoption
+  van tach biet hoan toan voi PuppyListing thuong mai.

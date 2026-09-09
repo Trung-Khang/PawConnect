@@ -1,13 +1,14 @@
 # PawConnect Data Pipeline
 
-Thu muc nay chua du lieu tham chieu chung cho cac moi truong `dev`, `test` va `demo` cua PawConnect.
+Curated data trong `data/curated/` la master data. Bootstrap chinh thuc duy nhat la `data/seed/v3/`, dung chung cho TV1, TV2 va TV3 tren mot database PawConnect dev/test/demo.
 
-Bo seed hien tai chi gom cac file CSV curated cho Role, Branch, Category va ServiceType. Cac file nay khong dung ID tu tang cua database; module import sau nay phai map bang stable code nhu `role_code`, `branch_code`, `category_code` va `service_type_code`.
+Kiem tra release:
 
-Chu so huu du lieu:
+    python data-pipeline/src/build_seed_release.py --verify v3
+    python data-pipeline/src/build_seed_release.py --self-test-v3
 
-- Role do TV3 xac nhan va quan ly.
-- Branch, Category va ServiceType do TV1 xac nhan va quan ly.
-- TV2 chi duy tri pipeline, dinh dang ban giao va kiem tra chat luong du lieu.
+Importer doc theo thu tu `reference -> catalog -> users -> adoption -> commerce` va map bang stable code/seed key. Khong import raw crawl, candidate hay workspace.
 
-Khong import du lieu nay vao production khi chua co migration hoac quy trinh import duoc review. Seed CSV chi duoc dung cho phat trien, kiem thu va demo.
+Chu so huu: TV3 xac nhan Role/User, TV1 xac nhan Branch/Category/ServiceType va commerce mapping, TV2 duy tri catalog, adoption, release va validation.
+
+Khong sua truc tiep release v3. Sau khi review curated/rule, tao release ke tiep va cap nhat handoff sau khi verify.

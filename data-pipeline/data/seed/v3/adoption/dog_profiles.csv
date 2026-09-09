@@ -1,0 +1,31 @@
+seed_key,name,breed,size,age_months,weight_kg,gender,vaccination_status,image_url,description,branch_code
+dog_poodle_1,Mây,Poodle,SMALL,20,7.1,MALE,FULLY_VACCINATED,,"Poodle thân thiện, phù hợp tìm mái ấm mới.",BR_HCM_01
+dog_poodle_2,Bắp,Poodle,SMALL,21,6.4,FEMALE,PARTIALLY_VACCINATED,,"Poodle thân thiện, phù hợp tìm mái ấm mới.",BR_HN_01
+dog_chihuahua_1,Nâu,Chihuahua,SMALL,21,2.8,MALE,NOT_VACCINATED,,"Chihuahua thân thiện, phù hợp tìm mái ấm mới.",BR_DN_01
+dog_chihuahua_2,Sữa,Chihuahua,SMALL,12,1.1,FEMALE,FULLY_VACCINATED,,"Chihuahua thân thiện, phù hợp tìm mái ấm mới.",BR_HCM_01
+dog_pug_1,Mít,Pug,SMALL,12,8.7,MALE,PARTIALLY_VACCINATED,,"Pug thân thiện, phù hợp tìm mái ấm mới.",BR_HN_01
+dog_pug_2,Đậu,Pug,SMALL,12,6.4,FEMALE,NOT_VACCINATED,,"Pug thân thiện, phù hợp tìm mái ấm mới.",BR_DN_01
+dog_corgi_1,Mơ,Corgi,MEDIUM,14,12.7,MALE,FULLY_VACCINATED,,"Corgi thân thiện, phù hợp tìm mái ấm mới.",BR_HCM_01
+dog_corgi_2,Bông,Corgi,MEDIUM,16,10.4,FEMALE,PARTIALLY_VACCINATED,,"Corgi thân thiện, phù hợp tìm mái ấm mới.",BR_HN_01
+dog_shiba_inu_1,Lúa,Shiba Inu,MEDIUM,14,10.6,MALE,NOT_VACCINATED,,"Shiba Inu thân thiện, phù hợp tìm mái ấm mới.",BR_DN_01
+dog_shiba_inu_2,Cốm,Shiba Inu,MEDIUM,14,10.6,FEMALE,FULLY_VACCINATED,,"Shiba Inu thân thiện, phù hợp tìm mái ấm mới.",BR_HCM_01
+dog_beagle_1,Tép,Beagle,MEDIUM,17,10.3,MALE,PARTIALLY_VACCINATED,,"Beagle thân thiện, phù hợp tìm mái ấm mới.",BR_HN_01
+dog_beagle_2,Sao,Beagle,MEDIUM,12,11.2,FEMALE,NOT_VACCINATED,,"Beagle thân thiện, phù hợp tìm mái ấm mới.",BR_DN_01
+dog_phu_quoc_1,Nếp,Chó Phú Quốc,MEDIUM,23,16.6,MALE,FULLY_VACCINATED,,"Chó Phú Quốc thân thiện, phù hợp tìm mái ấm mới.",BR_HCM_01
+dog_phu_quoc_2,Mộc,Chó Phú Quốc,MEDIUM,21,17.5,FEMALE,PARTIALLY_VACCINATED,,"Chó Phú Quốc thân thiện, phù hợp tìm mái ấm mới.",BR_HN_01
+dog_french_bulldog_1,Na,French Bulldog,SMALL,14,9.1,MALE,NOT_VACCINATED,,"French Bulldog thân thiện, phù hợp tìm mái ấm mới.",BR_DN_01
+dog_french_bulldog_2,Bơ,French Bulldog,SMALL,24,10.3,FEMALE,FULLY_VACCINATED,,"French Bulldog thân thiện, phù hợp tìm mái ấm mới.",BR_HCM_01
+dog_husky_siberian_1,Kem,Husky Siberian,LARGE,27,26.5,MALE,PARTIALLY_VACCINATED,,"Husky Siberian thân thiện, phù hợp tìm mái ấm mới.",BR_HN_01
+dog_husky_siberian_2,Sương,Husky Siberian,LARGE,28,23.3,FEMALE,NOT_VACCINATED,,"Husky Siberian thân thiện, phù hợp tìm mái ấm mới.",BR_DN_01
+dog_alaskan_malamute_1,Mầm,Alaskan Malamute,LARGE,19,35.9,MALE,FULLY_VACCINATED,,"Alaskan Malamute thân thiện, phù hợp tìm mái ấm mới.",BR_HCM_01
+dog_alaskan_malamute_2,Gạo,Alaskan Malamute,LARGE,24,41.4,FEMALE,PARTIALLY_VACCINATED,,"Alaskan Malamute thân thiện, phù hợp tìm mái ấm mới.",BR_HN_01
+dog_golden_retriever_1,Nắng,Golden Retriever,LARGE,29,28.4,MALE,NOT_VACCINATED,,"Golden Retriever thân thiện, phù hợp tìm mái ấm mới.",BR_DN_01
+dog_golden_retriever_2,Sỏi,Golden Retriever,LARGE,27,25.2,FEMALE,FULLY_VACCINATED,,"Golden Retriever thân thiện, phù hợp tìm mái ấm mới.",BR_HCM_01
+dog_labrador_retriever_1,Linh,Labrador Retriever,LARGE,30,34.4,MALE,PARTIALLY_VACCINATED,,"Labrador Retriever thân thiện, phù hợp tìm mái ấm mới.",BR_HN_01
+dog_labrador_retriever_2,Mèo,Labrador Retriever,LARGE,22,26.2,FEMALE,NOT_VACCINATED,,"Labrador Retriever thân thiện, phù hợp tìm mái ấm mới.",BR_DN_01
+dog_pomeranian_1,Vừng,Pomeranian,SMALL,17,2.9,MALE,FULLY_VACCINATED,,"Pomeranian thân thiện, phù hợp tìm mái ấm mới.",BR_HCM_01
+dog_pomeranian_2,Bắp Nhỏ,Pomeranian,SMALL,16,1.9,FEMALE,PARTIALLY_VACCINATED,,"Pomeranian thân thiện, phù hợp tìm mái ấm mới.",BR_HN_01
+dog_hmong_coc_duoi_1,Mây Nhỏ,Chó H'Mông cộc đuôi,MEDIUM,15,17.7,MALE,NOT_VACCINATED,,"Chó H'Mông cộc đuôi thân thiện, phù hợp tìm mái ấm mới.",BR_DN_01
+dog_hmong_coc_duoi_2,Sữa Nhỏ,Chó H'Mông cộc đuôi,MEDIUM,18,22.8,FEMALE,FULLY_VACCINATED,,"Chó H'Mông cộc đuôi thân thiện, phù hợp tìm mái ấm mới.",BR_HCM_01
+dog_samoyed_1,Nâu Nhỏ,Samoyed,LARGE,28,18.0,MALE,PARTIALLY_VACCINATED,,"Samoyed thân thiện, phù hợp tìm mái ấm mới.",BR_HN_01
+dog_samoyed_2,Mơ Nhỏ,Samoyed,LARGE,29,22.2,FEMALE,NOT_VACCINATED,,"Samoyed thân thiện, phù hợp tìm mái ấm mới.",BR_DN_01

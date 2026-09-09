@@ -1,136 +1,181 @@
-# PawConnect Data Pipeline Workflow
+# Runbook Data Pipeline PawConnect
 
-## Mục lục
+## 1. Tổng quan kiến trúc
 
-1. Mục tiêu và giới hạn
-2. Kiến trúc pipeline
-3. Trạng thái dữ liệu hiện tại
-4. Nguồn và provenance
-5. Nghiệm thu
-6. Vận hành tương lai
-7. Quick Start / Quick Update Dataset
+Luồng dữ liệu là: raw -> candidate/review -> curated -> deterministic build ->
+seed release -> DB importer.
 
-## Mục tiêu và giới hạn
-
-Pipeline cung cấp dữ liệu tái lập cho `dev/test/demo`, không phải dữ liệu người dùng thật. Pipeline hiện không triển khai DB import, backend, migration hay Cloudinary. Curated là master; generated là workspace build; `seed/vN` là release immutable.
-
-Raw crawler là local artifact bị gitignore. Không commit raw, sample HTML, PII, secret, `__pycache__` hoặc `.pyc`.
-
-## Kiến trúc pipeline
-
-```text
-Curated master -> Seed release immutable -> Importer DB tương lai
-
-Raw crawl -> Cleaner/Dedup -> Candidate/price bands -> review
-         -> curated/rule được duyệt -> Seed release vN+1
-
-Generated -> workspace build -> snapshot vào release sau validation
-```
-
-Cleaner không tự thêm dữ liệu vào generator/release. Muốn cập nhật release phải review, cập nhật curated hoặc rule, tạo `vN+1`, verify manifest/checksum rồi cập nhật handoff. Không ghi đè v1/v2.
-
-## Trạng thái dữ liệu hiện tại
-
-| Hạng mục | Input | Output/hiện trạng | Kết quả |
-| --- | --- | --- | --- |
-| Data Foundation | contract, reference CSV | Role/Branch/Category/ServiceType/catalog | Curated master sẵn sàng. |
-| Adoption generator | curated catalog/branch/user | generated adoption CSV | 28 DogProfile, 8 post, 12 application; PASS. |
-| Breed crawler | Wikipedia allowlist | raw breed batch | Raw/provenance demo, không import trực tiếp. |
-| Commercial crawler | configured sources | raw observation | Chợ Tốt/Pet Mart observation, không import trực tiếp. |
-| Cleaner + Dedup | raw commercial | candidate + price band | 73 Product candidate, 3 puppy market price band. |
-| Product generator | catalog + price-band rule | generated Product CSV | 27 Product; PASS. |
-| Contract v0.2 | shared decision | commercial puppy profile | DEV/TEST/DEMO only; chưa DB-ready. |
-| Seed v1 | 12-breed snapshot | baseline immutable | 24 dog, 24 post, 32 application, 27 Product. |
-| Seed v2 | curated catalog + provenance | default bootstrap | 14 breed, 28 dog, 28 post, 36 application, 27 Product. |
-
-Checksum/count chính thức nằm trong `data-pipeline/data/seed/v2/manifest.json`; không hardcode hash trong tài liệu này.
-
-## Nguồn và provenance
-
-| Nguồn | Vai trò | Giới hạn |
+| Lớp | Mục đích | Git |
 | --- | --- | --- |
-| Wikipedia English allowlist | Breed raw demo | Raw/reference review, allowlist và attribution. |
-| Chợ Tốt | Public market observation | Không handoff listing, contact, chat, ảnh hoặc URL nguồn. |
-| Pet Mart | Public product observation | Chỉ fact sạch; không ảnh/mô tả dài/review. |
-| AKC Pomeranian | Adult size/weight reference | Provenance trong `breed_references.csv`. |
-| VKA H'Mông cộc đuôi | National breed standard | Provenance trong `breed_references.csv`. |
-| Vietnam-Russia Tropical Center | H'Mông maturity/weight research | Provenance trong `breed_references.csv`. |
+| Raw | Quan sát công khai có kiểm soát và evidence ban đầu. | Local, ignored; không import DB. |
+| Candidate/review | Normalize, deduplicate, quarantine, price band để reviewer xét. | Không là bootstrap hay import DB. |
+| Curated | Reference/catalog/rule đã được duyệt, có stable code và provenance. | Track. |
+| Seed release | Snapshot bootstrap bất biến từ curated/rule. | Track; V3 là release hiện hành. |
+| Database | Dữ liệu vận hành sau import. | Không phải CSV pipeline. |
 
-Robots permission không tự là quyền tái sử dụng nội dung. Không bypass Terms/robots/login/CAPTCHA, không lưu PII/ảnh.
+Candidate và workspace cũ đã bị loại khỏi Git. Công cụ tạo output tạm phải dùng
+thư mục ignored hoặc thư mục tạm. Raw/candidate/generated không được import DB.
 
-## Nghiệm thu
+## 2. Lịch sử có bằng chứng
 
-Đã PASS: `py_compile`; generator validation/self-test; cleaner dry-run/self-test; release build/verify/self-test; immutable v1 check; `git diff --check`.
+Lịch sử dưới đây lấy từ git log và các commit pipeline: 3fb6bec, 5aadedf,
+ba1f48a, db338d7, 4bae80c, 4fa0b7e, 0cdd32f và 855b655.
 
-Chưa triển khai: importer idempotent, DB schema/migration, Product v0.2 Entity/DTO mapping, credential runtime seed, backend mapping và Cloudinary upload.
+### Giai đoạn 1A — Data Foundation
 
-## Vận hành tương lai
+Commit 3fb6bec tạo curated foundation: data contract, reference data, catalog,
+User/Adoption, stable code và seed_key.
 
-### Crawl breed reference
+### Giai đoạn 1B — Pipeline Core
 
-```powershell
-python data-pipeline/src/crawlers/crawl_breeds.py --dry-run
-python data-pipeline/src/crawlers/crawl_breeds.py --self-test
-python data-pipeline/src/crawlers/crawl_breeds.py --run-id YYYYMMDDTHHMMSSZ
-```
+Commit ba1f48a bổ sung commercial cleaning, price band, deduplication và báo cáo
+quarantine. Candidate là đầu vào review, không phải dữ liệu nghiệp vụ.
 
-Đọc `data-pipeline/config/sources.json` và allowlist trước. Review manifest, request log, checksum/provenance; raw không commit.
+### Giai đoạn 2A — Controlled Crawling và Evidence
 
-### Crawl commercial
+Commit db338d7 bổ sung controlled crawl pipeline. Cấu hình Wikipedia dùng
+allowlist; crawler commercial dùng source đã cấu hình. Raw chỉ lưu local, không
+lưu PII/contact/ảnh. Permission, robots, Terms, rate limit và giới hạn request
+được source/config kiểm soát.
 
-Network bị khóa mặc định. Chỉ chạy source được config/review:
+### Giai đoạn 2B — Generation và release thử nghiệm
 
-```powershell
-python data-pipeline/src/crawlers/crawl_commercial.py --source "Chợ Tốt" --allow-network
-python data-pipeline/src/crawlers/crawl_commercial.py --source "Chợ Tốt (cho-giong)" --allow-network
-python data-pipeline/src/crawlers/crawl_commercial.py --source "Pet Mart" --allow-network
-```
+Commit 5aadedf tạo adoption generator; 4bae80c tạo product workspace; 4fa0b7e
+tạo versioned release và catalog. Các snapshot thử nghiệm từng trộn Puppy/Product,
+có text nhãn nội bộ và trùng snapshot; chúng không còn là bootstrap cuối. Hai
+generator thử nghiệm đã obsolete và được loại ở commit 855b655.
 
-Có thể smoke test bằng `--max-pages 2`. Không lấy chat/contact/phone/email/address/image và không bypass restrictions.
+### Giai đoạn 3 — Final Seed V3
 
-### Cleaner và review candidate
+Commit 0cdd32f thêm Samoyed, đưa catalog lên 15 breed, chốt allowlist commerce
+14 breed, tách PuppyListing khỏi Product, để Product chỉ FOOD/ACCESSORY, để
+image_url rỗng, dùng credential runtime, tạo manifest/provenance/validation và
+bootstrap đầy đủ cho ba thành viên. Commit 855b655 dọn release/workspace cũ.
 
-```powershell
-python data-pipeline/src/clean_commercial_observations.py --dry-run
-python data-pipeline/src/clean_commercial_observations.py --self-test
-python data-pipeline/src/clean_commercial_observations.py
-```
+## 3. Nguồn và provenance
 
-Đọc quarantine/validation report. Candidate/price band không phải DB input; review mapping/evidence trước khi sửa curated/rule.
+| Nguồn | Mục đích | Vào Seed | Giới hạn |
+| --- | --- | --- | --- |
+| Wikipedia English allowlist trong config/sources.json | Breed raw reference cho Poodle, Chihuahua, Pug. | Chỉ evidence sau review. | Chỉ đường dẫn allowlist, không media; giữ attribution. |
+| American Kennel Club trong breed_references.csv | Adult metadata Pomeranian/Samoyed. | Qua curated provenance/range đã duyệt. | Không sao chép mô tả nguồn làm UI. |
+| Vietnam Kennel Association và Vietnam-Russia Tropical Center | Adult/maturity H'Mông cộc đuôi. | Qua curated provenance/range đã duyệt. | Dùng evidence, không hiển thị nội dung nguồn trực tiếp. |
+| Chợ Tốt cấu hình commercial | Quan sát puppy và khoảng giá khi được phép. | Không trực tiếp; price rule curated sau review. | Không lấy contact/chat/ảnh; dừng khi không được phép. |
+| Pet Mart cấu hình commercial | Quan sát catalog sản phẩm công khai. | Không trực tiếp. | Không lấy ảnh/mô tả dài/review. |
 
-### Sinh workspace data
+Ngày retrieved, URL và evidence status nằm trong breed_references.csv hoặc raw
+batch khi có. Nếu không có observation hợp lệ, commerce dùng rule curated đã
+review để tạo dữ liệu có kiểm soát; không được gọi đó là dữ liệu crawl thật.
 
-```powershell
-python data-pipeline/src/generate_adoption_demo.py --seed 20260908
-python data-pipeline/src/generate_adoption_demo.py --self-test-invalid
-python data-pipeline/src/generate_product_demo.py --seed 20260908
-python data-pipeline/src/generate_product_demo.py --self-test
-```
+## 4. Thống kê qua các mốc
 
-Kiểm tra report/checksum. Product generator không nhận raw listing làm input trực tiếp.
+| Mốc | Breed | DogProfile | AdoptionPost | AdoptionApplication | PuppyListing | Product | Trạng thái |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| Curated foundation | 12 | 5 | 3 | 4 | Không đủ bằng chứng | Không đủ bằng chứng | Curated ban đầu. |
+| Workspace thử nghiệm | 14 | 28 | 8 | 12 | Không đủ bằng chứng | 27 | Lịch sử, không bootstrap. |
+| Seed V1 | 12 | 24 | 24 | 32 | Không đủ bằng chứng | 27 | Lịch sử, đã dọn. |
+| Seed V2 | 14 | 28 | 28 | 36 | Không đủ bằng chứng | 27 | Lịch sử, đã dọn. |
+| Seed V3 | 15 | 30 | 30 | 36 | 14 | 18 | Bootstrap hiện hành. |
 
-### Tạo release mới
+V3 còn có Role 3, Branch 3, Category 4, ServiceType 3, BreedReference 16 và
+User 6 theo manifest.json.
 
-Builder hiện hỗ trợ `v1` và `v2`. Không ghi đè release; để phát hành v3 phải mở rộng explicit allowlist trong builder trước.
+## 5. Quy trình tạo Final Seed V3
 
-```powershell
-python data-pipeline/src/build_seed_release.py --release v2 --seed 20260908
-python data-pipeline/src/build_seed_release.py --verify v2
-python data-pipeline/src/build_seed_release.py --self-test
-```
+1. Chuẩn hóa contract và stable code.
+2. Thu thập evidence; crawler là tự động hóa có kiểm soát.
+3. Lưu raw local; cleaner normalize/deduplicate/quarantine tự động.
+4. Reviewer đánh giá evidence, price rule và provenance thủ công.
+5. Chuyển rule đã duyệt vào curated.
+6. Builder deterministic tạo V3 từ curated/rule.
+7. Validator kiểm tra FK, enum, count, checksum, UI text và image URL.
+8. Tạo manifest/provenance/report, verify/self-test, đóng release và handoff.
 
-Review `manifest.json`, validation report, count/checksum, rồi mới đổi default bootstrap/handoff.
+## 6. Kết quả nghiệm thu V3
 
-### Checklist commit
+- Catalog 15 breed; PuppyListing đúng allowlist 14 breed.
+- BREED_PHU_QUOC không có PuppyListing; Husky map BREED_HUSKY_SIBERIAN.
+- Product chỉ FOOD/ACCESSORY.
+- Recursive banned-word, placeholder image, security, FK, enum, count, header,
+  checksum và deterministic verify đều PASS.
+- image_url rỗng, chờ Cloudinary; V3 độc lập với raw, candidate, workspace và
+  release lịch sử.
 
-- Stage code/config/report/curated/seed đã review.
-- Không stage raw, sample HTML, PII, secret, pycache.
-- Chạy `git diff --check`, `git status --short`, sau đó commit/push trên branch TV2.
+## 7. Hướng dẫn bảo trì
 
-## Quick Start / Quick Update Dataset
+### Bước 1: Chuẩn bị
 
-**Không mạng:** đọc contract/manifest, chạy generator self-test, cleaner dry-run/self-test, release verify.
+Làm việc từ project root với Python đang được hệ thống nhận diện. Build/verify
+local không cần credential. Crawler network chỉ chạy khi source/permission đã
+được review.
 
-**Có mạng:** chỉ crawl với `--allow-network` sau khi source, Terms, robots và scope được review.
+### Bước 2: Breed crawler
 
-**Cập nhật data:** backup/review curated -> chạy generator -> review report -> tạo release version mới -> verify/self-test -> cập nhật `docs/Project/data_handoff.md`. Không thay đổi release cũ.
+    python data-pipeline/src/crawlers/crawl_breeds.py --dry-run
+    python data-pipeline/src/crawlers/crawl_breeds.py --self-test
+    python data-pipeline/src/crawlers/crawl_breeds.py --run-id YYYYMMDDTHHMMSSZ
+
+Output là raw batch; review manifest/request log/evidence trước khi cập nhật
+curated. Không đưa raw trực tiếp vào Seed.
+
+### Bước 3: Commercial crawler
+
+    python data-pipeline/src/crawlers/crawl_commercial.py --source "Chợ Tốt" --max-pages 2 --allow-network
+    python data-pipeline/src/crawlers/crawl_commercial.py --source "Chợ Tốt (cho-giong)" --max-pages 2 --allow-network
+    python data-pipeline/src/crawlers/crawl_commercial.py --source "Pet Mart" --max-pages 2 --allow-network
+
+Chỉ dùng source allowlist trong config; giữ rate limit, không bypass chặn truy
+cập. Nếu nguồn chặn hoặc không cho phép, dừng và không đưa dữ liệu đó vào curated.
+
+### Bước 4: Cleaner
+
+    python data-pipeline/src/clean_commercial_observations.py --dry-run
+    python data-pipeline/src/clean_commercial_observations.py --self-test
+    python data-pipeline/src/clean_commercial_observations.py
+
+Cleaner normalize, deduplicate và quarantine; xem report lỗi/quarantine. Output
+không tự động trở thành curated.
+
+### Bước 5: Review và curated
+
+Thêm breed bằng stable breed_code, adult size/weight/maturity vào breeds.csv và
+provenance vào breed_references.csv. Cập nhật puppy_price_rules.csv với đơn vị
+VND, tuổi và min/default/max đã review. Không thêm breed vào allowlist commerce
+V3 nếu chưa được nhóm duyệt; allowlist hiện tại là 14 breed.
+
+### Bước 6: Dữ liệu adoption và commerce
+
+Hai generator cũ đã bị xóa. Builder V3 hiện tạo 30 DogProfile/30 Post/36
+Application, 14 PuppyListing và 18 Product theo rule cố định trong
+build_seed_v3.py. Muốn tăng số lượng hoặc thay rule phải phát triển/review
+builder release mới và curated input; không sửa trực tiếp seed/v3. Generator độc
+lập cho release sau là đề xuất chưa triển khai.
+
+### Bước 7: Release kế tiếp
+
+Không ghi đè V3. CLI hiện chỉ hỗ trợ release V3; chưa có lệnh V4. Cần phát triển
+builder/release folder mới, cập nhật release ID, manifest, provenance và
+validation trước khi build release kế tiếp.
+
+### Bước 8: Verify
+
+    python -m py_compile data-pipeline/src/build_seed_release.py data-pipeline/src/build_seed_v3.py
+    python data-pipeline/src/build_seed_release.py --verify v3
+    python data-pipeline/src/build_seed_release.py --self-test-v3
+    git diff --check
+    git status --short
+
+Kiểm tra thêm banned word, placeholder URL, secret, duplicate stable key, FK,
+enum, count, checksum và deterministic output trước khi bàn giao.
+
+### Bước 9: Bàn giao team
+
+Cập nhật data_contract.md, data_handoff.md, manifest/provenance/report; TV1,
+TV2, TV3 xác nhận mapping. Chỉ commit release mới khi toàn bộ validation PASS.
+
+## 8. Không được làm
+
+- Không chạy crawler mạng trong lượt viết tài liệu.
+- Không sửa hoặc tái tạo Seed V3.
+- Không sửa curated CSV, phục hồi release/workspace lịch sử hoặc tạo generator giả.
+- Không đưa secret hoặc dữ liệu cá nhân thật vào tài liệu.
+- Không commit/push trong lượt viết tài liệu.

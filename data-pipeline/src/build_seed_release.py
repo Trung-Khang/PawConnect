@@ -15,6 +15,9 @@ from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
 
 ROOT = Path(__file__).resolve().parents[2]
 PIPELINE = ROOT / "data-pipeline"
@@ -22,7 +25,7 @@ CURATED = PIPELINE / "data" / "curated"
 GENERATED = PIPELINE / "data" / "generated"
 SEEDS = PIPELINE / "data" / "seed"
 SEED = 20260908
-SUPPORTED_RELEASES = ("v1", "v2")
+SUPPORTED_RELEASES = ("v3",)
 UTF8 = "utf-8"
 
 DOG_HEADER = ["seed_key", "name", "breed", "size", "age_months", "weight_kg", "gender", "vaccination_status", "image_url", "description", "branch_code"]
@@ -412,10 +415,29 @@ def main() -> int:
     parser.add_argument("--seed", type=int, default=SEED)
     parser.add_argument("--verify", choices=SUPPORTED_RELEASES)
     parser.add_argument("--self-test", action="store_true")
+    parser.add_argument("--self-test-v3", action="store_true")
     args = parser.parse_args()
     try:
+        if args.self_test_v3:
+            from build_seed_v3 import self_test as self_test_v3
+            self_test_v3()
+            print("SELF-TEST PASS: v3 rejects invalid puppy stock")
+            return 0
+        if args.release == "v3" or args.verify == "v3":
+            from build_seed_v3 import build as build_v3, verify as verify_v3
+            if args.verify == "v3":
+                verify_v3()
+                print("VERIFY PASS: data-pipeline/data/seed/v3")
+                return 0
+            if args.release == "v3":
+                counts = build_v3(args.seed)
+                print(f"BUILD PASS: {SEEDS / 'v3'}")
+                print(json.dumps(counts, sort_keys=True))
+                return 0
         if args.self_test:
-            self_test()
+            from build_seed_v3 import self_test as self_test_v3
+            self_test_v3()
+            print("SELF-TEST PASS: v3 rejects invalid puppy stock")
             return 0
         if args.verify:
             verify(SEEDS / args.verify, args.verify)

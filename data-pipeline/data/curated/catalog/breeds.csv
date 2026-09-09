@@ -13,3 +13,4 @@ breed_golden_retriever,BREED_GOLDEN_RETRIEVER,Golden Retriever,LARGE,25,34,18,14
 breed_labrador_retriever,BREED_LABRADOR_RETRIEVER,Labrador Retriever,LARGE,25,36,18,144,Giống chó lớn dễ huấn luyện phù hợp catalog demo chung.
 breed_pomeranian,BREED_POMERANIAN,Pomeranian,SMALL,1.4,3.2,12,144,Giống chó nhỏ dùng cho catalog demo với adult range tham chiếu có provenance.
 breed_hmong_coc_duoi,BREED_HMONG_COC_DUOI,Chó H'Mông cộc đuôi,MEDIUM,16,26,12,144,Giống chó bản địa Việt Nam dùng cho catalog demo với adult range tham chiếu có provenance.
+breed_samoyed,BREED_SAMOYED,Samoyed,LARGE,16,30,18,144,Giống chó cỡ lớn với dải cân nặng trưởng thành dùng cho catalog PawConnect.

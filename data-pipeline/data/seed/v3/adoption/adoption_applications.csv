@@ -1,0 +1,37 @@
+seed_key,adoption_post_seed_key,applicant_user_key,message,status
+application_adoption_post_poodle_1_approved,adoption_post_poodle_1,user_customer_an,Tôi có điều kiện chăm sóc và mong được nhận nuôi.,APPROVED
+application_adoption_post_poodle_1_rejected,adoption_post_poodle_1,user_customer_lan,Gia đình tôi quan tâm và muốn tìm hiểu thêm.,REJECTED
+application_adoption_post_poodle_2_approved,adoption_post_poodle_2,user_customer_lan,Tôi có điều kiện chăm sóc và mong được nhận nuôi.,APPROVED
+application_adoption_post_poodle_2_rejected,adoption_post_poodle_2,user_customer_an,Gia đình tôi quan tâm và muốn tìm hiểu thêm.,REJECTED
+application_adoption_post_chihuahua_1_approved,adoption_post_chihuahua_1,user_customer_an,Tôi có điều kiện chăm sóc và mong được nhận nuôi.,APPROVED
+application_adoption_post_chihuahua_1_rejected,adoption_post_chihuahua_1,user_customer_lan,Gia đình tôi quan tâm và muốn tìm hiểu thêm.,REJECTED
+application_adoption_post_chihuahua_2_approved,adoption_post_chihuahua_2,user_customer_lan,Tôi có điều kiện chăm sóc và mong được nhận nuôi.,APPROVED
+application_adoption_post_chihuahua_2_rejected,adoption_post_chihuahua_2,user_customer_an,Gia đình tôi quan tâm và muốn tìm hiểu thêm.,REJECTED
+application_adoption_post_pug_1_approved,adoption_post_pug_1,user_customer_an,Tôi có điều kiện chăm sóc và mong được nhận nuôi.,APPROVED
+application_adoption_post_pug_1_rejected,adoption_post_pug_1,user_customer_lan,Gia đình tôi quan tâm và muốn tìm hiểu thêm.,REJECTED
+application_adoption_post_pug_2_approved,adoption_post_pug_2,user_customer_lan,Tôi có điều kiện chăm sóc và mong được nhận nuôi.,APPROVED
+application_adoption_post_pug_2_rejected,adoption_post_pug_2,user_customer_an,Gia đình tôi quan tâm và muốn tìm hiểu thêm.,REJECTED
+application_adoption_post_corgi_1_pending,adoption_post_corgi_1,user_customer_an,Tôi mong được trao đổi về việc nhận nuôi.,PENDING
+application_adoption_post_corgi_2_pending,adoption_post_corgi_2,user_customer_lan,Tôi mong được trao đổi về việc nhận nuôi.,PENDING
+application_adoption_post_shiba_inu_1_pending,adoption_post_shiba_inu_1,user_customer_an,Tôi mong được trao đổi về việc nhận nuôi.,PENDING
+application_adoption_post_shiba_inu_2_pending,adoption_post_shiba_inu_2,user_customer_lan,Tôi mong được trao đổi về việc nhận nuôi.,PENDING
+application_adoption_post_beagle_1_pending,adoption_post_beagle_1,user_customer_an,Tôi mong được trao đổi về việc nhận nuôi.,PENDING
+application_adoption_post_beagle_2_pending,adoption_post_beagle_2,user_customer_lan,Tôi mong được trao đổi về việc nhận nuôi.,PENDING
+application_adoption_post_phu_quoc_1_pending,adoption_post_phu_quoc_1,user_customer_an,Tôi mong được trao đổi về việc nhận nuôi.,PENDING
+application_adoption_post_phu_quoc_2_pending,adoption_post_phu_quoc_2,user_customer_lan,Tôi mong được trao đổi về việc nhận nuôi.,PENDING
+application_adoption_post_french_bulldog_1_pending,adoption_post_french_bulldog_1,user_customer_an,Tôi mong được trao đổi về việc nhận nuôi.,PENDING
+application_adoption_post_french_bulldog_2_pending,adoption_post_french_bulldog_2,user_customer_lan,Tôi mong được trao đổi về việc nhận nuôi.,PENDING
+application_adoption_post_husky_siberian_1_pending,adoption_post_husky_siberian_1,user_customer_an,Tôi mong được trao đổi về việc nhận nuôi.,PENDING
+application_adoption_post_husky_siberian_2_pending,adoption_post_husky_siberian_2,user_customer_lan,Tôi mong được trao đổi về việc nhận nuôi.,PENDING
+application_adoption_post_alaskan_malamute_1_pending,adoption_post_alaskan_malamute_1,user_customer_an,Tôi mong được trao đổi về việc nhận nuôi.,PENDING
+application_adoption_post_alaskan_malamute_2_pending,adoption_post_alaskan_malamute_2,user_customer_lan,Tôi mong được trao đổi về việc nhận nuôi.,PENDING
+application_adoption_post_golden_retriever_1_pending,adoption_post_golden_retriever_1,user_customer_an,Tôi mong được trao đổi về việc nhận nuôi.,PENDING
+application_adoption_post_golden_retriever_2_pending,adoption_post_golden_retriever_2,user_customer_lan,Tôi mong được trao đổi về việc nhận nuôi.,PENDING
+application_adoption_post_labrador_retriever_1_pending,adoption_post_labrador_retriever_1,user_customer_an,Tôi mong được trao đổi về việc nhận nuôi.,PENDING
+application_adoption_post_labrador_retriever_2_pending,adoption_post_labrador_retriever_2,user_customer_lan,Tôi mong được trao đổi về việc nhận nuôi.,PENDING
+application_adoption_post_pomeranian_1_pending,adoption_post_pomeranian_1,user_customer_an,Tôi mong được trao đổi về việc nhận nuôi.,PENDING
+application_adoption_post_pomeranian_2_pending,adoption_post_pomeranian_2,user_customer_lan,Tôi mong được trao đổi về việc nhận nuôi.,PENDING
+application_adoption_post_hmong_coc_duoi_1_pending,adoption_post_hmong_coc_duoi_1,user_customer_an,Tôi mong được trao đổi về việc nhận nuôi.,PENDING
+application_adoption_post_hmong_coc_duoi_2_pending,adoption_post_hmong_coc_duoi_2,user_customer_lan,Tôi mong được trao đổi về việc nhận nuôi.,PENDING
+application_adoption_post_samoyed_1_pending,adoption_post_samoyed_1,user_customer_an,Tôi mong được trao đổi về việc nhận nuôi.,PENDING
+application_adoption_post_samoyed_2_pending,adoption_post_samoyed_2,user_customer_lan,Tôi mong được trao đổi về việc nhận nuôi.,PENDING
