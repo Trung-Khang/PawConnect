@@ -1,0 +1,126 @@
+{
+  "release": "v3",
+  "seed": 20260908,
+  "datasets": [
+    {
+      "path": "adoption/adoption_applications.csv",
+      "record_count": 36,
+      "file_sha256": "57f616e8072a68bc181669312f92f89ca31de210ab81b74fa6cca092387ec8b5",
+      "header_sha256": "86b391630abca5bd9093ef0fabcf529ea01e93c788f34fe4a786aef89f168a74",
+      "stable_key": "seed_key",
+      "dependencies": [
+        "curated catalog/reference/commerce"
+      ]
+    },
+    {
+      "path": "adoption/adoption_posts.csv",
+      "record_count": 30,
+      "file_sha256": "23ac4fd800ff634f21c7a79c365e4369c104c759cff91d3afb9d7c1e8aa37524",
+      "header_sha256": "1d5e0b61d4e79e23f9f82618231160827c8292d22a4cf736f94ad785f33d5d95",
+      "stable_key": "seed_key",
+      "dependencies": [
+        "curated catalog/reference/commerce"
+      ]
+    },
+    {
+      "path": "adoption/dog_profiles.csv",
+      "record_count": 30,
+      "file_sha256": "8d63ee7eccb5033d890251311914c00b3915495b71f79c8fe8b82345207cf868",
+      "header_sha256": "3fc1043c778b1ba66c42b9c628c990aa7b9e58a471152bb1bb6fe4891bebff10",
+      "stable_key": "seed_key",
+      "dependencies": [
+        "curated catalog/reference/commerce"
+      ]
+    },
+    {
+      "path": "catalog/breed_references.csv",
+      "record_count": 16,
+      "file_sha256": "86c7f658aaeade0d5510e4d18d26c25144ae57feadce083d1748346b70013bb0",
+      "header_sha256": "8bbb104bd78f87b66d282467b11999f75ed37a84dbf9c2b37d94eac5a5d4a2d0",
+      "stable_key": "breed_code",
+      "dependencies": [
+        "curated catalog/reference/commerce"
+      ]
+    },
+    {
+      "path": "catalog/breeds.csv",
+      "record_count": 15,
+      "file_sha256": "6a01df0485873457dff1c6bd458ce602873fb3c9e1d9d13e0ddd44375b79c69a",
+      "header_sha256": "879693916bcbe1e5db87e495b1a6d5a15ecfeeb5a43dd3c51873a553ede2ed39",
+      "stable_key": "breed_code",
+      "dependencies": [
+        "curated catalog/reference/commerce"
+      ]
+    },
+    {
+      "path": "commerce/products.csv",
+      "record_count": 18,
+      "file_sha256": "5eb8b18aa50d20893724f237b82a2dd647be9f1b679820790223ce982c5965ee",
+      "header_sha256": "8ae0b6c2ef2890993dd9a4464da98cacea505c3b5fbf93fa3500e7931e9f9385",
+      "stable_key": "seed_key",
+      "dependencies": [
+        "curated catalog/reference/commerce"
+      ]
+    },
+    {
+      "path": "commerce/puppy_listings.csv",
+      "record_count": 14,
+      "file_sha256": "7d60fa646b3cb6bdaf23d755d0168a70e2be31d33ea8fe079c8b4a8f55df661a",
+      "header_sha256": "c95221d4bfeee04e51acab7739e6d816d4fc4a94d8c4e8ce61aae1d6e6e9bdfd",
+      "stable_key": "seed_key",
+      "dependencies": [
+        "curated catalog/reference/commerce"
+      ]
+    },
+    {
+      "path": "fixtures/users.csv",
+      "record_count": 6,
+      "file_sha256": "2f436d88c35dd209c2d4e969972e32d8c4ba72c8363bcd0acfd3e6959b78416b",
+      "header_sha256": "cf67757ea9ce8778998208c8636a9837893bfdafdd31dff0cf2de83f5c8e2e9d",
+      "stable_key": "seed_key",
+      "dependencies": [
+        "curated catalog/reference/commerce"
+      ]
+    },
+    {
+      "path": "reference/branches.csv",
+      "record_count": 3,
+      "file_sha256": "3b8d23d7b241d29cd4c04c1b4695af56c884f686225c536cf90eb30bb4c0804d",
+      "header_sha256": "4972686429898c79076c370658c80e2ebea9f3810401650a9ead3fbf4b9fb522",
+      "stable_key": "seed_key",
+      "dependencies": [
+        "curated catalog/reference/commerce"
+      ]
+    },
+    {
+      "path": "reference/categories.csv",
+      "record_count": 4,
+      "file_sha256": "1fb0ae1346f9b9afadfe535a6555eeb20e9cfe3f41ae8ac01f82da7bca930fcc",
+      "header_sha256": "b86df6f735772ecaedc81cb0db5a1699f7aa676b7f8fcfa19d2ad17c1aa7f676",
+      "stable_key": "seed_key",
+      "dependencies": [
+        "curated catalog/reference/commerce"
+      ]
+    },
+    {
+      "path": "reference/roles.csv",
+      "record_count": 3,
+      "file_sha256": "7480c59707a7e620ec6c523e3981b476b1048deb5fa27661d40929a380e8571c",
+      "header_sha256": "fada73364b55f1a33f9b3c99c0c6a2dd2796096bed6e376da153251007e1d15e",
+      "stable_key": "seed_key",
+      "dependencies": [
+        "curated catalog/reference/commerce"
+      ]
+    },
+    {
+      "path": "reference/service_types.csv",
+      "record_count": 3,
+      "file_sha256": "cf1f21ab8e229ca20e96bb61a65e9e163f8257e91bed6dc97571bba90143f41d",
+      "header_sha256": "ee37f4540c39571718e6b5a2482c7078b54278e7b5e8e0c1adaaf3a4e592a451",
+      "stable_key": "seed_key",
+      "dependencies": [
+        "curated catalog/reference/commerce"
+      ]
+    }
+  ]
+}

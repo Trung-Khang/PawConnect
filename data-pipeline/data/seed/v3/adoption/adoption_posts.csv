@@ -1,0 +1,31 @@
+seed_key,dog_profile_seed_key,created_by_user_key,title,description,health_note,status,created_at
+adoption_post_poodle_1,dog_poodle_1,user_manager_hcm,Tìm mái ấm cho Mây,Mây đang chờ một gia đình quan tâm và chăm sóc lâu dài.,Đã được kiểm tra sức khỏe cơ bản.,CLOSED,2026-09-02T09:00:00+07:00
+adoption_post_poodle_2,dog_poodle_2,user_manager_hn,Tìm mái ấm cho Bắp,Bắp đang chờ một gia đình quan tâm và chăm sóc lâu dài.,Đã được kiểm tra sức khỏe cơ bản.,CLOSED,2026-09-02T09:00:00+07:00
+adoption_post_chihuahua_1,dog_chihuahua_1,user_manager_dn,Tìm mái ấm cho Nâu,Nâu đang chờ một gia đình quan tâm và chăm sóc lâu dài.,Đã được kiểm tra sức khỏe cơ bản.,CLOSED,2026-09-02T09:00:00+07:00
+adoption_post_chihuahua_2,dog_chihuahua_2,user_manager_hcm,Tìm mái ấm cho Sữa,Sữa đang chờ một gia đình quan tâm và chăm sóc lâu dài.,Đã được kiểm tra sức khỏe cơ bản.,CLOSED,2026-09-03T09:00:00+07:00
+adoption_post_pug_1,dog_pug_1,user_manager_hn,Tìm mái ấm cho Mít,Mít đang chờ một gia đình quan tâm và chăm sóc lâu dài.,Đã được kiểm tra sức khỏe cơ bản.,CLOSED,2026-09-03T09:00:00+07:00
+adoption_post_pug_2,dog_pug_2,user_manager_dn,Tìm mái ấm cho Đậu,Đậu đang chờ một gia đình quan tâm và chăm sóc lâu dài.,Đã được kiểm tra sức khỏe cơ bản.,CLOSED,2026-09-03T09:00:00+07:00
+adoption_post_corgi_1,dog_corgi_1,user_manager_hcm,Tìm mái ấm cho Mơ,Mơ đang chờ một gia đình quan tâm và chăm sóc lâu dài.,Đã được kiểm tra sức khỏe cơ bản.,AVAILABLE,2026-09-04T09:00:00+07:00
+adoption_post_corgi_2,dog_corgi_2,user_manager_hn,Tìm mái ấm cho Bông,Bông đang chờ một gia đình quan tâm và chăm sóc lâu dài.,Đã được kiểm tra sức khỏe cơ bản.,AVAILABLE,2026-09-04T09:00:00+07:00
+adoption_post_shiba_inu_1,dog_shiba_inu_1,user_manager_dn,Tìm mái ấm cho Lúa,Lúa đang chờ một gia đình quan tâm và chăm sóc lâu dài.,Đã được kiểm tra sức khỏe cơ bản.,AVAILABLE,2026-09-04T09:00:00+07:00
+adoption_post_shiba_inu_2,dog_shiba_inu_2,user_manager_hcm,Tìm mái ấm cho Cốm,Cốm đang chờ một gia đình quan tâm và chăm sóc lâu dài.,Đã được kiểm tra sức khỏe cơ bản.,AVAILABLE,2026-09-05T09:00:00+07:00
+adoption_post_beagle_1,dog_beagle_1,user_manager_hn,Tìm mái ấm cho Tép,Tép đang chờ một gia đình quan tâm và chăm sóc lâu dài.,Đã được kiểm tra sức khỏe cơ bản.,AVAILABLE,2026-09-05T09:00:00+07:00
+adoption_post_beagle_2,dog_beagle_2,user_manager_dn,Tìm mái ấm cho Sao,Sao đang chờ một gia đình quan tâm và chăm sóc lâu dài.,Đã được kiểm tra sức khỏe cơ bản.,AVAILABLE,2026-09-05T09:00:00+07:00
+adoption_post_phu_quoc_1,dog_phu_quoc_1,user_manager_hcm,Tìm mái ấm cho Nếp,Nếp đang chờ một gia đình quan tâm và chăm sóc lâu dài.,Đã được kiểm tra sức khỏe cơ bản.,AVAILABLE,2026-09-06T09:00:00+07:00
+adoption_post_phu_quoc_2,dog_phu_quoc_2,user_manager_hn,Tìm mái ấm cho Mộc,Mộc đang chờ một gia đình quan tâm và chăm sóc lâu dài.,Đã được kiểm tra sức khỏe cơ bản.,AVAILABLE,2026-09-06T09:00:00+07:00
+adoption_post_french_bulldog_1,dog_french_bulldog_1,user_manager_dn,Tìm mái ấm cho Na,Na đang chờ một gia đình quan tâm và chăm sóc lâu dài.,Đã được kiểm tra sức khỏe cơ bản.,AVAILABLE,2026-09-06T09:00:00+07:00
+adoption_post_french_bulldog_2,dog_french_bulldog_2,user_manager_hcm,Tìm mái ấm cho Bơ,Bơ đang chờ một gia đình quan tâm và chăm sóc lâu dài.,Đã được kiểm tra sức khỏe cơ bản.,AVAILABLE,2026-09-07T09:00:00+07:00
+adoption_post_husky_siberian_1,dog_husky_siberian_1,user_manager_hn,Tìm mái ấm cho Kem,Kem đang chờ một gia đình quan tâm và chăm sóc lâu dài.,Đã được kiểm tra sức khỏe cơ bản.,AVAILABLE,2026-09-07T09:00:00+07:00
+adoption_post_husky_siberian_2,dog_husky_siberian_2,user_manager_dn,Tìm mái ấm cho Sương,Sương đang chờ một gia đình quan tâm và chăm sóc lâu dài.,Đã được kiểm tra sức khỏe cơ bản.,AVAILABLE,2026-09-07T09:00:00+07:00
+adoption_post_alaskan_malamute_1,dog_alaskan_malamute_1,user_manager_hcm,Tìm mái ấm cho Mầm,Mầm đang chờ một gia đình quan tâm và chăm sóc lâu dài.,Đã được kiểm tra sức khỏe cơ bản.,AVAILABLE,2026-09-08T09:00:00+07:00
+adoption_post_alaskan_malamute_2,dog_alaskan_malamute_2,user_manager_hn,Tìm mái ấm cho Gạo,Gạo đang chờ một gia đình quan tâm và chăm sóc lâu dài.,Đã được kiểm tra sức khỏe cơ bản.,AVAILABLE,2026-09-08T09:00:00+07:00
+adoption_post_golden_retriever_1,dog_golden_retriever_1,user_manager_dn,Tìm mái ấm cho Nắng,Nắng đang chờ một gia đình quan tâm và chăm sóc lâu dài.,Đã được kiểm tra sức khỏe cơ bản.,AVAILABLE,2026-09-08T09:00:00+07:00
+adoption_post_golden_retriever_2,dog_golden_retriever_2,user_manager_hcm,Tìm mái ấm cho Sỏi,Sỏi đang chờ một gia đình quan tâm và chăm sóc lâu dài.,Đã được kiểm tra sức khỏe cơ bản.,AVAILABLE,2026-09-09T09:00:00+07:00
+adoption_post_labrador_retriever_1,dog_labrador_retriever_1,user_manager_hn,Tìm mái ấm cho Linh,Linh đang chờ một gia đình quan tâm và chăm sóc lâu dài.,Đã được kiểm tra sức khỏe cơ bản.,AVAILABLE,2026-09-09T09:00:00+07:00
+adoption_post_labrador_retriever_2,dog_labrador_retriever_2,user_manager_dn,Tìm mái ấm cho Mèo,Mèo đang chờ một gia đình quan tâm và chăm sóc lâu dài.,Đã được kiểm tra sức khỏe cơ bản.,AVAILABLE,2026-09-09T09:00:00+07:00
+adoption_post_pomeranian_1,dog_pomeranian_1,user_manager_hcm,Tìm mái ấm cho Vừng,Vừng đang chờ một gia đình quan tâm và chăm sóc lâu dài.,Đã được kiểm tra sức khỏe cơ bản.,AVAILABLE,2026-09-10T09:00:00+07:00
+adoption_post_pomeranian_2,dog_pomeranian_2,user_manager_hn,Tìm mái ấm cho Bắp Nhỏ,Bắp Nhỏ đang chờ một gia đình quan tâm và chăm sóc lâu dài.,Đã được kiểm tra sức khỏe cơ bản.,AVAILABLE,2026-09-10T09:00:00+07:00
+adoption_post_hmong_coc_duoi_1,dog_hmong_coc_duoi_1,user_manager_dn,Tìm mái ấm cho Mây Nhỏ,Mây Nhỏ đang chờ một gia đình quan tâm và chăm sóc lâu dài.,Đã được kiểm tra sức khỏe cơ bản.,AVAILABLE,2026-09-10T09:00:00+07:00
+adoption_post_hmong_coc_duoi_2,dog_hmong_coc_duoi_2,user_manager_hcm,Tìm mái ấm cho Sữa Nhỏ,Sữa Nhỏ đang chờ một gia đình quan tâm và chăm sóc lâu dài.,Đã được kiểm tra sức khỏe cơ bản.,AVAILABLE,2026-09-11T09:00:00+07:00
+adoption_post_samoyed_1,dog_samoyed_1,user_manager_hn,Tìm mái ấm cho Nâu Nhỏ,Nâu Nhỏ đang chờ một gia đình quan tâm và chăm sóc lâu dài.,Đã được kiểm tra sức khỏe cơ bản.,AVAILABLE,2026-09-11T09:00:00+07:00
+adoption_post_samoyed_2,dog_samoyed_2,user_manager_dn,Tìm mái ấm cho Mơ Nhỏ,Mơ Nhỏ đang chờ một gia đình quan tâm và chăm sóc lâu dài.,Đã được kiểm tra sức khỏe cơ bản.,AVAILABLE,2026-09-11T09:00:00+07:00
