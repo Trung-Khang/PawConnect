@@ -81,7 +81,9 @@ AVAILABLE không có APPROVED. CLOSED có tối đa một APPROVED và không c�
 
 TV3 nhận roles.csv, branches.csv, users.csv, các image_url rỗng và manifest.json. TV3 map User–Role, map BRANCH_MANAGER–Branch, và cung cấp User ID mapping cho importer chung/TV1/TV2 khi cần.
 
-Credential phải được tạo/hash runtime từ cấu hình local không commit. Không import credential placeholder. Cloudinary tích hợp theo schema nhóm duyệt; không ghi secret vào CSV/Git, không tạo URL giả. Khi upload ảnh thật, lưu secure URL/public ID vào database, không sửa Seed V3.
+Credential phải được tạo/hash runtime từ cấu hình local không commit. Không import credential placeholder. 
+
+Cloudinary tích hợp theo schema nhóm duyệt; không ghi secret vào CSV/Git, không tạo URL giả. Khi upload ảnh thật, lưu secure URL/public ID vào database, không sửa Seed V3.
 
 ## 8. Vận hành sau import
 
