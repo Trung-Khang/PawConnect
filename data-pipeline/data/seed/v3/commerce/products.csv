@@ -1,0 +1,19 @@
+seed_key,product_kind,name,description,price,stock,image_url,suitable_size,is_breeding_dog,category_code,branch_code,breed_code,breed_type,life_stage,age_months,current_weight_kg,current_size,expected_adult_size,health_status,care_instructions
+product_food_br_hcm_01_1,FOOD,Thức ăn hạt cỡ nhỏ,Sản phẩm dành cho chó tại PawConnect.,180000,9,,,false,CAT_FOOD,BR_HCM_01,,,,,,,,,Sử dụng theo hướng dẫn trên bao bì.
+product_food_br_hcm_01_2,FOOD,Thức ăn hạt cỡ vừa,Sản phẩm dành cho chó tại PawConnect.,220000,10,,,false,CAT_FOOD,BR_HCM_01,,,,,,,,,Sử dụng theo hướng dẫn trên bao bì.
+product_food_br_hcm_01_3,FOOD,Thức ăn hạt cỡ lớn,Sản phẩm dành cho chó tại PawConnect.,260000,11,,,false,CAT_FOOD,BR_HCM_01,,,,,,,,,Sử dụng theo hướng dẫn trên bao bì.
+product_accessory_br_hcm_01_1,ACCESSORY,Dây dắt chó,Sản phẩm dành cho chó tại PawConnect.,120000,9,,,false,CAT_ACCESSORY,BR_HCM_01,,,,,,,,,Sử dụng theo hướng dẫn trên bao bì.
+product_accessory_br_hcm_01_2,ACCESSORY,Bát ăn chống trượt,Sản phẩm dành cho chó tại PawConnect.,90000,10,,,false,CAT_ACCESSORY,BR_HCM_01,,,,,,,,,Sử dụng theo hướng dẫn trên bao bì.
+product_accessory_br_hcm_01_3,ACCESSORY,Đồ chơi bóng cao su,Sản phẩm dành cho chó tại PawConnect.,75000,11,,,false,CAT_ACCESSORY,BR_HCM_01,,,,,,,,,Sử dụng theo hướng dẫn trên bao bì.
+product_food_br_hn_01_1,FOOD,Thức ăn hạt cỡ nhỏ,Sản phẩm dành cho chó tại PawConnect.,180000,9,,,false,CAT_FOOD,BR_HN_01,,,,,,,,,Sử dụng theo hướng dẫn trên bao bì.
+product_food_br_hn_01_2,FOOD,Thức ăn hạt cỡ vừa,Sản phẩm dành cho chó tại PawConnect.,220000,10,,,false,CAT_FOOD,BR_HN_01,,,,,,,,,Sử dụng theo hướng dẫn trên bao bì.
+product_food_br_hn_01_3,FOOD,Thức ăn hạt cỡ lớn,Sản phẩm dành cho chó tại PawConnect.,260000,11,,,false,CAT_FOOD,BR_HN_01,,,,,,,,,Sử dụng theo hướng dẫn trên bao bì.
+product_accessory_br_hn_01_1,ACCESSORY,Dây dắt chó,Sản phẩm dành cho chó tại PawConnect.,120000,9,,,false,CAT_ACCESSORY,BR_HN_01,,,,,,,,,Sử dụng theo hướng dẫn trên bao bì.
+product_accessory_br_hn_01_2,ACCESSORY,Bát ăn chống trượt,Sản phẩm dành cho chó tại PawConnect.,90000,10,,,false,CAT_ACCESSORY,BR_HN_01,,,,,,,,,Sử dụng theo hướng dẫn trên bao bì.
+product_accessory_br_hn_01_3,ACCESSORY,Đồ chơi bóng cao su,Sản phẩm dành cho chó tại PawConnect.,75000,11,,,false,CAT_ACCESSORY,BR_HN_01,,,,,,,,,Sử dụng theo hướng dẫn trên bao bì.
+product_food_br_dn_01_1,FOOD,Thức ăn hạt cỡ nhỏ,Sản phẩm dành cho chó tại PawConnect.,180000,9,,,false,CAT_FOOD,BR_DN_01,,,,,,,,,Sử dụng theo hướng dẫn trên bao bì.
+product_food_br_dn_01_2,FOOD,Thức ăn hạt cỡ vừa,Sản phẩm dành cho chó tại PawConnect.,220000,10,,,false,CAT_FOOD,BR_DN_01,,,,,,,,,Sử dụng theo hướng dẫn trên bao bì.
+product_food_br_dn_01_3,FOOD,Thức ăn hạt cỡ lớn,Sản phẩm dành cho chó tại PawConnect.,260000,11,,,false,CAT_FOOD,BR_DN_01,,,,,,,,,Sử dụng theo hướng dẫn trên bao bì.
+product_accessory_br_dn_01_1,ACCESSORY,Dây dắt chó,Sản phẩm dành cho chó tại PawConnect.,120000,9,,,false,CAT_ACCESSORY,BR_DN_01,,,,,,,,,Sử dụng theo hướng dẫn trên bao bì.
+product_accessory_br_dn_01_2,ACCESSORY,Bát ăn chống trượt,Sản phẩm dành cho chó tại PawConnect.,90000,10,,,false,CAT_ACCESSORY,BR_DN_01,,,,,,,,,Sử dụng theo hướng dẫn trên bao bì.
+product_accessory_br_dn_01_3,ACCESSORY,Đồ chơi bóng cao su,Sản phẩm dành cho chó tại PawConnect.,75000,11,,,false,CAT_ACCESSORY,BR_DN_01,,,,,,,,,Sử dụng theo hướng dẫn trên bao bì.

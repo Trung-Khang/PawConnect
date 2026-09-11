@@ -1,0 +1,28 @@
+{
+  "source_name": "Wikipedia English",
+  "source_base_url": "https://en.wikipedia.org",
+  "license_attribution_note": "Wikipedia article text is generally available under CC BY-SA 4.0 and GFDL. Preserve source_url and attribution for review. Do not collect media.",
+  "robots_policy": {
+    "checked_at": "2026-09-08",
+    "status": "approved",
+    "allowed_path_prefix": "/wiki/",
+    "denied_path_prefixes": ["/w/", "/api/", "/wiki/Special:"]
+  },
+  "allowlist": [
+    {
+      "breed_code": "BREED_POODLE",
+      "breed_name": "Poodle",
+      "url": "https://en.wikipedia.org/wiki/Poodle"
+    },
+    {
+      "breed_code": "BREED_CHIHUAHUA",
+      "breed_name": "Chihuahua",
+      "url": "https://en.wikipedia.org/wiki/Chihuahua_(dog)"
+    },
+    {
+      "breed_code": "BREED_PUG",
+      "breed_name": "Pug",
+      "url": "https://en.wikipedia.org/wiki/Pug"
+    }
+  ]
+}

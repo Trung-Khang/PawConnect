@@ -1,0 +1,7 @@
+seed_key,full_name,email,credential_mode,phone,avatar_url,role_code,branch_code,created_at
+user_admin_pawconnect,Quản trị PawConnect,admin@pawconnect.example,RUNTIME_ENV,,,ROLE_ADMIN,,2026-09-01T08:00:00+07:00
+user_manager_hcm,Quản lý TP.HCM,manager.hcm@pawconnect.example,RUNTIME_ENV,,,ROLE_BRANCH_MANAGER,BR_HCM_01,2026-09-01T08:00:00+07:00
+user_manager_hn,Quản lý Hà Nội,manager.hn@pawconnect.example,RUNTIME_ENV,,,ROLE_BRANCH_MANAGER,BR_HN_01,2026-09-01T08:00:00+07:00
+user_manager_dn,Quản lý Đà Nẵng,manager.dn@pawconnect.example,RUNTIME_ENV,,,ROLE_BRANCH_MANAGER,BR_DN_01,2026-09-01T08:00:00+07:00
+user_customer_an,Khách hàng An,an@pawconnect.example,RUNTIME_ENV,,,ROLE_CUSTOMER,,2026-09-01T08:00:00+07:00
+user_customer_lan,Khách hàng Lan,lan@pawconnect.example,RUNTIME_ENV,,,ROLE_CUSTOMER,,2026-09-01T08:00:00+07:00

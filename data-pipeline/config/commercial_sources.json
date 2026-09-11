@@ -1,0 +1,42 @@
+{
+  "schema_version": "commercial-observation-v0.2",
+  "network_default": "disabled",
+  "sources": [
+    {
+      "source_name": "Chợ Tốt",
+      "domain": "www.chotot.com",
+      "catalog_url": "https://www.chotot.com/mua-ban-cho-tp-ho-chi-minh?event_source=search_suggestion",
+      "page_url_pattern": "https://www.chotot.com/mua-ban-cho-tp-ho-chi-minh?event_source=search_suggestion&page={page}",
+      "source_category": "PUPPY_MARKETPLACE",
+      "max_pages": 3,
+      "permission_status": "APPROVED",
+      "robots_status": "APPROVED",
+      "terms_status": "APPROVED",
+      "enabled": true
+    },
+    {
+      "source_name": "Chợ Tốt (cho-giong)",
+      "domain": "www.chotot.com",
+      "catalog_url": "https://www.chotot.com/tags/mua-ban-cho/cho-giong",
+      "page_url_pattern": "https://www.chotot.com/tags/mua-ban-cho/cho-giong?page={page}",
+      "source_category": "PUPPY_MARKETPLACE",
+      "max_pages": 3,
+      "permission_status": "APPROVED",
+      "robots_status": "APPROVED",
+      "terms_status": "APPROVED",
+      "enabled": true
+    },
+    {
+      "source_name": "Pet Mart",
+      "domain": "www.petmart.vn",
+      "catalog_url": "https://www.petmart.vn/cho",
+      "page_url_pattern": "https://www.petmart.vn/cho/page/{page}",
+      "source_category": "PRODUCT_CATALOG",
+      "max_pages": 8,
+      "permission_status": "APPROVED",
+      "robots_status": "APPROVED",
+      "terms_status": "APPROVED",
+      "enabled": true
+    }
+  ]
+}
