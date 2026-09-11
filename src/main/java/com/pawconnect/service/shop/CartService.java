@@ -1,7 +1,6 @@
 package com.pawconnect.service.shop;
 
 import com.pawconnect.entity.Cart;
-import com.pawconnect.entity.CartItem;
 
 import com.pawconnect.dto.cart.CartResponse;
 
