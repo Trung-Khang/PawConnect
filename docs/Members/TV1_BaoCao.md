@@ -108,3 +108,26 @@ Sau đợt rà soát mã nguồn toàn diện, TV1 đã tiến hành vá thành 
 Tất cả các thay đổi trên đã được kiểm chứng bằng Unit Test & Integration Test (như `CartAndOrderServiceTest` và `ProductServiceConcurrencyTest`). **Tất cả các Tests đều chạy qua (BUILD SUCCESS) 100%.** Mọi luồng API của TV1 đều đã được kiện toàn và đóng băng (Frozen), chờ ráp nối với TV2 và TV3.
 
 Trạng thái hạng mục Bug Fix: `COMPLETED`.
+
+## 11. Báo Cáo Cập Nhật (Ngày 11/09/2026) - Hoàn thiện Quản trị Sản phẩm & Tích hợp Cloudinary
+
+Trong phiên làm việc này, TV1 đã hoàn thiện các tính năng cốt lõi cho trang quản trị (Admin) liên quan đến Sản phẩm, đảm bảo giao diện trực quan và dữ liệu lưu trữ chuyên nghiệp:
+
+### 11.1. Tích hợp thực tế Cloudinary API
+- **Thay thế Mock Upload:** Chuyển đổi API `/api/upload` từ giả lập sang sử dụng trực tiếp Cloudinary SDK gốc. Hình ảnh chó giống/sản phẩm tải lên giờ đây sẽ được lưu trữ thẳng lên Cloud thực tế và trả về URL CDN an toàn.
+- **Sửa lỗi Encoding:** Khắc phục lỗi sai bảng mã ký tự (encoding) đối với `cloud_name` trong `application.properties` để kết nối Cloudinary thành công.
+
+### 11.2. Hoàn thiện tính năng Cập nhật (Edit Product) & Đồng bộ Tiền tệ
+- Xây dựng luồng Frontend (`admin-products.js`) xử lý việc chỉnh sửa mặt hàng, tự động tải dữ liệu cũ vào Form.
+- Thay đổi API call sang phương thức `PUT` đối với các thao tác cập nhật.
+- **Đồng bộ UI/UX:** Cập nhật lại toàn bộ giao diện Shop và Admin để hiển thị thống nhất định dạng tiền tệ là `VND` (thay vì ký hiệu `$`), mang lại trải nghiệm chính xác cho khách hàng Việt Nam.
+
+### 11.3. Cấu trúc Giao diện Form Động (Dynamic UI Fields)
+- **Tái cấu trúc Database:** Bổ sung trực tiếp 2 cột mới `ingredients` (Thành phần) và `target_audience` (Đối tượng) vào bảng `Product` trong Database thay vì lưu dồn vào chuỗi Description.
+- **Giao diện thông minh:** Thêm menu chọn **Loại mặt hàng** (Chó giống, Thức ăn, Khác) trong HTML. Tùy thuộc vào lựa chọn, Form sẽ sử dụng JavaScript để bật/tắt (show/hide) linh hoạt các trường:
+  - **Chó giống:** Tuổi, Giống, Sức khỏe, Chăm sóc, Lưu ý đặc biệt.
+  - **Thức ăn:** Thành phần, Đối tượng, Lưu ý đặc biệt.
+  - **Khác:** Lưu ý khi sử dụng.
+- CSS cũng được căn chỉnh lại (max-height `90vh`, scroll) giúp Form chỉnh sửa tự động thu gọn vừa vặn trên màn hình laptop nhỏ mà không bị vỡ bố cục.
+
+Trạng thái hạng mục Quản trị Sản phẩm & Cloudinary: `COMPLETED`.
