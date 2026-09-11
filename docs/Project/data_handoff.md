@@ -158,10 +158,9 @@ TV3 phụ trách User, Role, bảo mật và Cloudinary.
 2. Map role_code và branch_code sang database ID.
 3. Tạo và hash credential tại runtime; không lấy password từ CSV.
 4. Cung cấp User ID mapping để TV1 và TV2 liên kết dữ liệu.
-5. Tích hợp Cloudinary cho ảnh User, DogProfile, AdoptionPost, Product và PuppyListing.
-6. Khi upload ảnh, lưu secure URL và public ID vào database.
-7. Khi thay hoặc xóa ảnh, cập nhật Cloudinary và database, không sửa Seed V3.
-8. Không đưa Cloudinary secret, token hoặc API key vào CSV/Git.
+5. Tạo Cloudinary service/configuration dùng chung cho ảnh User, DogProfile, AdoptionPost, Product và PuppyListing.
+6. Cung cấp API upload, thay thế và xóa ảnh; trả về secure URL cùng public ID để TV1 lưu vào database.
+7. Phân quyền thao tác ảnh theo User/Admin/Branch Manager; khi thay hoặc xóa ảnh, cập nhật Cloudinary và database, không sửa Seed V3.
 
 **Phân công kỹ thuật Cloudinary**
 
