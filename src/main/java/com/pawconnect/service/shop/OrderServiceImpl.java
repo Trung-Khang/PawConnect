@@ -43,6 +43,12 @@ public class OrderServiceImpl implements OrderService {
         if (cart.getItems() == null || cart.getItems().isEmpty()) {
             throw new BusinessException("Cart is empty");
         }
+        
+        for (CartItem cartItem : cart.getItems()) {
+            if (!cartItem.getProduct().getBranch().getId().equals(request.getBranchId())) {
+                throw new BusinessException("Cart contains product from a different branch: " + cartItem.getProduct().getName());
+            }
+        }
 
         Order order = Order.builder()
                 .userId(userId)
@@ -83,6 +89,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<OrderResponse> getMyOrders() {
         Long userId = SecurityUtils.getCurrentUserId();
         return orderRepository.findByUserId(userId).stream()
@@ -93,6 +100,9 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public OrderResponse updateOrderStatus(Long orderId, String status) {
+        if (!List.of("PENDING", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELLED").contains(status)) {
+            throw new BusinessException("Invalid order status: " + status);
+        }
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new ResourceNotFoundException("Order not found"));
         order.setStatus(status);
         orderRepository.save(order);

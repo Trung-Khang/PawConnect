@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class ViewController {
 
-    @GetMapping("/shop")
+    @GetMapping({"/", "/shop"})
     public String shopPage() {
         return "shop/index"; // points to templates/shop/index.html
     }

@@ -41,6 +41,16 @@ public class ApiExceptionHandler {
         return ResponseEntity.badRequest().body(Map.of("timestamp", Instant.now(), "status", 400, "errors", fields));
     }
 
+    @ExceptionHandler(BusinessException.class)
+    ResponseEntity<Map<String, Object>> businessException(BusinessException exception) {
+        return response(HttpStatus.CONFLICT, exception.getMessage());
+    }
+
+    @ExceptionHandler(Exception.class)
+    ResponseEntity<Map<String, Object>> generalException(Exception exception) {
+        return response(HttpStatus.INTERNAL_SERVER_ERROR, exception.getMessage());
+    }
+
     private ResponseEntity<Map<String, Object>> response(HttpStatus status, String message) {
         return ResponseEntity.status(status).body(Map.of("timestamp", Instant.now(), "status", status.value(), "message", message));
     }

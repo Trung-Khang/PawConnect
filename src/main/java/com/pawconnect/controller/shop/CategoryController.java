@@ -1,6 +1,7 @@
 package com.pawconnect.controller.shop;
 
 import com.pawconnect.entity.Category;
+import com.pawconnect.dto.category.CategoryResponse;
 import com.pawconnect.service.shop.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,7 +18,7 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @GetMapping
-    public List<Category> getAllCategories() {
+    public List<CategoryResponse> getAllCategories() {
         return categoryService.getAllCategories();
     }
 }

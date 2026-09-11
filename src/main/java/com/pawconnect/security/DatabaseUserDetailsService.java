@@ -21,9 +21,11 @@ public class DatabaseUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) {
         User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Account was not found"));
-        return org.springframework.security.core.userdetails.User.withUsername(user.getEmail())
-                .password(user.getPassword())
-                .authorities(new SimpleGrantedAuthority("ROLE_" + user.getRole().getName().name()))
-                .build();
+        return new CustomUserDetails(
+                user.getId(),
+                user.getEmail(),
+                user.getPassword(),
+                java.util.Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().getName().name()))
+        );
     }
 }

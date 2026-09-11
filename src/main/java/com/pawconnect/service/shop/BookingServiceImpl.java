@@ -69,6 +69,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<BookingResponse> getMyBookings() {
         Long userId = SecurityUtils.getCurrentUserId();
         return bookingRepository.findByUserId(userId).stream()
@@ -79,6 +80,9 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public BookingResponse updateBookingStatus(Long bookingId, String status) {
+        if (!List.of("PENDING", "CONFIRMED", "COMPLETED", "CANCELLED").contains(status)) {
+            throw new BusinessException("Invalid booking status: " + status);
+        }
         ServiceBooking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
         

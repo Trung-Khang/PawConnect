@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.pawconnect.exception.ResourceNotFoundException;
+import com.pawconnect.exception.BusinessException;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,12 +28,14 @@ public class ProductServiceImpl implements ProductService {
     private final CategoryRepository categoryRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public List<ProductResponse> getProducts(Long branchId, Boolean isBreedingDog, String suitableSize) {
         return productRepository.findByBranchIdAndFilters(branchId, isBreedingDog, suitableSize)
                 .stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ProductResponse getProductById(Long id) {
         Product p = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product not found"));
         return mapToResponse(p);
@@ -98,8 +102,16 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
     public void deleteProduct(Long id) {
-        productRepository.deleteById(id);
+        if (!productRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Product not found");
+        }
+        try {
+            productRepository.deleteById(id);
+        } catch (DataIntegrityViolationException e) {
+            throw new BusinessException("Cannot delete product because it is already used in an order or cart.");
+        }
     }
 
     private ProductResponse mapToResponse(Product p) {
