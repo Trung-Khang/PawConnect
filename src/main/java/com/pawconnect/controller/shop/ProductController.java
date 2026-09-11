@@ -30,13 +30,11 @@ public class ProductController {
         return productService.getProductById(id);
     }
 
-    @PreAuthorize("hasAnyRole('BRANCH_MANAGER', 'ADMIN')")
     @PostMapping
     public ProductResponse createProduct(@RequestBody @Valid ProductRequest request) {
         return productService.createProduct(request);
     }
 
-    @PreAuthorize("hasAnyRole('BRANCH_MANAGER', 'ADMIN')")
     @PutMapping("/{id}")
     public ProductResponse updateProduct(@PathVariable Long id, @RequestBody @Valid ProductRequest request) {
         return productService.updateProduct(id, request);

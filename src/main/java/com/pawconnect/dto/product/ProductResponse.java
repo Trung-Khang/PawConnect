@@ -17,6 +17,8 @@ public class ProductResponse {
     private String age;
     private String healthStatus;
     private String careInstructions;
+    private String ingredients;
+    private String targetAudience;
     private Long categoryId;
     private String categoryName;
     private Long branchId;

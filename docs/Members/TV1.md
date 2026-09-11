@@ -199,6 +199,7 @@ Manager duyệt / hủy lịch
 | 07/09/2026 | Sản phẩm (Chó giống) & Giỏ hàng | `Product`, `Cart` | CRUD, Lọc Branch | Test HQL, Atomic Query | ✅ | Hoàn tất cấu trúc Cloudinary |
 | 07/09/2026 | Đặt hàng & Đặt lịch | `Order`, `ServiceBooking` | Đặt lịch, Checkout | Optimistic Locking | ✅ | Đã chừa sẵn userId cho JWT |
 | 07/09/2026 | Giao diện Frontend | `index.html`, `booking.html`, css, js | Giao tiếp API Local | UI tương tác mượt mà | ✅ | Hoàn thiện Frontend |
+| 11/09/2026 | Upload Ảnh, Sửa Sp, Form Động (Dynamic Fields) | `Product`, DTO, `admin-products.js`, `products.html` | PUT `/api/products/{id}` | Test Upload & Giao diện | ✅ | Hoàn thiện UI Admin & Cloudinary API |
 
 ---
 

@@ -66,7 +66,7 @@ function renderProducts(products) {
         card.innerHTML += `
             <img src="${p.imageUrl || 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=800&auto=format&fit=crop'}" alt="product" class="product-image" onclick="openModal(${safeProductJson})" style="cursor:pointer">
             <h3 class="product-title" onclick="openModal(${safeProductJson})" style="cursor:pointer"></h3>
-            <p class="product-price">$${p.price}</p>
+            <p class="product-price">${p.price.toLocaleString()} VND</p>
             <div class="product-card-actions">
                 <button class="btn-icon-cart" onclick="addToCart(${p.id})" title="Add to Cart"><i class="fas fa-cart-plus"></i></button>
                 <button class="btn-add-cart" onclick="buyNow(${p.id})" style="flex:1;">Mua ngay</button>
@@ -104,7 +104,7 @@ async function loadServices() {
         services.forEach(s => {
             const opt = document.createElement('option');
             opt.value = s.id;
-            opt.textContent = `${s.name} - $${s.price}`;
+            opt.textContent = `${s.name} - ${s.price.toLocaleString()} VND`;
             select.appendChild(opt);
         });
     } catch(e) { console.error(e) }
@@ -187,7 +187,7 @@ async function submitBooking() {
 function openModal(p) {
     document.getElementById('modalImage').src = p.imageUrl || 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=800&auto=format&fit=crop';
     document.getElementById('modalName').textContent = p.name;
-    document.getElementById('modalPrice').textContent = '$' + p.price;
+    document.getElementById('modalPrice').textContent = p.price.toLocaleString() + ' VND';
     document.getElementById('modalBreed').textContent = p.breed || 'Chưa cập nhật';
     document.getElementById('modalAge').textContent = p.age || 'Chưa cập nhật';
     document.getElementById('modalHealth').textContent = p.healthStatus || 'Đang cập nhật';

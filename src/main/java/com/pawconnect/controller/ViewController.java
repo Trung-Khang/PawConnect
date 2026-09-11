@@ -15,4 +15,9 @@ public class ViewController {
     public String bookingPage() {
         return "service/booking"; // points to templates/service/booking.html
     }
+
+    @GetMapping("/admin/products")
+    public String adminProductsPage() {
+        return "admin/products"; // points to templates/admin/products.html
+    }
 }

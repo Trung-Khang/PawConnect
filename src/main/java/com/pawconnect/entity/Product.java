@@ -43,6 +43,11 @@ public class Product {
     @Column(length = 1000)
     private String careInstructions;
 
+    @Column(length = 1000)
+    private String ingredients;
+
+    private String targetAudience;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;

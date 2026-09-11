@@ -61,6 +61,8 @@ public class ProductServiceImpl implements ProductService {
                 .age(request.getAge())
                 .healthStatus(request.getHealthStatus())
                 .careInstructions(request.getCareInstructions())
+                .ingredients(request.getIngredients())
+                .targetAudience(request.getTargetAudience())
                 .branch(branch)
                 .category(category)
                 .build();
@@ -84,6 +86,8 @@ public class ProductServiceImpl implements ProductService {
         p.setAge(request.getAge());
         p.setHealthStatus(request.getHealthStatus());
         p.setCareInstructions(request.getCareInstructions());
+        p.setIngredients(request.getIngredients());
+        p.setTargetAudience(request.getTargetAudience());
         
         if (request.getCategoryId() != null) {
             Category category = categoryRepository.findById(request.getCategoryId())
@@ -128,6 +132,8 @@ public class ProductServiceImpl implements ProductService {
         res.setAge(p.getAge());
         res.setHealthStatus(p.getHealthStatus());
         res.setCareInstructions(p.getCareInstructions());
+        res.setIngredients(p.getIngredients());
+        res.setTargetAudience(p.getTargetAudience());
         if (p.getBranch() != null) {
             res.setBranchId(p.getBranch().getId());
         }

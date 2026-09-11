@@ -31,8 +31,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/refresh-token").permitAll()
                         .requestMatchers("/ws/**").permitAll()
-                        .requestMatchers("/", "/shop", "/service", "/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/", "/shop", "/service", "/admin/**", "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/branches", "/api/categories", "/api/products", "/api/products/*", "/api/service-types").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/upload", "/api/products").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/products/*").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
