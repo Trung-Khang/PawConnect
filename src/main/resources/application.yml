@@ -21,3 +21,15 @@ app:
     refresh-token-ttl: ${JWT_REFRESH_TOKEN_TTL:P14D}
   websocket:
     allowed-origin-pattern: ${WEBSOCKET_ALLOWED_ORIGIN_PATTERN:http://localhost:*}
+  cloudinary:
+    enabled: ${CLOUDINARY_ENABLED:false}
+    cloud-name: ${CLOUDINARY_CLOUD_NAME:}
+    api-key: ${CLOUDINARY_API_KEY:}
+    api-secret: ${CLOUDINARY_API_SECRET:}
+    max-file-size-bytes: ${CLOUDINARY_MAX_FILE_SIZE_BYTES:5242880}
+    max-image-dimension: ${CLOUDINARY_MAX_IMAGE_DIMENSION:4096}
+  seed:
+    users:
+      enabled: ${SEED_USERS_ENABLED:false}
+      directory: ${SEED_V3_DIRECTORY:data-pipeline/data/seed/v3}
+      password: ${SEED_USER_PASSWORD:}
