@@ -215,14 +215,51 @@ Build / run / deploy ✅
 | 2026-09-08 | Xác thực và phân quyền JWT | `config`, `security`, `controller/auth`, `service/auth`, `dto/auth` | `POST /api/auth/register`, `/login`, `/refresh-token`; `GET /me`; BCrypt, stateless JWT, method security | `AuthFlowIntegrationTest` ✅ | ✅ | TV1, TV2 |
 | 2026-09-08 | Chat nhận nuôi real-time | `Conversation`, `ChatMessage`, STOMP/SockJS, `controller/chat`, `service/chat` | JWT ở STOMP CONNECT; chỉ 2 thành viên hội thoại được subscribe/send; lịch sử có phân trang | `ConversationServiceIntegrationTest` ✅ | ✅ | TV2 |
 | 2026-09-08 | Dashboard tài khoản | `controller/admin`, `service/admin` | `GET /api/admin/users` chỉ `ADMIN`, response không chứa password hash | `AdminUserControllerSecurityTest` ✅ | ✅ | TV1, TV2 |
+| 2026-09-14 | Seed User/Role/Branch theo Seed V3 | `User`, `Branch`, `RoleDataInitializer`, `SeedUserImportService` | Map `role_code` / `branch_code` sang entity ID; `BRANCH_MANAGER` bắt buộc thuộc Branch; lưu `seedKey` và cấp `GET /api/admin/users/seed-mapping`; BCrypt password chỉ từ `SEED_USER_PASSWORD` runtime; chỉ chạy seed ở profile `dev` / `test` / `demo` | `SeedUserImportServiceIntegrationTest` ✅; `mvn test` 9/9 ✅ | ✅ | TV1, TV2 |
+| 2026-09-14 | Cloudinary dùng chung & bảo mật media | `.env.example`, `config/Cloudinary*`, `service/media`, `controller/media` | Upload/prepare-replace/delete ảnh cho Product/PuppyListing/DogProfile/AdoptionPost; avatar User lưu `secure_url` + `public_id`; Customer chỉ avatar, Manager scope theo Branch, Admin toàn hệ thống; JPEG/PNG/GIF, tối đa 5 MB và 4096 px; xóa mock URL cũ | `CloudinaryMediaServiceTest`, `MediaAccessServiceIntegrationTest`; `mvn test` 9/9 ✅ | ✅ (chưa live upload) | TV1, TV2 |
 
 Đối với mỗi lần tích hợp, ghi rõ: đã nhận gì từ TV1/TV2 → đã tích hợp gì → có conflict không → test đã chạy → bug còn tồn tại → đã báo ai → đã fix chưa.
 
 | Ngày | Đã nhận | Đã tích hợp | Conflict / blocker | Test | Phản hồi |
 | ---- | ------- | ----------- | ------------------ | ---- | -------- |
 | 2026-09-08 | Chưa có entity/API đã bàn giao từ TV1/TV2 trên nhánh `TV3` | Chat giữ `adoptionPostId` là khóa tích hợp, không tạo entity hoặc FK giả | Chờ TV2 bàn giao AdoptionPost/Application để chỉ mở Conversation theo đúng trạng thái đơn; chờ TV1 bàn giao Branch để thêm `/api/admin/branches` | Chưa thể chạy integration liên module | Cần TV1/TV2 bàn giao contract/entity trước giai đoạn ghép hệ thống |
+| 2026-09-14 | Seed V3: `reference/roles.csv`, `reference/branches.csv`, `fixtures/users.csv`; Cloudinary SDK có sẵn trên `main`, không có credential hoặc ảnh được cấp | Bổ sung stable `Branch.code`, quan hệ `User–Branch`, mapping `seed_key → User.id`, API media chuẩn; `User.avatarUrl/avatarPublicId` do TV3 lưu; mock URL Cloudinary đã bị xóa | Product/PuppyListing (TV1) và DogProfile/AdoptionPost (TV2) chưa có trường/API lưu `public_id`; Branch phải được TV1 import có `code` trước User seed. Đây là dependency bàn giao, không tự sửa entity nghiệp vụ của TV1/TV2 | `mvn test` 9/9 ✅ | Đã phản hồi TV1/TV2: gọi API media, lưu `secureUrl` + `publicId` vào record sở hữu trước; chỉ sau DB update thành công mới gọi DELETE ảnh cũ. Cloudinary live chưa test vì không có credential/tài sản ảnh được cấp |
 
 ---
+
+## 10.1. Bàn giao TV3 — Seed V3 và Cloudinary (2026-09-14)
+
+**Commit code:** `4ad99e3` — `feat(tv3): add Seed V3 user mapping and secure media service`.
+
+### CSV/dataset đã sử dụng
+
+- `data-pipeline/data/seed/v3/reference/roles.csv`: 3 Role chuẩn.
+- `data-pipeline/data/seed/v3/reference/branches.csv`: `branch_code` để liên kết Branch Manager.
+- `data-pipeline/data/seed/v3/fixtures/users.csv`: 6 User bootstrap.
+- Không sửa Seed V3 và không dùng `password`, hash, token, Cloudinary secret hay URL ảnh giả từ CSV.
+
+### Entity, mapping và API đã bàn giao
+
+- `Role`: xác nhận enum `CUSTOMER`, `BRANCH_MANAGER`, `ADMIN`; import theo `role_code` → `Role.id`.
+- `Branch`: thêm stable `code`; `branch_code` → `Branch.id`. Branch phải được TV1 import trước User seed.
+- `User`: thêm `seedKey`, quan hệ tùy chọn `branch`, `avatarPublicId`; `seed_key` → `User.id` được trả cho module khác qua `GET /api/admin/users/seed-mapping` (ADMIN).
+- Credential User seed chỉ được BCrypt hash tại runtime từ `SEED_USER_PASSWORD`; seed chỉ chạy khi `SEED_USERS_ENABLED=true` và profile là `dev`, `test` hoặc `demo`.
+- Media: `POST /api/media/{PRODUCT|PUPPY_LISTING|DOG_PROFILE|ADOPTION_POST}`, `POST /api/media/{type}/replace`, `DELETE /api/media/{type}`, `PUT|DELETE /api/media/avatar`.
+- Upload trả `secureUrl` và `publicId`. Customer chỉ thay avatar của chính mình; Branch Manager bị giới hạn thư mục Branch; Admin quản lý toàn bộ thư mục `pawconnect/`.
+
+### File code chính
+
+- `config/CloudinaryConfiguration`, `CloudinaryProperties`, `SeedUserInitializer`, `SeedUserProperties`.
+- `service/seed/SeedUserImportService`, `service/media/*`, `controller/media/MediaController`.
+- `entity/User`, `entity/Branch`, repositories và `controller/admin/AdminUserController`.
+- `.env.example` chỉ chứa tên biến môi trường; service mock trả URL Cloudinary giả đã bị xóa.
+
+### Hoàn thành, giới hạn và việc tiếp theo
+
+- Hoàn thành: mapping Role/Branch/User, User ID mapping, runtime BCrypt credential, API/config Cloudinary và kiểm soát quyền upload/xóa/thay ảnh; xác thực JPEG/PNG/GIF, tối đa 5 MB và 4096 px.
+- Đã test: `mvn test` — 9 tests pass, 0 failures, 0 errors; gồm auth, admin security, chat, Seed User và media.
+- Chưa thực hiện live upload Cloudinary vì chưa có credential và asset được cấp phép; không commit secret hoặc upload thử.
+- TV1/TV2 còn phải thêm/lưu `secure_url` và `public_id` cho record nghiệp vụ do họ sở hữu. Luồng thay ảnh: upload ảnh mới → lưu metadata mới vào database thành công → gọi DELETE với `previousPublicId`; không sửa `Seed V3`.
 
 ## 11. Tiến độ 8 tuần 
 
