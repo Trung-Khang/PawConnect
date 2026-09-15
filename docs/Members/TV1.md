@@ -194,7 +194,11 @@ Manager duyệt / hủy lịch
 
 | Ngày | Chức năng | File/Module | API | Test | Trạng thái | Bàn giao |
 | ---- | --------- | ----------- | --- | ---- | ---------- | -------- |
-|      |           |             |     |      | ⬜/🟨/✅     |          |
+| 07/09/2026 | Khởi tạo CSDL, 7 Entities cốt lõi | `entity/*` | Không | Hibernate DDL | ✅ | Xong |
+| 07/09/2026 | Chi nhánh & Danh mục | `Branch`, `Category` | GET All | Postman | ✅ | Sẵn sàng tích hợp |
+| 07/09/2026 | Sản phẩm (Chó giống) & Giỏ hàng | `Product`, `Cart` | CRUD, Lọc Branch | Test HQL, Atomic Query | ✅ | Hoàn tất cấu trúc Cloudinary |
+| 07/09/2026 | Đặt hàng & Đặt lịch | `Order`, `ServiceBooking` | Đặt lịch, Checkout | Optimistic Locking | ✅ | Đã chừa sẵn userId cho JWT |
+| 07/09/2026 | Giao diện Frontend | `index.html`, `booking.html`, css, js | Giao tiếp API Local | UI tương tác mượt mà | ✅ | Hoàn thiện Frontend |
 
 ---
 

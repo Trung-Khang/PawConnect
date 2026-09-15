@@ -4,7 +4,9 @@ import com.pawconnect.dto.product.ProductRequest;
 import com.pawconnect.dto.product.ProductResponse;
 import com.pawconnect.service.shop.ProductService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -28,16 +30,19 @@ public class ProductController {
         return productService.getProductById(id);
     }
 
+    @PreAuthorize("hasAnyRole('BRANCH_MANAGER', 'ADMIN')")
     @PostMapping
-    public ProductResponse createProduct(@RequestBody ProductRequest request) {
+    public ProductResponse createProduct(@RequestBody @Valid ProductRequest request) {
         return productService.createProduct(request);
     }
 
+    @PreAuthorize("hasAnyRole('BRANCH_MANAGER', 'ADMIN')")
     @PutMapping("/{id}")
-    public ProductResponse updateProduct(@PathVariable Long id, @RequestBody ProductRequest request) {
+    public ProductResponse updateProduct(@PathVariable Long id, @RequestBody @Valid ProductRequest request) {
         return productService.updateProduct(id, request);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public void deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
