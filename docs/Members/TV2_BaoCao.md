@@ -129,6 +129,23 @@
 - **TV1 cần đối chiếu khi tích hợp commerce:** Seed V3 tách `PuppyListing` khỏi `Product`; không trộn dữ liệu puppy bán với `DogProfile` nhận nuôi.
 - **TV2 bàn giao:** 9 endpoint đã sẵn sàng trên H2. Import MySQL và Cloudinary thực chỉ thực hiện sau khi đầu mối TV1/TV3 xác nhận các dependency trên.
 
+## Giai đoạn 5 - Giao diện nhận nuôi
+
+**Trạng thái: COMPLETED trên H2 local.**
+
+- Đã thêm bốn route giao diện Thymeleaf: `/adoptions`, `/adoptions/{id}`, `/adoptions/my-applications` và `/adoptions/manage`; tất cả dùng chung template `community/adoptions` để không sao chép giao diện.
+- Danh sách và chi tiết bài nhận nuôi gọi hai GET public; có tìm kiếm phía trình duyệt, empty state, error state và fallback ký tự tên khi `image_url` đang trống theo Seed V3.
+- CUSTOMER có form nộp đơn và trang đơn của mình. Admin/Branch Manager có form tạo DogProfile + AdoptionPost, cập nhật bài và danh sách đơn để duyệt/từ chối. Mọi ghi dữ liệu đi qua 9 API đã chốt, service tiếp tục là nơi quyết định role, branch scope và rule approve/close.
+- Không tạo API mới, không dùng PuppyListing/Product thương mại, không đưa URL ảnh giả hoặc secret vào giao diện. Upload ảnh thật vẫn thuộc Giai đoạn 6.
+- `AdoptionViewControllerIntegrationTest` PASS: bốn route UI render template khi chưa đăng nhập. Bộ test Adoption liên quan PASS `14/14`.
+
+### Phối hợp TV1/TV3
+
+- **TV3 cần xác nhận:** convention key JWT của giao diện đăng nhập. UI hiện đọc lần lượt `pawconnect.accessToken` hoặc `accessToken` trong local/session storage để gọi `/api/auth/me`; khi TV3 chốt key chung, TV2 sẽ chỉ giữ một convention.
+- **TV3 cần bàn giao cho Giai đoạn 6:** service/API Cloudinary ổn định, metadata `secure URL` và `public ID`, cùng rule phân quyền upload/thay/xóa ảnh.
+- **TV1 cần xác nhận:** khi giao diện quản trị chung hoàn thiện, link/điều hướng tới `/adoptions/manage` không được thay đổi API hoặc trộn PuppyListing/Product với nhận nuôi.
+- **Blocker còn lại:** chưa có login UI và dữ liệu MySQL chung để kiểm thử tay đầy đủ theo role; việc này không chặn public UI hoặc test MockMvc trên H2.
+
 ## Progress log
 
 | Ngày | Chức năng | File/Module | API | Test | Trạng thái | Bàn giao |
@@ -139,3 +156,4 @@
 | 15/09/2026 | Giai đoạn 2B: nghiệm thu import MySQL chung | Chưa triển khai code mới | Không có API mới | Chưa chạy; phụ thuộc database chung | 🟨 WAITING | TV1: MySQL/Branch importer; TV3: Role/User/Branch mapping; sau đó TV2 chạy import và integration test MySQL |
 | 15/09/2026 | Giai đoạn 3: service và rule nghiệp vụ nhận nuôi | DTO/mapper, `AdoptionService`, repository query, integration test | Sẵn sàng cho 9 endpoint Giai đoạn 4 | PASS: role, branch ownership, PENDING trùng, approve/close/reject và manage scope | ✅ | TV3 giữ JWT principal email và role/branch authority; TV1 giữ mapping Branch khi tích hợp MySQL |
 | 15/09/2026 | Giai đoạn 4: REST API nhận nuôi | `AdoptionController`, DTO create/validation, MockMvc test, SecurityConfig matcher public | Đủ 9 endpoint theo `TV2.md`; không có endpoint DogProfile riêng | PASS: 5 MockMvc test, 401/403/404/409/400, public GET, branch ownership, approve/reject | ✅ | TV3 review public GET/security; TV1 xử lý Booking concurrency test, MySQL và tách PuppyListing khỏi Product theo Seed V3 |
+| 15/09/2026 | Giai đoạn 5: giao diện nhận nuôi | `AdoptionViewController`, template, CSS/JS, view integration test | UI cho list/detail/apply/my applications/manage; chỉ gọi 9 API Adoption hiện có | PASS: 4 route view; bộ test Adoption liên quan 14/14 | ✅ | TV3 chốt key lưu JWT và Cloudinary API; TV1 giữ điều hướng/commerce tách biệt; cần test tay sau login/MySQL chung |

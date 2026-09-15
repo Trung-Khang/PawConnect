@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nhận nuôi | PawConnect</title>
+    <link rel="stylesheet" href="/css/adoption.css">
+</head>
+<body>
+<header class="site-header">
+    <a class="brand" href="/shop">PawConnect</a>
+    <nav aria-label="Điều hướng nhận nuôi">
+        <a href="/adoptions">Nhận nuôi</a>
+        <a href="/adoptions/my-applications" data-customer-only>Đơn của tôi</a>
+        <a href="/adoptions/manage" data-staff-only>Quản lý nhận nuôi</a>
+    </nav>
+    <span id="account-status" class="account-status">Khách</span>
+</header>
+
+<main class="page-shell">
+    <section class="page-heading">
+        <p class="eyebrow">PawConnect</p>
+        <h1 id="page-title">Tìm một người bạn đồng hành</h1>
+        <p id="page-subtitle">Các hồ sơ đang sẵn sàng nhận nuôi tại PawConnect.</p>
+    </section>
+
+    <section id="notice" class="notice" role="status" aria-live="polite" hidden></section>
+
+    <section id="adoption-list-view">
+        <div class="toolbar">
+            <label class="search-field" for="adoption-search">
+                <span>Tìm theo tên, giống hoặc nội dung</span>
+                <input id="adoption-search" type="search" placeholder="Nhập từ khóa">
+            </label>
+            <p id="post-count" class="muted"></p>
+        </div>
+        <div id="adoption-list" class="adoption-grid" aria-live="polite"></div>
+    </section>
+
+    <section id="adoption-detail-view" hidden>
+        <a class="back-link" href="/adoptions">Quay lại danh sách</a>
+        <article id="adoption-detail" class="detail-panel"></article>
+        <form id="application-form" class="panel form-panel" hidden>
+            <h2>Đăng ký nhận nuôi</h2>
+            <label for="application-message">Lời nhắn</label>
+            <textarea id="application-message" name="message" rows="5" maxlength="1000" required
+                      placeholder="Chia sẻ ngắn gọn về điều kiện chăm sóc của bạn"></textarea>
+            <button type="submit">Gửi đơn đăng ký</button>
+        </form>
+        <p id="application-login-hint" class="muted" hidden>Đăng nhập bằng tài khoản khách hàng để gửi đơn.</p>
+        <section id="post-edit-panel" class="panel" hidden>
+            <h2>Cập nhật bài nhận nuôi</h2>
+            <form id="post-edit-form" class="form-grid">
+                <label>Tiêu đề<input name="title" required maxlength="255"></label>
+                <label class="full-width">Mô tả<textarea name="description" rows="4" required maxlength="3000"></textarea></label>
+                <label class="full-width">Ghi chú sức khỏe<textarea name="healthNote" rows="3" maxlength="2000"></textarea></label>
+                <label>Trạng thái
+                    <select name="status">
+                        <option value="AVAILABLE">Đang nhận nuôi</option>
+                        <option value="CLOSED">Đã đóng</option>
+                    </select>
+                </label>
+                <div class="form-actions"><button type="submit">Lưu thay đổi</button></div>
+            </form>
+        </section>
+    </section>
+
+    <section id="my-applications-view" hidden>
+        <div id="my-applications" class="stack-list" aria-live="polite"></div>
+    </section>
+
+    <section id="manage-view" hidden>
+        <div class="manage-layout">
+            <section class="panel">
+                <h2>Đăng bài nhận nuôi</h2>
+                <form id="create-adoption-form" class="form-grid">
+                    <label>Tên chó<input name="name" required maxlength="120"></label>
+                    <label>Giống<input name="breed" required maxlength="120"></label>
+                    <label>Kích thước
+                        <select name="size" required><option value="SMALL">Nhỏ</option><option value="MEDIUM">Vừa</option><option value="LARGE">Lớn</option></select>
+                    </label>
+                    <label>Tuổi (tháng)<input name="ageMonths" type="number" min="0" required></label>
+                    <label>Cân nặng (kg)<input name="weightKg" type="number" min="0.01" step="0.01"></label>
+                    <label>Giới tính
+                        <select name="gender" required><option value="MALE">Đực</option><option value="FEMALE">Cái</option></select>
+                    </label>
+                    <label>Tình trạng tiêm chủng
+                        <select name="vaccinationStatus" required><option value="NOT_VACCINATED">Chưa tiêm</option><option value="PARTIALLY_VACCINATED">Tiêm một phần</option><option value="FULLY_VACCINATED">Tiêm đầy đủ</option></select>
+                    </label>
+                    <label>Chi nhánh<input name="branchId" type="number" min="1" required></label>
+                    <label class="full-width">Mô tả hồ sơ<textarea name="dogDescription" rows="3" maxlength="3000"></textarea></label>
+                    <label class="full-width">Tiêu đề bài đăng<input name="title" required maxlength="255"></label>
+                    <label class="full-width">Mô tả bài đăng<textarea name="description" rows="4" required maxlength="3000"></textarea></label>
+                    <label class="full-width">Ghi chú sức khỏe<textarea name="healthNote" rows="3" maxlength="2000"></textarea></label>
+                    <div class="form-actions"><button type="submit">Đăng bài nhận nuôi</button></div>
+                </form>
+            </section>
+            <section>
+                <div class="section-title-row"><h2>Đơn cần xử lý</h2><button id="reload-managed" class="secondary-button" type="button">Tải lại</button></div>
+                <div id="managed-applications" class="stack-list" aria-live="polite"></div>
+            </section>
+        </div>
+    </section>
+</main>
+
+<template id="empty-state-template">
+    <div class="empty-state"><h2>Chưa có dữ liệu phù hợp</h2><p>Hãy quay lại sau hoặc thử thay đổi từ khóa tìm kiếm.</p></div>
+</template>
+
+<script src="/js/adoption.js"></script>
+</body>
+</html>

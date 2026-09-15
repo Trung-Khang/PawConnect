@@ -16,7 +16,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpMethod;
 
 @Configuration
 @EnableWebSecurity
@@ -32,6 +31,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/refresh-token").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/adoptions", "/api/adoptions/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/adoptions", "/adoptions/*").permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/", "/shop", "/service", "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/branches", "/api/categories", "/api/products", "/api/products/*", "/api/service-types").permitAll()
