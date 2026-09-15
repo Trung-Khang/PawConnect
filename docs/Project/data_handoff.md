@@ -84,6 +84,21 @@ database; website đọc từ database, không sửa CSV hoặc build lại Seed
 định seed_key và breed_code; muốn đổi breed thì nên tạo listing mới và đóng
 listing cũ.
 
+**Phân công hình ảnh**
+
+TV1 phụ trách chuẩn bị dữ liệu hình ảnh cho Product, PuppyListing, DogProfile,
+AdoptionPost và User profile khi cần. TV1 dùng thêm commerce/products.csv,
+commerce/puppy_listings.csv, adoption/dog_profiles.csv, adoption/adoption_posts.csv
+và fixtures/users.csv nếu có trường avatar/image.
+
+- Upload ảnh lên Cloudinary theo thư mục và naming convention thống nhất.
+- Ghi secure URL và public ID vào database sau khi importer tạo record.
+- Đảm bảo mỗi bản ghi cần hiển thị có ảnh phù hợp hoặc ảnh mặc định đã thống nhất.
+- Không đưa file ảnh nhị phân, Cloudinary secret, token hoặc API key vào CSV/Git.
+- Không sửa image_url trong Seed V3 để cập nhật ảnh sau khi website chạy.
+
+Ảnh phục vụ trực tiếp cho toàn bộ giao diện website, không chỉ PuppyListing.
+
 **Cách báo cáo lại nhóm**
 
 - File CSV đã sử dụng.
@@ -143,10 +158,23 @@ TV3 phụ trách User, Role, bảo mật và Cloudinary.
 2. Map role_code và branch_code sang database ID.
 3. Tạo và hash credential tại runtime; không lấy password từ CSV.
 4. Cung cấp User ID mapping để TV1 và TV2 liên kết dữ liệu.
-5. Tích hợp Cloudinary cho ảnh User, DogProfile, AdoptionPost, Product và PuppyListing.
-6. Khi upload ảnh, lưu secure URL và public ID vào database.
-7. Khi thay hoặc xóa ảnh, cập nhật Cloudinary và database, không sửa Seed V3.
-8. Không đưa Cloudinary secret, token hoặc API key vào CSV/Git.
+5. Tạo Cloudinary service/configuration dùng chung cho ảnh User, DogProfile, AdoptionPost, Product và PuppyListing.
+6. Cung cấp API upload, thay thế và xóa ảnh; trả về secure URL cùng public ID để TV1 lưu vào database.
+7. Phân quyền thao tác ảnh theo User/Admin/Branch Manager; khi thay hoặc xóa ảnh, cập nhật Cloudinary và database, không sửa Seed V3.
+
+**Phân công kỹ thuật Cloudinary**
+
+TV3 xây dựng service/configuration Cloudinary, đọc credential từ biến môi trường
+hoặc cấu hình local không commit, cung cấp chức năng upload/thay thế/xóa ảnh và
+trả secure URL cùng public ID cho TV1 lưu vào database. TV3 phân quyền upload
+theo User/Admin/Branch Manager và hỗ trợ TV1 với ảnh Product, PuppyListing,
+DogProfile, AdoptionPost và User profile.
+
+TV1 quản lý nội dung và upload ảnh của dataset/business records; TV3 xây dựng
+service/API Cloudinary và bảo mật tích hợp. Database chỉ lưu metadata ảnh như
+secure_url và public_id; Cloudinary chỉ lưu file ảnh. Seed V3 giữ image_url trống,
+ảnh thật được bổ sung sau khi import database. Không lưu file ảnh trong database,
+không tạo URL giả và không ghi secret Cloudinary vào CSV/Git.
 
 **Cách báo cáo lại nhóm**
 

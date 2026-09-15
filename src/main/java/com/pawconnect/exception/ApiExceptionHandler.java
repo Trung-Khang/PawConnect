@@ -23,6 +23,16 @@ public class ApiExceptionHandler {
         return response(HttpStatus.NOT_FOUND, exception.getMessage());
     }
 
+    @ExceptionHandler({InvalidMediaException.class, IllegalArgumentException.class})
+    ResponseEntity<Map<String, Object>> badRequest(RuntimeException exception) {
+        return response(HttpStatus.BAD_REQUEST, exception.getMessage());
+    }
+
+    @ExceptionHandler(MediaStorageUnavailableException.class)
+    ResponseEntity<Map<String, Object>> mediaUnavailable(MediaStorageUnavailableException exception) {
+        return response(HttpStatus.SERVICE_UNAVAILABLE, exception.getMessage());
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     ResponseEntity<Map<String, Object>> forbidden(AccessDeniedException exception) {
         return response(HttpStatus.FORBIDDEN, "You do not have permission to perform this action");

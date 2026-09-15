@@ -21,6 +21,10 @@ public class Branch {
     @Column(nullable = false)
     private String name;
 
+    /** Stable reference used by Seed V3, for example BR_HCM_01. */
+    @Column(unique = true, length = 40)
+    private String code;
+
     @Column(nullable = false)
     private String address;
 
