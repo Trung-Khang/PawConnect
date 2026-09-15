@@ -1,15 +1,10 @@
 package com.pawconnect.dto.order;
 
 import lombok.Data;
-import java.util.List;
+import jakarta.validation.constraints.NotNull;
 
 @Data
 public class OrderRequest {
+    @NotNull(message = "Branch ID is required")
     private Long branchId;
-    private List<OrderItemRequest> items;
-    @Data
-    public static class OrderItemRequest {
-        private Long productId;
-        private Integer quantity;
-    }
 }

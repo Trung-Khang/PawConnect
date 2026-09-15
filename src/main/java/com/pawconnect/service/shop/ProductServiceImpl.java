@@ -10,6 +10,11 @@ import com.pawconnect.repository.CategoryRepository;
 import com.pawconnect.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.pawconnect.exception.ResourceNotFoundException;
+import com.pawconnect.exception.BusinessException;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,26 +28,26 @@ public class ProductServiceImpl implements ProductService {
     private final CategoryRepository categoryRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public List<ProductResponse> getProducts(Long branchId, Boolean isBreedingDog, String suitableSize) {
-        if (branchId == null) {
-            return productRepository.findAll().stream().map(this::mapToResponse).collect(Collectors.toList());
-        }
         return productRepository.findByBranchIdAndFilters(branchId, isBreedingDog, suitableSize)
                 .stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ProductResponse getProductById(Long id) {
-        Product p = productRepository.findById(id).orElseThrow(() -> new RuntimeException("Product not found"));
+        Product p = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product not found"));
         return mapToResponse(p);
     }
 
     @Override
+    @Transactional
     public ProductResponse createProduct(ProductRequest request) {
         Branch branch = branchRepository.findById(request.getBranchId())
-                .orElseThrow(() -> new RuntimeException("Branch not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Branch not found"));
         Category category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
         Product p = Product.builder()
                 .name(request.getName())
@@ -65,8 +70,9 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
     public ProductResponse updateProduct(Long id, ProductRequest request) {
-        Product p = productRepository.findById(id).orElseThrow(() -> new RuntimeException("Product not found"));
+        Product p = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product not found"));
         p.setName(request.getName());
         p.setDescription(request.getDescription());
         p.setPrice(request.getPrice());
@@ -81,8 +87,14 @@ public class ProductServiceImpl implements ProductService {
         
         if (request.getCategoryId() != null) {
             Category category = categoryRepository.findById(request.getCategoryId())
-                    .orElseThrow(() -> new RuntimeException("Category not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
             p.setCategory(category);
+        }
+        
+        if (request.getBranchId() != null) {
+            Branch branch = branchRepository.findById(request.getBranchId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Branch not found"));
+            p.setBranch(branch);
         }
         
         productRepository.save(p);
@@ -90,8 +102,16 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
     public void deleteProduct(Long id) {
-        productRepository.deleteById(id);
+        if (!productRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Product not found");
+        }
+        try {
+            productRepository.deleteById(id);
+        } catch (DataIntegrityViolationException e) {
+            throw new BusinessException("Cannot delete product because it is already used in an order or cart.");
+        }
     }
 
     private ProductResponse mapToResponse(Product p) {
