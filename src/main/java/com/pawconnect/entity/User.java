@@ -36,9 +36,21 @@ public class User {
     @Column(length = 1_000)
     private String avatarUrl;
 
+    @Column(length = 255)
+    private String avatarPublicId;
+
+    /** Seed V3 key used by TV1 and TV2 to resolve a shared user ID. */
+    @Column(unique = true, length = 100)
+    private String seedKey;
+
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
+
+    /** Only BRANCH_MANAGER users are assigned to a branch. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "branch_id")
+    private Branch branch;
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
@@ -66,5 +78,19 @@ public class User {
     public String getPhone() { return phone; }
     public String getAvatarUrl() { return avatarUrl; }
     public Role getRole() { return role; }
+    public String getAvatarPublicId() { return avatarPublicId; }
+    public String getSeedKey() { return seedKey; }
+    public Branch getBranch() { return branch; }
     public Instant getCreatedAt() { return createdAt; }
+
+    public void updateSeedProfile(String seedKey, Role role, Branch branch) {
+        this.seedKey = seedKey;
+        this.role = Objects.requireNonNull(role, "Role must not be null");
+        this.branch = branch;
+    }
+
+    public void updateAvatar(String avatarUrl, String avatarPublicId) {
+        this.avatarUrl = avatarUrl;
+        this.avatarPublicId = avatarPublicId;
+    }
 }

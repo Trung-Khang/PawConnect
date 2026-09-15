@@ -20,11 +20,13 @@ class AdminUserControllerSecurityTest {
     @WithMockUser(roles = "ADMIN")
     void adminCanListAccounts() throws Exception {
         mockMvc.perform(get("/api/admin/users")).andExpect(status().isOk());
+        mockMvc.perform(get("/api/admin/users/seed-mapping")).andExpect(status().isOk());
     }
 
     @Test
     @WithMockUser(roles = "CUSTOMER")
     void customerCannotListAccounts() throws Exception {
         mockMvc.perform(get("/api/admin/users")).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/admin/users/seed-mapping")).andExpect(status().isForbidden());
     }
 }
