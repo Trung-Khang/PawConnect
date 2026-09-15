@@ -1,10 +1,11 @@
 package com.pawconnect.dto.adoption;
 
 import com.pawconnect.entity.AdoptionPostStatus;
+import jakarta.validation.constraints.NotBlank;
 
 public record AdoptionPostUpdateRequest(
-        String title,
-        String description,
+        @NotBlank String title,
+        @NotBlank String description,
         String healthNote,
         String imageUrl,
         String imagePublicId,

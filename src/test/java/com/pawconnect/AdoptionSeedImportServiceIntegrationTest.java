@@ -20,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
+import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -49,7 +50,8 @@ class AdoptionSeedImportServiceIntegrationTest {
         adoptionPostRepository.deleteAll();
         dogProfileRepository.deleteAll();
         userRepository.deleteAll();
-        branchRepository.deleteAll();
+        List.of("BR_HCM_01", "BR_HN_01", "BR_DN_01").forEach(code ->
+                branchRepository.findByCode(code).ifPresent(branchRepository::delete));
     }
 
     @Test
@@ -103,11 +105,13 @@ class AdoptionSeedImportServiceIntegrationTest {
     }
 
     private void saveBranch(String code, String name) {
-        Branch branch = new Branch();
-        branch.setCode(code);
-        branch.setName(name);
-        branch.setAddress("Test branch");
-        branchRepository.save(branch);
+        branchRepository.findByCode(code).orElseGet(() -> {
+            Branch branch = new Branch();
+            branch.setCode(code);
+            branch.setName(name);
+            branch.setAddress("Test branch");
+            return branchRepository.save(branch);
+        });
     }
 
     private void copySeed(Path source, Path target) throws IOException {

@@ -7,6 +7,7 @@ import com.pawconnect.dto.adoption.AdoptionPostResponse;
 import com.pawconnect.dto.adoption.AdoptionPostUpdateRequest;
 import com.pawconnect.dto.adoption.DogProfileRequest;
 import com.pawconnect.dto.adoption.DogProfileResponse;
+import com.pawconnect.dto.adoption.CreateAdoptionRequest;
 import com.pawconnect.entity.AdoptionApplication;
 import com.pawconnect.entity.AdoptionApplicationStatus;
 import com.pawconnect.entity.AdoptionPost;
@@ -166,6 +167,20 @@ public class AdoptionService {
                 .imagePublicId(blankToNull(request.imagePublicId()))
                 .build();
         return AdoptionMapper.toResponse(adoptionPostRepository.save(post));
+    }
+
+    /** Creates a new dog and post atomically, or posts an existing managed DogProfile. */
+    @Transactional
+    public AdoptionPostResponse createAdoption(CreateAdoptionRequest request, String actorEmail) {
+        if (request == null || (request.dogProfileId() == null) == (request.dogProfile() == null)) {
+            throw new IllegalArgumentException("Provide exactly one of dogProfileId or dogProfile");
+        }
+        Long dogProfileId = request.dogProfileId();
+        if (request.dogProfile() != null) {
+            dogProfileId = createDogProfile(request.dogProfile(), actorEmail).id();
+        }
+        return createPost(new AdoptionPostRequest(dogProfileId, request.title(), request.description(), request.healthNote(),
+                request.imageUrl(), request.imagePublicId()), actorEmail);
     }
 
     @Transactional

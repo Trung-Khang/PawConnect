@@ -29,12 +29,12 @@
 - `DogProfile` nhận nuôi không phải `PuppyListing` hoặc `Product` thương mại.
 - Import phải map `seed_key`/stable code sang database ID, có idempotency và không ghi đè dữ liệu vận hành đã chỉnh sửa.
 
-### Blocker và bàn giao cần xác nhận
+### Phối hợp TV1/TV3
 
-1. **Đã xử lý:** TV3 đã bổ sung `Branch.code`, quan hệ `User -> Branch`, `User.seedKey`, JWT và API mapping User ID.
-2. **Đã xử lý:** baseline Maven đã compile/test được sau khi nâng Lombok và cấu hình annotation processor/Surefire cho JDK 26.
-3. **Quyết định hiện tại:** không tạo `Breed` entity/FK cho module nhận nuôi; `DogProfile.breed` giữ tên chuẩn từ Seed V3 và importer Giai đoạn 2 sẽ đối chiếu catalog/reference.
-4. **Cần bàn giao ở Giai đoạn 7:** TV3 chốt thời điểm và contract mở Conversation từ `AdoptionApplication` được duyệt; `Conversation` hiện chỉ nhận `adoptionPostId` và không tạo cross-module JPA mapping.
+- **TV3 - đã xác nhận:** `Branch.code`, quan hệ `User -> Branch`, `User.seedKey`, JWT và mapping User ID đã sẵn sàng cho module nhận nuôi.
+- **TV1 - cần xác nhận trước Giai đoạn 2B:** database PawConnect chung dùng MySQL 8, import Branch idempotent và cách lookup `branch_code -> Branch.id`.
+- **Quyết định TV2 hiện tại:** không tạo `Breed` entity/FK cho nhận nuôi. `DogProfile.breed` giữ tên giống chuẩn từ Seed V3; importer đối chiếu catalog/reference.
+- **TV3 - cần bàn giao ở Giai đoạn 7:** chốt thời điểm và contract mở Conversation từ `AdoptionApplication` được duyệt. `Conversation` hiện chỉ nhận `adoptionPostId`, không tạo cross-module JPA mapping.
 
 ### File đã tạo trong Giai đoạn 1
 
@@ -64,6 +64,11 @@
 - Rule approve/close, kiểm tra role và branch ownership chưa được đặt trong entity; sẽ được enforce ở service/API Giai đoạn 3-4.
 - Đã sửa baseline Maven: Lombok `1.18.48` với annotation processor cho JDK 26; Surefire bật chế độ tương thích Byte Buddy. `mvn test` PASS 11/11.
 
+### Phối hợp TV1/TV3
+
+- **TV3:** giữ tương thích `User.seedKey`, `User.branch`, `Branch.code` và ba role `CUSTOMER`, `BRANCH_MANAGER`, `ADMIN`. Nếu đổi mapping phải báo TV2 trước khi đổi contract/stable code.
+- **TV1:** giữ `Branch.code` và mapping Branch ổn định. Việc tạo Breed entity/FK là quyết định tích hợp chung, không tự thêm FK làm sai lựa chọn `DogProfile.breed` hiện tại.
+
 ## Giai đoạn 2A - Import Seed V3 trên H2 local
 
 **Trạng thái: COMPLETED.**
@@ -76,6 +81,20 @@
 - `AdoptionSeedImportServiceIntegrationTest` có một bản Seed lỗi trong thư mục tạm; breed không tồn tại bị reject trước khi ghi record adoption nào.
 - Giai đoạn 2B chưa thực hiện: chờ TV1 dựng MySQL chung/import Branch và TV3 import User fixture vào cùng database.
 
+### Phối hợp TV1/TV3
+
+- **TV1 cần bàn giao:** một schema MySQL 8 PawConnect dùng chung; importer reference Branch idempotent; giữ các code `BR_HCM_01`, `BR_HN_01`, `BR_DN_01`; không tách Shop và Adoption thành database riêng.
+- **TV3 cần bàn giao:** import `roles.csv` và `users.csv` sau Branch, trước Adoption, trong cùng database; cung cấp mapping User/Branch để TV2 kiểm chứng import.
+- **TV2 sẽ thực hiện 2B** khi hai phần trên đã sẵn sàng, theo thứ tự `reference -> catalog -> users -> adoption -> commerce`.
+
+## Giai đoạn 2B - Nghiệm thu import trên MySQL chung
+
+**Trạng thái: WAITING TV1/TV3.**
+
+- Không có code TV2 mới ở giai đoạn này cho đến khi database chung, Branch reference và User fixture đã được TV1/TV3 bàn giao.
+- Tiêu chí bắt đầu: TV1 xác nhận MySQL/schema/import Branch; TV3 xác nhận Role/User/Branch mapping cùng database; TV2 có cấu hình local không chứa secret để chạy integration test.
+- Tiêu chí nghiệm thu: importer Adoption V3 idempotent trên MySQL, map đúng stable key/code sang ID, không ghi đè dữ liệu vận hành và toàn bộ FK/enum/rule Adoption PASS.
+
 ## Giai đoạn 3 - Service và rule nghiệp vụ
 
 **Trạng thái: COMPLETED.**
@@ -87,30 +106,36 @@
 - `AdoptionServiceIntegrationTest` PASS 4 case: phân quyền/branch ownership, approve/close, chặn application PENDING trùng, close post và lọc manage theo branch.
 - Chưa có controller/API, giao diện hoặc thao tác Cloudinary; các phần này thuộc Giai đoạn 4-6.
 
-TV2 đã hoàn thành Giai đoạn 1 của module nhận nuôi:
-DogProfile, AdoptionPost, AdoptionApplication, enum/repository và test persistence.
+### Phối hợp TV1/TV3
 
-TV2 sẽ dùng H2 local để phát triển/test độc lập. Đây chỉ là DB giả lập
-trên máy TV2, không phải database riêng của kiến trúc dự án.
+- **TV3:** JWT principal phải tiếp tục là email; role authority và Branch của `BRANCH_MANAGER` phải khớp dữ liệu User. Không đổi cơ chế này mà không báo TV2 vì service dùng để phân quyền.
+- **TV1:** chưa cần sửa service nhận nuôi; khi tích hợp MySQL phải giữ Branch ID/mapping để service và importer áp dụng đúng branch scope.
 
-Theo data_handoff, TV1 phụ trách database PawConnect chung và commerce.
-Nhờ TV1 xác nhận/hoàn thành các điểm sau để TV2 chuẩn bị Giai đoạn 2 import Seed V3:
+## Giai đoạn 4 - REST API theo hợp đồng TV2
 
-1. Database tích hợp chung là MySQL 8 và dùng một schema PawConnect cho cả nhóm.
-2. Import reference Seed V3 cho Branch/Category/ServiceType phải idempotent.
-3. Branch.code phải map đúng branch_code Seed V3 như BR_HCM_01.
-4. Không tách database Shop và Adoption; DogProfile của TV2 sẽ FK tới Branch chung.
-5. Báo lại cách TV2 lookup branch_code -> Branch.id khi import adoption.
-6. Sau khi pull/merge thay đổi mới, chạy mvn test để xác nhận baseline PASS.
+**Trạng thái: COMPLETED.**
 
-TV2 không tạo Breed entity/FK trong module adoption hiện tại.
-DogProfile lưu breed là tên chuẩn từ Seed V3 và importer sẽ validate theo catalog.
+- Đã thêm `AdoptionController` với đúng chín endpoint `/api/adoptions` đã chốt: danh sách/chi tiết public, tạo/sửa post, apply, đơn của tôi, manage, approve và reject.
+- `POST /api/adoptions` nhận đúng một trong hai lựa chọn: `dogProfileId` có sẵn hoặc `dogProfile` mới; tạo mới DogProfile và AdoptionPost trong cùng transaction, không thêm endpoint DogProfile thứ mười.
+- Controller lấy email từ JWT principal; không nhận staff ID hoặc applicant ID từ request body. Validation request trả `400`; rule nghiệp vụ trả `404` hoặc `409`; role sai trả `403`; thiếu đăng nhập trả `401`.
+- Đã cập nhật tối thiểu `SecurityConfig` của TV3 để chỉ permit hai GET public đúng contract. JWT và các rule security khác không thay đổi.
+- `AdoptionControllerIntegrationTest` PASS 5 case, bao phủ đủ 9 route, public GET, CUSTOMER/manager, branch ownership, create/apply/approve/reject, và lỗi `400/401/403/404/409`.
+- `mvn test` toàn bộ hiện BLOCKED bởi `BookingServiceConcurrencyTest` của TV1: test này FAIL cả khi chạy độc lập, kỳ vọng một giao dịch bị optimistic locking nhưng nhận 0. TV2 không sửa test/service TV1.
+
+### Phối hợp TV1/TV3
+
+- **TV3 cần xác nhận:** thay đổi tối thiểu tại `SecurityConfig` chỉ mở public hai GET Adoption đúng contract; JWT principal email và rule `401/403` phải tiếp tục tương thích khi TV3 chỉnh security.
+- **TV1 cần xử lý:** `BookingServiceConcurrencyTest` đang fail độc lập, không liên quan code TV2; đồng thời hoàn tất MySQL/reference import để mở Giai đoạn 2B.
+- **TV1 cần đối chiếu khi tích hợp commerce:** Seed V3 tách `PuppyListing` khỏi `Product`; không trộn dữ liệu puppy bán với `DogProfile` nhận nuôi.
+- **TV2 bàn giao:** 9 endpoint đã sẵn sàng trên H2. Import MySQL và Cloudinary thực chỉ thực hiện sau khi đầu mối TV1/TV3 xác nhận các dependency trên.
 
 ## Progress log
 
 | Ngày | Chức năng | File/Module | API | Test | Trạng thái | Bàn giao |
-| --- | --- | --- | --- | --- | --- |
-| 2026-09-15 | Giai đoạn 0: audit contract, Seed V3 và backend | Tài liệu TV2, Seed V3, entity/security/test hiện có | 9 API adoption chưa tạo | V3 verify/self-test PASS; `mvn test` FAIL ở Shop/Booking compile | COMPLETED - BLOCKED cho Giai đoạn 1 | TV1 xác nhận Breed/Branch code; TV3 xác nhận User-Branch/JWT/Chat; nhóm xử lý baseline build |
-| 2026-09-15 | Giai đoạn 1: domain model nhận nuôi và sửa baseline Maven | Entity/enum/repository adoption, `pom.xml`, `AdoptionPersistenceTest` | Chưa tạo API; chuẩn bị cho service/API | `mvn test` PASS 11/11; persistence/FK/enum/unique seed key PASS | COMPLETED | TV2 bàn giao entity/repository; Giai đoạn 2 import Seed V3 dùng Branch/User mapping TV3 và breed text chuẩn từ catalog |
-| 2026-09-15 | Giai đoạn 2A: importer Seed V3 trên H2 local | `AdoptionSeedImportService`, summary, integration test | Chưa tạo API; importer gọi tường minh, không chạy startup | PASS: tạo 30/30/36, chạy lại idempotent, invalid seed rollback | COMPLETED | 2B chờ TV1 MySQL/Branch chung và TV3 User fixture trên cùng DB |
-| 2026-09-15 | Giai đoạn 3: service và rule nghiệp vụ nhận nuôi | DTO/mapper, `AdoptionService`, repository query, integration test | Chưa tạo controller; chuẩn bị đúng 9 endpoint ở Giai đoạn 4 | PASS: role, branch ownership, duplicate PENDING, approve/close/reject và manage scope | COMPLETED | Giai đoạn 4 có thể triển khai trên H2; 2B vẫn chờ MySQL chung của TV1 |
+| ---- | --------- | ----------- | --- | ---- | ---------- | -------- |
+| 15/09/2026 | Giai đoạn 0: rà soát contract, Seed V3 và backend | Tài liệu TV2, Seed V3, entity/security/test hiện có | Chưa tạo API Adoption | Seed V3 verify/self-test PASS; baseline Maven đã được khắc phục | ✅ | TV3 đã bàn giao User/Role/JWT/Branch; TV1 cần chốt MySQL chung và Branch import cho 2B |
+| 15/09/2026 | Giai đoạn 1: domain model nhận nuôi | Entity/enum/repository Adoption, `AdoptionPersistenceTest`, `pom.xml` | Chưa tạo API; chuẩn bị service/API | `mvn test` PASS 11/11; FK, enum, timestamp và unique seed key PASS | ✅ | TV3 giữ mapping User/Branch/role; TV1 giữ Branch code ổn định và không tự đổi lựa chọn breed text |
+| 15/09/2026 | Giai đoạn 2A: import Seed V3 trên H2 local | `AdoptionSeedImportService`, summary, integration test | Import gọi tường minh, không chạy khi startup | PASS: tạo 30/30/36, chạy lại idempotent, Seed lỗi rollback | ✅ | Chờ TV1 bàn giao MySQL/Branch reference và TV3 bàn giao Role/User cùng database cho 2B |
+| 15/09/2026 | Giai đoạn 2B: nghiệm thu import MySQL chung | Chưa triển khai code mới | Không có API mới | Chưa chạy; phụ thuộc database chung | 🟨 WAITING | TV1: MySQL/Branch importer; TV3: Role/User/Branch mapping; sau đó TV2 chạy import và integration test MySQL |
+| 15/09/2026 | Giai đoạn 3: service và rule nghiệp vụ nhận nuôi | DTO/mapper, `AdoptionService`, repository query, integration test | Sẵn sàng cho 9 endpoint Giai đoạn 4 | PASS: role, branch ownership, PENDING trùng, approve/close/reject và manage scope | ✅ | TV3 giữ JWT principal email và role/branch authority; TV1 giữ mapping Branch khi tích hợp MySQL |
+| 15/09/2026 | Giai đoạn 4: REST API nhận nuôi | `AdoptionController`, DTO create/validation, MockMvc test, SecurityConfig matcher public | Đủ 9 endpoint theo `TV2.md`; không có endpoint DogProfile riêng | PASS: 5 MockMvc test, 401/403/404/409/400, public GET, branch ownership, approve/reject | ✅ | TV3 review public GET/security; TV1 xử lý Booking concurrency test, MySQL và tách PuppyListing khỏi Product theo Seed V3 |

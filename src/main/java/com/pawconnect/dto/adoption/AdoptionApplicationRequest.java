@@ -1,4 +1,6 @@
 package com.pawconnect.dto.adoption;
 
-public record AdoptionApplicationRequest(String message) {
+import jakarta.validation.constraints.NotBlank;
+
+public record AdoptionApplicationRequest(@NotBlank String message) {
 }
