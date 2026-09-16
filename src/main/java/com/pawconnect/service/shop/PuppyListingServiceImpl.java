@@ -15,6 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import com.pawconnect.security.SecurityUtils;
+import org.springframework.security.access.AccessDeniedException;
+import java.util.Objects;
 
 @Service
 public class PuppyListingServiceImpl implements PuppyListingService {
@@ -40,6 +43,13 @@ public class PuppyListingServiceImpl implements PuppyListingService {
         Branch branch = branchRepository.findById(request.getBranchId())
                 .orElseThrow(() -> new ResourceNotFoundException("Branch not found"));
 
+        if (SecurityUtils.hasRole("BRANCH_MANAGER")) {
+            Long currentUserBranchId = SecurityUtils.getCurrentUserBranchId();
+            if (!Objects.equals(currentUserBranchId, branch.getId())) {
+                throw new AccessDeniedException("Branch managers can only create puppy listings for their own branch");
+            }
+        }
+
         PuppyListing puppyListing = new PuppyListing();
         mapRequestToEntity(request, puppyListing, category, branch);
         
@@ -57,6 +67,16 @@ public class PuppyListingServiceImpl implements PuppyListingService {
     public PuppyListingResponse updatePuppyListing(Long id, PuppyListingRequest request) {
         PuppyListing puppyListing = puppyListingRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Puppy listing not found with id: " + id));
+
+        if (SecurityUtils.hasRole("BRANCH_MANAGER")) {
+            Long currentUserBranchId = SecurityUtils.getCurrentUserBranchId();
+            if (!Objects.equals(currentUserBranchId, puppyListing.getBranch().getId())) {
+                throw new AccessDeniedException("Branch managers can only update puppy listings for their own branch");
+            }
+            if (request.getBranchId() != null && !Objects.equals(currentUserBranchId, request.getBranchId())) {
+                throw new AccessDeniedException("Branch managers cannot move puppy listings to another branch");
+            }
+        }
 
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
@@ -79,8 +99,8 @@ public class PuppyListingServiceImpl implements PuppyListingService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<PuppyListingResponse> getAllPuppyListings() {
-        return puppyListingRepository.findAll().stream()
+    public List<PuppyListingResponse> getAllPuppyListings(Long branchId, String breedCode, String suitableSize) {
+        return puppyListingRepository.findByBranchIdAndFilters(branchId, breedCode, suitableSize).stream()
                 .map(this::mapEntityToResponse)
                 .collect(Collectors.toList());
     }
@@ -88,8 +108,13 @@ public class PuppyListingServiceImpl implements PuppyListingService {
     @Override
     @Transactional
     public void deletePuppyListing(Long id) {
-        if (!puppyListingRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Puppy listing not found with id: " + id);
+        PuppyListing puppyListing = puppyListingRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Puppy listing not found with id: " + id));
+        if (SecurityUtils.hasRole("BRANCH_MANAGER")) {
+            Long currentUserBranchId = SecurityUtils.getCurrentUserBranchId();
+            if (!Objects.equals(currentUserBranchId, puppyListing.getBranch().getId())) {
+                throw new AccessDeniedException("Branch managers can only delete puppy listings for their own branch");
+            }
         }
         puppyListingRepository.deleteById(id);
     }

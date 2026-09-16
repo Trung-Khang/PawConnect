@@ -23,4 +23,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByBranchIdAndFilters(
             @Param("branchId") Long branchId, 
             @Param("suitableSize") String suitableSize);
+            
+    java.util.Optional<Product> findByName(String name);
 }

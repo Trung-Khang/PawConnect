@@ -48,6 +48,9 @@ public class OrderServiceImpl implements OrderService {
         }
         
         for (CartItem cartItem : cart.getItems()) {
+            if (cartItem.getProduct() == null && cartItem.getPuppyListing() == null) {
+                throw new BusinessException("Invalid cart item: missing product and puppy listing");
+            }
             Branch itemBranch = cartItem.getProduct() != null ? cartItem.getProduct().getBranch() : cartItem.getPuppyListing().getBranch();
             if (!itemBranch.getId().equals(request.getBranchId())) {
                 throw new BusinessException("Cart contains item from a different branch");

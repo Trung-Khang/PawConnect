@@ -15,6 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.pawconnect.exception.ResourceNotFoundException;
 import com.pawconnect.exception.BusinessException;
 import org.springframework.dao.DataIntegrityViolationException;
+import com.pawconnect.security.SecurityUtils;
+import org.springframework.security.access.AccessDeniedException;
+import java.util.Objects;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -49,6 +52,13 @@ public class ProductServiceImpl implements ProductService {
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
+        if (SecurityUtils.hasRole("BRANCH_MANAGER")) {
+            Long currentUserBranchId = SecurityUtils.getCurrentUserBranchId();
+            if (!Objects.equals(currentUserBranchId, branch.getId())) {
+                throw new AccessDeniedException("Branch managers can only create products for their own branch");
+            }
+        }
+
         Product p = Product.builder()
                 .name(request.getName())
                 .description(request.getDescription())
@@ -72,6 +82,17 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public ProductResponse updateProduct(Long id, ProductRequest request) {
         Product p = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        
+        if (SecurityUtils.hasRole("BRANCH_MANAGER")) {
+            Long currentUserBranchId = SecurityUtils.getCurrentUserBranchId();
+            if (!Objects.equals(currentUserBranchId, p.getBranch().getId())) {
+                throw new AccessDeniedException("Branch managers can only update products for their own branch");
+            }
+            if (request.getBranchId() != null && !Objects.equals(currentUserBranchId, request.getBranchId())) {
+                throw new AccessDeniedException("Branch managers cannot move products to another branch");
+            }
+        }
+        
         p.setName(request.getName());
         p.setDescription(request.getDescription());
         p.setPrice(request.getPrice());
@@ -102,8 +123,12 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public void deleteProduct(Long id) {
-        if (!productRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Product not found");
+        Product p = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        if (SecurityUtils.hasRole("BRANCH_MANAGER")) {
+            Long currentUserBranchId = SecurityUtils.getCurrentUserBranchId();
+            if (!Objects.equals(currentUserBranchId, p.getBranch().getId())) {
+                throw new AccessDeniedException("Branch managers can only delete products for their own branch");
+            }
         }
         try {
             productRepository.deleteById(id);

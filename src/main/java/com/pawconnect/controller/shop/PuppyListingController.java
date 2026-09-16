@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
@@ -24,8 +25,11 @@ public class PuppyListingController {
     }
 
     @GetMapping
-    public ResponseEntity<List<PuppyListingResponse>> getAllPuppyListings() {
-        return ResponseEntity.ok(puppyListingService.getAllPuppyListings());
+    public ResponseEntity<List<PuppyListingResponse>> getAllPuppyListings(
+            @RequestParam(required = false) Long branchId,
+            @RequestParam(required = false) String breedCode,
+            @RequestParam(required = false) String suitableSize) {
+        return ResponseEntity.ok(puppyListingService.getAllPuppyListings(branchId, breedCode, suitableSize));
     }
 
     @GetMapping("/{id}")
@@ -34,20 +38,20 @@ public class PuppyListingController {
     }
 
     @PostMapping
-    // @PreAuthorize("hasAnyRole('ADMIN', 'BRANCH_MANAGER')") // Temporarily disabled for dev/test
+    @PreAuthorize("hasAnyRole('ADMIN', 'BRANCH_MANAGER')")
     public ResponseEntity<PuppyListingResponse> createPuppyListing(@Valid @RequestBody PuppyListingRequest request) {
         PuppyListingResponse created = puppyListingService.createPuppyListing(request);
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    // @PreAuthorize("hasAnyRole('ADMIN', 'BRANCH_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BRANCH_MANAGER')")
     public ResponseEntity<PuppyListingResponse> updatePuppyListing(@PathVariable Long id, @Valid @RequestBody PuppyListingRequest request) {
         return ResponseEntity.ok(puppyListingService.updatePuppyListing(id, request));
     }
 
     @DeleteMapping("/{id}")
-    // @PreAuthorize("hasAnyRole('ADMIN', 'BRANCH_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BRANCH_MANAGER')")
     public ResponseEntity<Void> deletePuppyListing(@PathVariable Long id) {
         puppyListingService.deletePuppyListing(id);
         return ResponseEntity.noContent().build();

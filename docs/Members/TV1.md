@@ -9,10 +9,10 @@
 
 TV1 xây dựng toàn bộ luồng **bán chó giống & đồ dùng thú cưng** theo chuỗi cửa hàng và **đặt lịch dịch vụ chăm sóc** (Spa, Khám bệnh, Tiêm phòng).
 
-TV1 quản lý **7 entity**:
+TV1 quản lý **10 entity**:
 
 ```text
-Branch, Category, Product, Order, OrderItem, ServiceType, ServiceBooking
+Branch, Category, Product, PuppyListing, Cart, CartItem, Order, OrderItem, ServiceType, ServiceBooking
 ```
 
 **Quyền hạn:**
@@ -46,9 +46,15 @@ Branch, Category, Product, Order, OrderItem, ServiceType, ServiceBooking
 Branch          (id, name, address, phone, latitude, longitude)
 Category        (id, name, description)
 Product         (id, name, description, price, stock, imageUrl,
-                 suitableSize, isBreedingDog, categoryId, branchId)
+                 suitableSize, categoryId, branchId)
+PuppyListing    (id, seedKey, listingTitle, description, branchId, categoryId,
+                 breedCode, breedType, lifeStage, ageMonths, currentWeightKg,
+                 currentSize, expectedAdultSize, pricePerPuppyVnd, stock,
+                 status, imageUrl, healthStatus, careInstructions)
+Cart            (id, userId)
+CartItem        (id, cartId, productId, puppyListingId, quantity)
 Order           (id, userId, branchId, status, totalAmount, createdAt)
-OrderItem       (id, orderId, productId, quantity, price)
+OrderItem       (id, orderId, productId, puppyListingId, quantity, price)
 ServiceType     (id, name, duration, price)
 ServiceBooking  (id, userId, branchId, serviceTypeId, bookingTime, status)
 ```
@@ -68,20 +74,25 @@ User    1 ── N Order           (User do TV3 cung cấp)
 | ------ | ----------------------------- | ---------------------- | ------------------------------------------- |
 | GET    | `/api/branches`               | Public                 | Danh sách chi nhánh                          |
 | GET    | `/api/categories`             | Public                 | Danh mục sản phẩm / chó giống                |
-| GET    | `/api/products`               | Public                 | DS chó giống & sản phẩm (lọc branchId, isBreedingDog, size) |
-| GET    | `/api/products/{id}`          | Public                 | Chi tiết chó giống / sản phẩm                |
-| POST   | `/api/products`               | BRANCH_MANAGER, ADMIN  | Đăng mới sản phẩm / chó giống                |
+| GET    | `/api/products`               | Public                 | DS sản phẩm (lọc branchId, size)             |
+| GET    | `/api/products/{id}`          | Public                 | Chi tiết sản phẩm                            |
+| POST   | `/api/products`               | BRANCH_MANAGER, ADMIN  | Đăng mới sản phẩm                            |
 | PUT    | `/api/products/{id}`          | BRANCH_MANAGER, ADMIN  | Cập nhật giá bán, số lượng, thông tin        |
-| DELETE | `/api/products/{id}`          | ADMIN                  | Xóa sản phẩm / chó giống                     |
-| POST   | `/api/cart/items`             | CUSTOMER               | Thêm sản phẩm / chó giống vào giỏ             |
+| DELETE | `/api/products/{id}`          | ADMIN                  | Xóa sản phẩm                                 |
+| GET    | `/api/puppy-listings`         | Public                 | DS chó giống (lọc branchId, breed)           |
+| GET    | `/api/puppy-listings/{id}`    | Public                 | Chi tiết chó giống                           |
+| POST   | `/api/puppy-listings`         | BRANCH_MANAGER, ADMIN  | Đăng bán chó giống mới                       |
+| PUT    | `/api/puppy-listings/{id}`    | BRANCH_MANAGER, ADMIN  | Cập nhật thông tin chó giống                 |
+| DELETE | `/api/puppy-listings/{id}`    | ADMIN                  | Xóa chó giống                                |
+| POST   | `/api/cart/items`             | CUSTOMER               | Thêm sản phẩm / chó giống vào giỏ            |
 | GET    | `/api/cart`                   | CUSTOMER               | Xem giỏ hàng cá nhân                         |
 | DELETE | `/api/cart/items/{id}`        | CUSTOMER               | Xóa sản phẩm khỏi giỏ                        |
-| POST   | `/api/orders`                 | CUSTOMER               | Đặt mua chó giống / sản phẩm                  |
+| POST   | `/api/orders`                 | CUSTOMER               | Đặt mua chó giống / sản phẩm                 |
 | GET    | `/api/orders/my`              | CUSTOMER               | Lịch sử mua hàng cá nhân                     |
-| PUT    | `/api/orders/{id}/status`     | BRANCH_MANAGER, ADMIN  | Cập nhật trạng thái xử lý đơn                 |
+| PUT    | `/api/orders/{id}/status`     | BRANCH_MANAGER, ADMIN  | Cập nhật trạng thái xử lý đơn                |
 | GET    | `/api/service-types`          | Public                 | Danh sách gói dịch vụ (Spa, Khám, Tiêm)      |
-| POST   | `/api/bookings`               | CUSTOMER               | Đặt lịch chăm sóc chó tại chi nhánh           |
-| GET    | `/api/bookings/my`            | CUSTOMER               | Danh sách lịch hẹn cá nhân                    |
+| POST   | `/api/bookings`               | CUSTOMER               | Đặt lịch chăm sóc chó tại chi nhánh          |
+| GET    | `/api/bookings/my`            | CUSTOMER               | Danh sách lịch hẹn cá nhân                   |
 | PUT    | `/api/bookings/{id}/status`   | BRANCH_MANAGER         | Duyệt / hủy lịch hẹn tại chi nhánh           |
 
 ---
@@ -124,7 +135,7 @@ src/main/resources/static/images/
 
 * **Shared Database**: toàn hệ thống dùng chung một CSDL quan hệ; dữ liệu Shop/Dịch vụ phân biệt theo khóa ngoại `branch_id`.
 * **Index**:
-  * `idx_product_branch_dog` trên `Product(branch_id, is_breeding_dog, suitable_size)` — tối ưu lọc chó giống/đồ dùng theo chi nhánh.
+  * `idx_product_branch_size` trên `Product(branch_id, suitable_size)` — tối ưu lọc đồ dùng theo chi nhánh.
   * `idx_booking_branch_time` trên `ServiceBooking(branch_id, booking_time, status)` — hỗ trợ kiểm tra chống trùng lịch tại chi nhánh.
 * **Chống trùng lịch ServiceBooking**: dùng Optimistic Locking (`@Version`) hoặc Pessimistic Locking trong JPA để khóa bản ghi lịch hẹn khi xử lý giao dịch đặt lịch.
 * **Chống race condition khi mua chó giống độc bản (stock = 1)**: dùng câu truy vấn Atomic Update trong `@Transactional`:

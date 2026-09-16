@@ -174,3 +174,29 @@ Tiếp tục bám sát Data Contract v0.2 draft, TV1 đã tách biệt hoàn to�
 - Nút "Mua ngay" và "Thêm vào giỏ hàng" xử lý đúng logic gọi API với `productId` hoặc `puppyListingId`.
 
 Trạng thái hạng mục Tách Biệt PuppyListing: `COMPLETED`. Mọi thay đổi code đều chỉ giới hạn trong phạm vi task của TV1.
+
+## 14. Báo Cáo Cập Nhật (Ngày 16/09/2026) - Hoàn thiện 100% các Task Kỹ thuật còn lại của TV1
+
+Trong phiên làm việc này, TV1 đã hoàn thành dứt điểm toàn bộ các mục còn thiếu trong danh sách bàn giao (Data Handoff), đảm bảo hệ thống đạt chuẩn hoàn thiện để TV2 và TV3 tích hợp:
+
+### 14.1. Phân quyền Branch Manager (Scope Validation)
+- Bổ sung `branchId` vào `CustomUserDetails` để dễ dàng quản lý phân quyền theo ngữ cảnh (Security Context).
+- Cập nhật logic trong `ProductServiceImpl` và `PuppyListingServiceImpl`: **Branch Manager** hiện chỉ được phép tạo, sửa, và xóa các sản phẩm thuộc về chi nhánh của mình. Bất kỳ cố gắng nào tác động chéo chi nhánh đều ném lỗi `AccessDeniedException`.
+- Viết mới `AuthorizationIntegrationTest` (4/4 test cases passed) để bảo vệ tuyệt đối luồng dữ liệu này.
+
+### 14.2. Hoàn thiện API Lọc PuppyListing & Tự động đổi trạng thái
+- **API Lọc:** Nâng cấp `GET /api/puppy-listings` trong `PuppyListingController` để nhận các `@RequestParam` tùy chọn (`branchId`, `breedCode`, `suitableSize`). Tầng Repository đã được gắn thêm JPQL `@Query` tương ứng để tối ưu hiệu năng lọc.
+- **Tự động SOLD_OUT:** Sửa đổi Native Query `decrementStock` trong `PuppyListingRepository` để tích hợp điều kiện `CASE WHEN`: Ngay khi `stock` bị trừ về 0 sau một đơn hàng, hệ thống sẽ tự động gán `status = 'SOLD_OUT'` ở mức Database, tránh hoàn toàn Race Condition.
+
+### 14.3. Nâng cấp DevDataInitializer (Idempotent Importer)
+- Gỡ bỏ logic kiểm tra `count() > 0` lỗi thời để tránh việc chặn nạp dữ liệu khi DB bị thay đổi.
+- Áp dụng chiến lược **Upsert** thông minh:
+  - Tra cứu Branch bằng `code`.
+  - Tra cứu Category / Product bằng `name`.
+  - Tra cứu PuppyListing bằng `seed_key`.
+- Luồng seed dữ liệu đảm bảo không bao giờ sinh ra lỗi trùng lặp (Duplicate Key) hay vi phạm khóa ngoại, hỗ trợ chạy lại nhiều lần (idempotent).
+
+### 14.4. Quyết định về bảng Breed
+- Để giảm bớt sự rườm rà và tránh tạo thêm phụ thuộc cho bảng `PuppyListing`, nhóm thống nhất giữ lại trường `breedCode` dưới dạng Text, **không tạo bảng Breed** riêng lẻ. Mọi dữ liệu chó thương mại đã được map thành công từ file `commerce/puppy_listings.csv` mới của Seed V3.
+
+Trạng thái toàn bộ các module của TV1: `COMPLETED`. Sẵn sàng cho tích hợp toàn cục.

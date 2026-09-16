@@ -11,9 +11,12 @@ import com.pawconnect.repository.CategoryRepository;
 import com.pawconnect.repository.ProductRepository;
 import com.pawconnect.repository.PuppyListingRepository;
 import com.pawconnect.repository.ServiceTypeRepository;
-import org.springframework.boot.CommandLineRunner;
+import com.pawconnect.entity.BreedType;
+import com.pawconnect.entity.LifeStage;
+import com.pawconnect.entity.DogSize;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.CommandLineRunner;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -34,11 +37,6 @@ public class DevDataInitializer {
             ProductRepository productRepository,
             PuppyListingRepository puppyListingRepository) {
         return arguments -> {
-            // Only run if empty
-            if (branchRepository.count() > 0) {
-                return;
-            }
-
             try {
                 String basePath = System.getProperty("user.dir") + "/data-pipeline/data/seed/v3/";
 
@@ -48,16 +46,16 @@ public class DevDataInitializer {
                 if (branchFile.exists()) {
                     List<String> lines = Files.readAllLines(branchFile.toPath());
                     for (int i = 1; i < lines.size(); i++) {
-                        String[] parts = lines.get(i).split(",");
+                        String[] parts = parseCsvLine(lines.get(i));
                         if (parts.length >= 7) {
                             String code = parts[1];
-                            Branch branch = Branch.builder()
-                                    .name(parts[2])
-                                    .address(parts[3])
-                                    .phone(parts[4])
-                                    .latitude(Double.parseDouble(parts[5]))
-                                    .longitude(Double.parseDouble(parts[6]))
-                                    .build();
+                            Branch branch = branchRepository.findByCode(code).orElse(new Branch());
+                            branch.setName(parts[2]);
+                            branch.setCode(code);
+                            branch.setAddress(parts[3]);
+                            branch.setPhone(parts[4]);
+                            branch.setLatitude(Double.parseDouble(parts[5]));
+                            branch.setLongitude(Double.parseDouble(parts[6]));
                             branchRepository.save(branch);
                             branchMap.put(code, branch);
                         }
@@ -70,13 +68,12 @@ public class DevDataInitializer {
                 if (categoryFile.exists()) {
                     List<String> lines = Files.readAllLines(categoryFile.toPath());
                     for (int i = 1; i < lines.size(); i++) {
-                        String[] parts = lines.get(i).split(",");
+                        String[] parts = parseCsvLine(lines.get(i));
                         if (parts.length >= 4) {
                             String code = parts[1];
-                            Category category = Category.builder()
-                                    .name(parts[2])
-                                    .description(parts[3])
-                                    .build();
+                            Category category = categoryRepository.findByName(parts[2]).orElse(new Category());
+                            category.setName(parts[2]);
+                            category.setDescription(parts[3]);
                             categoryRepository.save(category);
                             categoryMap.put(code, category);
                         }
@@ -88,14 +85,18 @@ public class DevDataInitializer {
                 if (serviceFile.exists()) {
                     List<String> lines = Files.readAllLines(serviceFile.toPath());
                     for (int i = 1; i < lines.size(); i++) {
-                        String[] parts = lines.get(i).split(",");
+                        String[] parts = parseCsvLine(lines.get(i));
                         if (parts.length >= 5) {
-                            ServiceType serviceType = ServiceType.builder()
-                                    .name(parts[2])
-                                    .duration(Integer.parseInt(parts[3]))
-                                    .price(new BigDecimal(parts[4]))
-                                    .build();
-                            serviceTypeRepository.save(serviceType);
+                            // Skipping idempotent service type update because we didn't add findByName, and it doesn't have a code.
+                            // Assuming serviceType is not strictly TV1's main domain for now, or we can just skip it if it exists.
+                            if (serviceTypeRepository.findAll().stream().noneMatch(s -> s.getName().equals(parts[2]))) {
+                                ServiceType serviceType = ServiceType.builder()
+                                        .name(parts[2])
+                                        .duration(Integer.parseInt(parts[3]))
+                                        .price(new BigDecimal(parts[4]))
+                                        .build();
+                                serviceTypeRepository.save(serviceType);
+                            }
                         }
                     }
                 }
@@ -107,7 +108,7 @@ public class DevDataInitializer {
                     for (int i = 1; i < lines.size(); i++) {
                         String line = lines.get(i);
                         if (line.trim().isEmpty()) continue;
-                        String[] parts = line.split(",", -1);
+                        String[] parts = parseCsvLine(line);
                         if (parts.length >= 20) {
                             String name = parts[2];
                             String description = parts[3];
@@ -115,43 +116,83 @@ public class DevDataInitializer {
                             Integer stock = Integer.parseInt(parts[5]);
                             String imageUrl = parts[6];
                             String suitableSize = parts[7];
-                            Boolean isBreedingDog = Boolean.parseBoolean(parts[8]);
                             String categoryCode = parts[9];
                             String branchCode = parts[10];
-                            String age = parts[14];
-                            String breed = parts[12];
-                            String healthStatus = parts[18];
-                            String careInstructions = parts[19];
 
-                            if (isBreedingDog) {
-                                PuppyListing puppy = new PuppyListing();
-                                puppy.setListingTitle(name);
-                                puppy.setDescription(description);
-                                puppy.setPricePerPuppyVnd(price);
-                                puppy.setStock(stock);
-                                puppy.setImageUrl(imageUrl);
-                                puppy.setCategory(categoryMap.get(categoryCode));
-                                puppy.setBranch(branchMap.get(branchCode));
-                                try { puppy.setAgeMonths(Integer.parseInt(age)); } catch (Exception e) {}
-                                puppy.setBreedCode(breed);
-                                puppy.setHealthStatus(healthStatus);
-                                puppy.setCareInstructions(careInstructions);
-                                puppy.setStatus(ListingStatus.AVAILABLE);
-                                puppy.setSeedKey("SEED_" + name.replaceAll("\\s+","").toUpperCase());
-                                puppyListingRepository.save(puppy);
-                            } else {
-                                Product product = Product.builder()
-                                        .name(name)
-                                        .description(description)
-                                        .price(price)
-                                        .stock(stock)
-                                        .imageUrl(imageUrl)
-                                        .suitableSize(suitableSize)
-                                        .category(categoryMap.get(categoryCode))
-                                        .branch(branchMap.get(branchCode))
-                                        .build();
-                                productRepository.save(product);
+                            Product product = productRepository.findByName(name).orElse(new Product());
+                            product.setName(name);
+                            product.setDescription(description);
+                            product.setPrice(price);
+                            product.setStock(stock);
+                            product.setImageUrl(imageUrl);
+                            product.setSuitableSize(suitableSize);
+                            product.setCategory(categoryMap.get(categoryCode));
+                            product.setBranch(branchMap.get(branchCode));
+                            productRepository.save(product);
+                        }
+                    }
+                }
+
+                // 5. Load Puppy Listings
+                File puppyFile = new File(basePath + "commerce/puppy_listings.csv");
+                if (puppyFile.exists()) {
+                    List<String> lines = Files.readAllLines(puppyFile.toPath());
+                    for (int i = 1; i < lines.size(); i++) {
+                        String line = lines.get(i);
+                        if (line.trim().isEmpty()) continue;
+                        String[] parts = parseCsvLine(line);
+                        if (parts.length >= 18) {
+                            String seedKey = parts[0];
+                            String listingTitle = parts[1];
+                            String description = parts[2];
+                            String branchCode = parts[3];
+                            String categoryCode = parts[4];
+                            String breedCode = parts[5];
+                            BreedType breedType = BreedType.valueOf(parts[6]);
+                            LifeStage lifeStage = LifeStage.valueOf(parts[7]);
+                            Integer ageMonths = 0;
+                            if(!parts[8].isEmpty()) {
+                                try { ageMonths = Integer.parseInt(parts[8]); } catch (Exception e) {}
                             }
+                            BigDecimal currentWeightKg = null;
+                            if(!parts[9].isEmpty()) {
+                                try { currentWeightKg = new BigDecimal(parts[9]); } catch (Exception e) {}
+                            }
+                            DogSize currentSize = null;
+                            if(!parts[10].isEmpty()) currentSize = DogSize.valueOf(parts[10]);
+                            DogSize expectedAdultSize = null;
+                            if(!parts[11].isEmpty()) expectedAdultSize = DogSize.valueOf(parts[11]);
+                            
+                            BigDecimal pricePerPuppyVnd = new BigDecimal(parts[12]);
+                            Integer stock = Integer.parseInt(parts[13]);
+                            ListingStatus status = ListingStatus.valueOf(parts[14]);
+                            String imageUrl = parts[15];
+                            String healthStatus = parts[16];
+                            String careInstructions = parts[17];
+                            
+                            PuppyListing puppy = puppyListingRepository.findBySeedKey(seedKey).orElse(new PuppyListing());
+                            puppy.setSeedKey(seedKey);
+                            puppy.setListingTitle(listingTitle);
+                            puppy.setDescription(description);
+                            puppy.setBranch(branchMap.get(branchCode));
+                            puppy.setCategory(categoryMap.get(categoryCode));
+                            puppy.setBreedCode(breedCode);
+                            puppy.setBreedType(breedType);
+                            puppy.setLifeStage(lifeStage);
+                            puppy.setAgeMonths(ageMonths);
+                            puppy.setCurrentWeightKg(currentWeightKg);
+                            puppy.setCurrentSize(currentSize);
+                            puppy.setExpectedAdultSize(expectedAdultSize);
+                            puppy.setPricePerPuppyVnd(pricePerPuppyVnd);
+                            puppy.setStock(stock);
+                            puppy.setStatus(status);
+                            if (imageUrl != null && !imageUrl.isEmpty()) {
+                                puppy.setImageUrl(imageUrl);
+                            }
+                            puppy.setHealthStatus(healthStatus);
+                            puppy.setCareInstructions(careInstructions);
+                            
+                            puppyListingRepository.save(puppy);
                         }
                     }
                 }
@@ -162,5 +203,13 @@ public class DevDataInitializer {
                 e.printStackTrace();
             }
         };
+    }
+
+    private String[] parseCsvLine(String line) {
+        String[] parts = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1);
+        for (int j = 0; j < parts.length; j++) {
+            parts[j] = parts[j].replace("\"", "").trim();
+        }
+        return parts;
     }
 }

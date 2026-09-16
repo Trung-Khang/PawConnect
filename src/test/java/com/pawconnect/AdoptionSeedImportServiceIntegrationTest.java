@@ -50,8 +50,6 @@ class AdoptionSeedImportServiceIntegrationTest {
         adoptionPostRepository.deleteAll();
         dogProfileRepository.deleteAll();
         userRepository.deleteAll();
-        List.of("BR_HCM_01", "BR_HN_01", "BR_DN_01").forEach(code ->
-                branchRepository.findByCode(code).ifPresent(branchRepository::delete));
     }
 
     @Test

@@ -9,6 +9,6 @@ public interface PuppyListingService {
     PuppyListingResponse createPuppyListing(PuppyListingRequest request);
     PuppyListingResponse updatePuppyListing(Long id, PuppyListingRequest request);
     PuppyListingResponse getPuppyListing(Long id);
-    List<PuppyListingResponse> getAllPuppyListings();
+    List<PuppyListingResponse> getAllPuppyListings(Long branchId, String breedCode, String suitableSize);
     void deletePuppyListing(Long id);
 }

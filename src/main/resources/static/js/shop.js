@@ -37,7 +37,7 @@ async function loadProducts() {
     let products = [];
     
     try {
-        if (!type || type === 'false' || type === 'product') {
+        if (!type || type === 'product') {
             let url = '/api/products?';
             if (branchId) url += `branchId=${branchId}`;
             const res = await fetch(url);
@@ -45,7 +45,7 @@ async function loadProducts() {
             json.forEach(p => p.itemType = 'product');
             products = products.concat(json);
         }
-        if (!type || type === 'true' || type === 'puppy') {
+        if (!type || type === 'puppy') {
             let url = '/api/puppy-listings';
             const res = await fetch(url);
             let json = await res.json();

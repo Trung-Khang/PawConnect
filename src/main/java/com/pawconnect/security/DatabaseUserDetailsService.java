@@ -23,6 +23,7 @@ public class DatabaseUserDetailsService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("Account was not found"));
         return new CustomUserDetails(
                 user.getId(),
+                user.getBranch() != null ? user.getBranch().getId() : null,
                 user.getEmail(),
                 user.getPassword(),
                 java.util.Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().getName().name()))
