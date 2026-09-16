@@ -1,6 +1,6 @@
 package com.pawconnect.controller.shop;
 
-import com.pawconnect.entity.Category;
+
 import com.pawconnect.dto.category.CategoryResponse;
 import com.pawconnect.service.shop.CategoryService;
 import lombok.RequiredArgsConstructor;
