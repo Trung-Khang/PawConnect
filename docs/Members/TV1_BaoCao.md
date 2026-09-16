@@ -137,8 +137,8 @@ Trạng thái hạng mục Quản trị Sản phẩm & Cloudinary: `COMPLETED`.
 Sau khi kéo (pull) bản cập nhật mới nhất từ nhánh `main` để đồng bộ code của TV2 và TV3, **TV1 đã hoàn thành riêng phần trách nhiệm của mình** trong việc tích hợp nền tảng bảo mật và dữ liệu dùng chung do TV3 bàn giao:
 
 ### 12.1. Cập nhật Entity và API Sản phẩm (Product) theo chuẩn TV3
-- Nhằm tránh conflict và lỗ hổng bảo mật, TV1 đã **xóa bỏ hoàn toàn** `CloudinaryService` và `CloudinaryController` cũ tự viết.
-- **Entity Product:** Bổ sung trường `imagePublicId` để lưu public_id của Cloudinary (chuẩn bị cho chức năng xóa ảnh rác).
+- Dựa trên trao đổi, TV1 tiếp tục **giữ lại và sử dụng `CloudinaryService` cùng `CloudinaryController`** để duy trì quyền chủ động về phần tích hợp Cloudinary.
+- **Entity Product:** Bổ sung trường `imagePublicId` để lưu public_id của Cloudinary (sẵn sàng cho chức năng quản lý ảnh và mở rộng về sau).
 - **Service Layer (`ProductServiceImpl`):** Cập nhật logic để nhận và lưu trữ `imagePublicId` từ DTO (`ProductRequest`). 
 
 ### 12.2. Đồng bộ Giao diện Admin (Frontend)
