@@ -4,9 +4,12 @@ import com.pawconnect.entity.Branch;
 import com.pawconnect.entity.Category;
 import com.pawconnect.entity.Product;
 import com.pawconnect.entity.ServiceType;
+import com.pawconnect.entity.PuppyListing;
+import com.pawconnect.entity.ListingStatus;
 import com.pawconnect.repository.BranchRepository;
 import com.pawconnect.repository.CategoryRepository;
 import com.pawconnect.repository.ProductRepository;
+import com.pawconnect.repository.PuppyListingRepository;
 import com.pawconnect.repository.ServiceTypeRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -28,7 +31,8 @@ public class DevDataInitializer {
             BranchRepository branchRepository,
             CategoryRepository categoryRepository,
             ServiceTypeRepository serviceTypeRepository,
-            ProductRepository productRepository) {
+            ProductRepository productRepository,
+            PuppyListingRepository puppyListingRepository) {
         return arguments -> {
             // Only run if empty
             if (branchRepository.count() > 0) {
@@ -119,22 +123,35 @@ public class DevDataInitializer {
                             String healthStatus = parts[18];
                             String careInstructions = parts[19];
 
-                            Product product = Product.builder()
-                                    .name(name)
-                                    .description(description)
-                                    .price(price)
-                                    .stock(stock)
-                                    .imageUrl(imageUrl)
-                                    .suitableSize(suitableSize)
-                                    .isBreedingDog(isBreedingDog)
-                                    .category(categoryMap.get(categoryCode))
-                                    .branch(branchMap.get(branchCode))
-                                    .age(age)
-                                    .breed(breed)
-                                    .healthStatus(healthStatus)
-                                    .careInstructions(careInstructions)
-                                    .build();
-                            productRepository.save(product);
+                            if (isBreedingDog) {
+                                PuppyListing puppy = new PuppyListing();
+                                puppy.setListingTitle(name);
+                                puppy.setDescription(description);
+                                puppy.setPricePerPuppyVnd(price);
+                                puppy.setStock(stock);
+                                puppy.setImageUrl(imageUrl);
+                                puppy.setCategory(categoryMap.get(categoryCode));
+                                puppy.setBranch(branchMap.get(branchCode));
+                                try { puppy.setAgeMonths(Integer.parseInt(age)); } catch (Exception e) {}
+                                puppy.setBreedCode(breed);
+                                puppy.setHealthStatus(healthStatus);
+                                puppy.setCareInstructions(careInstructions);
+                                puppy.setStatus(ListingStatus.AVAILABLE);
+                                puppy.setSeedKey("SEED_" + name.replaceAll("\\s+","").toUpperCase());
+                                puppyListingRepository.save(puppy);
+                            } else {
+                                Product product = Product.builder()
+                                        .name(name)
+                                        .description(description)
+                                        .price(price)
+                                        .stock(stock)
+                                        .imageUrl(imageUrl)
+                                        .suitableSize(suitableSize)
+                                        .category(categoryMap.get(categoryCode))
+                                        .branch(branchMap.get(branchCode))
+                                        .build();
+                                productRepository.save(product);
+                            }
                         }
                     }
                 }
