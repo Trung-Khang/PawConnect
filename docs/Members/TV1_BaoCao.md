@@ -131,3 +131,24 @@ Trong phiên làm việc này, TV1 đã hoàn thiện các tính năng cốt lõ
 - CSS cũng được căn chỉnh lại (max-height `90vh`, scroll) giúp Form chỉnh sửa tự động thu gọn vừa vặn trên màn hình laptop nhỏ mà không bị vỡ bố cục.
 
 Trạng thái hạng mục Quản trị Sản phẩm & Cloudinary: `COMPLETED`.
+
+## 12. Báo Cáo Cập Nhật (Ngày 16/09/2026) - Tích hợp Nền tảng Seed V3 và Secure Media Service (TV3)
+
+Sau khi kéo (pull) bản cập nhật mới nhất từ nhánh `main` để đồng bộ code của TV2 và TV3, **TV1 đã hoàn thành riêng phần trách nhiệm của mình** trong việc tích hợp nền tảng bảo mật và dữ liệu dùng chung do TV3 bàn giao:
+
+### 12.1. Cập nhật Entity và API Sản phẩm (Product) theo chuẩn TV3
+- Nhằm tránh conflict và lỗ hổng bảo mật, TV1 đã **xóa bỏ hoàn toàn** `CloudinaryService` và `CloudinaryController` cũ tự viết.
+- **Entity Product:** Bổ sung trường `imagePublicId` để lưu public_id của Cloudinary (chuẩn bị cho chức năng xóa ảnh rác).
+- **Service Layer (`ProductServiceImpl`):** Cập nhật logic để nhận và lưu trữ `imagePublicId` từ DTO (`ProductRequest`). 
+
+### 12.2. Đồng bộ Giao diện Admin (Frontend)
+- Trong file `admin-products.js`, luồng upload ảnh đã được sửa để gọi trực tiếp tới API bảo mật của TV3: `POST /api/media/PRODUCT`.
+- **Dọn rác dữ liệu (Clean up):** Áp dụng luồng xử lý chuẩn của TV3: Khi Admin cập nhật ảnh mới cho một Sản phẩm (đã có ảnh cũ), frontend sẽ gọi API upload trước, sau khi lưu Product thành công, frontend sẽ tự động gọi `DELETE /api/media/PRODUCT?publicId=...` để xóa ảnh cũ trên Cloudinary.
+
+### 12.3. Sẵn sàng cho Seed V3 User Mapping
+- Bảng `Branch` của TV1 đã có sẵn cột `code` (ví dụ `BR_HCM_01`).
+- Các bảng thuộc luồng mua hàng và đặt lịch của TV1 đều đã có trường `userId` hoặc `customer_id`, sẵn sàng để TV3 tiến hành gán JWT Authentication và chạy script Seed V3 mà không gây xung đột (conflict).
+
+> **Ghi chú:** TV1 chỉ sửa đổi code thuộc phạm vi `Product` và module của TV1. Các entity của TV2 (`DogProfile`, `AdoptionPost`) hay hệ thống bảo mật của TV3 hoàn toàn được giữ nguyên đúng theo nguyên tắc làm việc độc lập và không lấn sân task của thành viên khác.
+
+Trạng thái hạng mục Tích hợp Seed V3 & Media Service (phần của TV1): `COMPLETED`.
