@@ -48,7 +48,6 @@ public class ProductServiceConcurrencyTest {
                 .stock(1) // CHÓ GIỐNG ĐỘC BẢN CÓ STOCK = 1
                 .branch(branch)
                 .category(cat)
-                .isBreedingDog(true)
                 .build();
         p = productRepository.save(p);
         productId = p.getId();

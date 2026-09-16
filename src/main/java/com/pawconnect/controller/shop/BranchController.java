@@ -1,6 +1,6 @@
 package com.pawconnect.controller.shop;
 
-import com.pawconnect.entity.Branch;
+
 import com.pawconnect.dto.branch.BranchResponse;
 import com.pawconnect.service.shop.BranchService;
 import lombok.RequiredArgsConstructor;

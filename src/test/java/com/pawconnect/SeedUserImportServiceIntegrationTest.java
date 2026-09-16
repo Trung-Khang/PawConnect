@@ -45,10 +45,12 @@ class SeedUserImportServiceIntegrationTest {
     }
 
     private void saveBranch(String code, String name) {
-        Branch branch = new Branch();
-        branch.setCode(code);
-        branch.setName(name);
-        branch.setAddress("Test address");
-        branchRepository.save(branch);
+        branchRepository.findByCode(code).orElseGet(() -> {
+            Branch branch = new Branch();
+            branch.setCode(code);
+            branch.setName(name);
+            branch.setAddress("Test address");
+            return branchRepository.save(branch);
+        });
     }
 }

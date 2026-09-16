@@ -8,11 +8,13 @@ import com.pawconnect.entity.OrderItem;
 import com.pawconnect.entity.Product;
 import com.pawconnect.entity.Cart;
 import com.pawconnect.entity.CartItem;
+import com.pawconnect.entity.PuppyListing;
 import com.pawconnect.exception.BusinessException;
 import com.pawconnect.exception.ResourceNotFoundException;
 import com.pawconnect.repository.BranchRepository;
 import com.pawconnect.repository.OrderRepository;
 import com.pawconnect.repository.ProductRepository;
+import com.pawconnect.repository.PuppyListingRepository;
 import com.pawconnect.security.SecurityUtils;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,7 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
+    private final PuppyListingRepository puppyListingRepository;
     private final BranchRepository branchRepository;
     private final CartService cartService;
 
@@ -45,8 +48,12 @@ public class OrderServiceImpl implements OrderService {
         }
         
         for (CartItem cartItem : cart.getItems()) {
-            if (!cartItem.getProduct().getBranch().getId().equals(request.getBranchId())) {
-                throw new BusinessException("Cart contains product from a different branch: " + cartItem.getProduct().getName());
+            if (cartItem.getProduct() == null && cartItem.getPuppyListing() == null) {
+                throw new BusinessException("Invalid cart item: missing product and puppy listing");
+            }
+            Branch itemBranch = cartItem.getProduct() != null ? cartItem.getProduct().getBranch() : cartItem.getPuppyListing().getBranch();
+            if (!itemBranch.getId().equals(request.getBranchId())) {
+                throw new BusinessException("Cart contains item from a different branch");
             }
         }
 
@@ -61,23 +68,32 @@ public class OrderServiceImpl implements OrderService {
 
         for (CartItem cartItem : cart.getItems()) {
             Product product = cartItem.getProduct();
+            PuppyListing puppyListing = cartItem.getPuppyListing();
+            
+            BigDecimal itemPrice = product != null ? product.getPrice() : puppyListing.getPricePerPuppyVnd();
             
             for (int i = 0; i < cartItem.getQuantity(); i++) {
-                int updatedRows = productRepository.decreaseStock(product.getId());
+                int updatedRows = 0;
+                if (product != null) {
+                    updatedRows = productRepository.decreaseStock(product.getId());
+                } else if (puppyListing != null) {
+                    updatedRows = puppyListingRepository.decrementStock(puppyListing.getId(), 1);
+                }
                 if (updatedRows == 0) {
-                    throw new BusinessException("Product out of stock or race condition: " + product.getName());
+                    throw new BusinessException("Item out of stock or race condition");
                 }
             }
 
             OrderItem orderItem = OrderItem.builder()
                     .order(order)
                     .product(product)
+                    .puppyListing(puppyListing)
                     .quantity(cartItem.getQuantity())
-                    .price(product.getPrice())
+                    .price(itemPrice)
                     .build();
             
             order.getOrderItems().add(orderItem);
-            totalAmount = totalAmount.add(product.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())));
+            totalAmount = totalAmount.add(itemPrice.multiply(BigDecimal.valueOf(cartItem.getQuantity())));
         }
 
         order.setTotalAmount(totalAmount);
@@ -121,8 +137,13 @@ public class OrderServiceImpl implements OrderService {
             res.setItems(order.getOrderItems().stream().map(oi -> {
                 OrderResponse.OrderItemResponse oir = new OrderResponse.OrderItemResponse();
                 oir.setId(oi.getId());
-                oir.setProductId(oi.getProduct().getId());
-                oir.setProductName(oi.getProduct().getName());
+                if (oi.getProduct() != null) {
+                    oir.setProductId(oi.getProduct().getId());
+                    oir.setProductName(oi.getProduct().getName());
+                } else if (oi.getPuppyListing() != null) {
+                    oir.setPuppyListingId(oi.getPuppyListing().getId());
+                    oir.setProductName(oi.getPuppyListing().getListingTitle());
+                }
                 oir.setQuantity(oi.getQuantity());
                 oir.setPrice(oi.getPrice());
                 return oir;

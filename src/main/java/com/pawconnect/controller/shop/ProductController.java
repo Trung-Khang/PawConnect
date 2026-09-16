@@ -20,9 +20,8 @@ public class ProductController {
     @GetMapping
     public List<ProductResponse> getProducts(
             @RequestParam(required = false) Long branchId,
-            @RequestParam(required = false) Boolean isBreedingDog,
             @RequestParam(required = false) String suitableSize) {
-        return productService.getProducts(branchId, isBreedingDog, suitableSize);
+        return productService.getProducts(branchId, suitableSize);
     }
 
     @GetMapping("/{id}")
@@ -30,13 +29,11 @@ public class ProductController {
         return productService.getProductById(id);
     }
 
-    @PreAuthorize("hasAnyRole('BRANCH_MANAGER', 'ADMIN')")
     @PostMapping
     public ProductResponse createProduct(@RequestBody @Valid ProductRequest request) {
         return productService.createProduct(request);
     }
 
-    @PreAuthorize("hasAnyRole('BRANCH_MANAGER', 'ADMIN')")
     @PutMapping("/{id}")
     public ProductResponse updateProduct(@PathVariable Long id, @RequestBody @Valid ProductRequest request) {
         return productService.updateProduct(id, request);

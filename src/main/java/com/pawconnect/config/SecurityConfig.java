@@ -33,8 +33,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/adoptions", "/api/adoptions/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/adoptions", "/adoptions/*").permitAll()
                         .requestMatchers("/ws/**").permitAll()
-                        .requestMatchers("/", "/shop", "/service", "/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/", "/shop", "/service", "/admin/**", "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/branches", "/api/categories", "/api/products", "/api/products/*", "/api/service-types").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/upload", "/api/products").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/products/*").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

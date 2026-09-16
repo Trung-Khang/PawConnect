@@ -55,7 +55,7 @@ public class CartAndOrderServiceTest {
                 .stock(100)
                 .branch(branch)
                 .category(cat)
-                .isBreedingDog(false)
+
                 .build();
         p = productRepository.save(p);
         productId = p.getId();
@@ -69,7 +69,7 @@ public class CartAndOrderServiceTest {
     @Test
     public void testCartAndCheckoutFlow() {
         // 1. Thêm vào giỏ hàng
-        cartService.addItem(productId, 2); // Thêm 2 bịch thức ăn
+        cartService.addItem(productId, null, 2); // Thêm 2 bịch thức ăn
         
         // 2. Checkout (OrderRequest)
         com.pawconnect.dto.order.OrderRequest orderRequest = new com.pawconnect.dto.order.OrderRequest();

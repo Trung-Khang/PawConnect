@@ -15,6 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.pawconnect.exception.ResourceNotFoundException;
 import com.pawconnect.exception.BusinessException;
 import org.springframework.dao.DataIntegrityViolationException;
+import com.pawconnect.security.SecurityUtils;
+import org.springframework.security.access.AccessDeniedException;
+import java.util.Objects;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,8 +32,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ProductResponse> getProducts(Long branchId, Boolean isBreedingDog, String suitableSize) {
-        return productRepository.findByBranchIdAndFilters(branchId, isBreedingDog, suitableSize)
+    public List<ProductResponse> getProducts(Long branchId, String suitableSize) {
+        return productRepository.findByBranchIdAndFilters(branchId, suitableSize)
                 .stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
@@ -49,18 +52,24 @@ public class ProductServiceImpl implements ProductService {
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
+        if (SecurityUtils.hasRole("BRANCH_MANAGER")) {
+            Long currentUserBranchId = SecurityUtils.getCurrentUserBranchId();
+            if (!Objects.equals(currentUserBranchId, branch.getId())) {
+                throw new AccessDeniedException("Branch managers can only create products for their own branch");
+            }
+        }
+
         Product p = Product.builder()
                 .name(request.getName())
                 .description(request.getDescription())
                 .price(request.getPrice())
                 .stock(request.getStock())
                 .imageUrl(request.getImageUrl())
+                .imagePublicId(request.getImagePublicId())
                 .suitableSize(request.getSuitableSize())
-                .isBreedingDog(request.getIsBreedingDog())
-                .breed(request.getBreed())
-                .age(request.getAge())
-                .healthStatus(request.getHealthStatus())
-                .careInstructions(request.getCareInstructions())
+
+                .ingredients(request.getIngredients())
+                .targetAudience(request.getTargetAudience())
                 .branch(branch)
                 .category(category)
                 .build();
@@ -73,17 +82,27 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public ProductResponse updateProduct(Long id, ProductRequest request) {
         Product p = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        
+        if (SecurityUtils.hasRole("BRANCH_MANAGER")) {
+            Long currentUserBranchId = SecurityUtils.getCurrentUserBranchId();
+            if (!Objects.equals(currentUserBranchId, p.getBranch().getId())) {
+                throw new AccessDeniedException("Branch managers can only update products for their own branch");
+            }
+            if (request.getBranchId() != null && !Objects.equals(currentUserBranchId, request.getBranchId())) {
+                throw new AccessDeniedException("Branch managers cannot move products to another branch");
+            }
+        }
+        
         p.setName(request.getName());
         p.setDescription(request.getDescription());
         p.setPrice(request.getPrice());
         p.setStock(request.getStock());
         p.setImageUrl(request.getImageUrl());
+        p.setImagePublicId(request.getImagePublicId());
         p.setSuitableSize(request.getSuitableSize());
-        p.setIsBreedingDog(request.getIsBreedingDog());
-        p.setBreed(request.getBreed());
-        p.setAge(request.getAge());
-        p.setHealthStatus(request.getHealthStatus());
-        p.setCareInstructions(request.getCareInstructions());
+
+        p.setIngredients(request.getIngredients());
+        p.setTargetAudience(request.getTargetAudience());
         
         if (request.getCategoryId() != null) {
             Category category = categoryRepository.findById(request.getCategoryId())
@@ -104,8 +123,12 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public void deleteProduct(Long id) {
-        if (!productRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Product not found");
+        Product p = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        if (SecurityUtils.hasRole("BRANCH_MANAGER")) {
+            Long currentUserBranchId = SecurityUtils.getCurrentUserBranchId();
+            if (!Objects.equals(currentUserBranchId, p.getBranch().getId())) {
+                throw new AccessDeniedException("Branch managers can only delete products for their own branch");
+            }
         }
         try {
             productRepository.deleteById(id);
@@ -122,12 +145,11 @@ public class ProductServiceImpl implements ProductService {
         res.setPrice(p.getPrice());
         res.setStock(p.getStock());
         res.setImageUrl(p.getImageUrl());
+        res.setImagePublicId(p.getImagePublicId());
         res.setSuitableSize(p.getSuitableSize());
-        res.setIsBreedingDog(p.getIsBreedingDog());
-        res.setBreed(p.getBreed());
-        res.setAge(p.getAge());
-        res.setHealthStatus(p.getHealthStatus());
-        res.setCareInstructions(p.getCareInstructions());
+
+        res.setIngredients(p.getIngredients());
+        res.setTargetAudience(p.getTargetAudience());
         if (p.getBranch() != null) {
             res.setBranchId(p.getBranch().getId());
         }

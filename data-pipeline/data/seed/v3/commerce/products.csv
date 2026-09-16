@@ -17,3 +17,5 @@ product_food_br_dn_01_3,FOOD,Thức ăn hạt cỡ lớn,Sản phẩm dành cho 
 product_accessory_br_dn_01_1,ACCESSORY,Dây dắt chó,Sản phẩm dành cho chó tại PawConnect.,120000,9,,,false,CAT_ACCESSORY,BR_DN_01,,,,,,,,,Sử dụng theo hướng dẫn trên bao bì.
 product_accessory_br_dn_01_2,ACCESSORY,Bát ăn chống trượt,Sản phẩm dành cho chó tại PawConnect.,90000,10,,,false,CAT_ACCESSORY,BR_DN_01,,,,,,,,,Sử dụng theo hướng dẫn trên bao bì.
 product_accessory_br_dn_01_3,ACCESSORY,Đồ chơi bóng cao su,Sản phẩm dành cho chó tại PawConnect.,75000,11,,,false,CAT_ACCESSORY,BR_DN_01,,,,,,,,,Sử dụng theo hướng dẫn trên bao bì.
+product_dog_br_hcm_01_1,DOG,Golden Retriever con,Chó cảnh thân thiện.,5000000,1,https://images.unsplash.com/photo-1552053831-71594a27632d?q=80&w=800&auto=format&fit=crop,LARGE,true,CAT_BREEDING_DOG,BR_HCM_01,GOLDEN,DOG,PUPPY,3,5,SMALL,LARGE,Khỏe mạnh,Tiêm phòng đầy đủ.
+product_dog_br_hcm_01_2,DOG,Corgi con,Chó cảnh lùn đáng yêu.,8000000,1,https://images.unsplash.com/photo-1590526017117-9104fa2828b1?q=80&w=800&auto=format&fit=crop,SMALL,true,CAT_BREEDING_DOG,BR_HCM_01,CORGI,DOG,PUPPY,2,3,SMALL,MEDIUM,Khỏe mạnh,Tiêm phòng đầy đủ.

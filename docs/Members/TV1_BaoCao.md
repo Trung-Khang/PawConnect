@@ -108,3 +108,95 @@ Sau đợt rà soát mã nguồn toàn diện, TV1 đã tiến hành vá thành 
 Tất cả các thay đổi trên đã được kiểm chứng bằng Unit Test & Integration Test (như `CartAndOrderServiceTest` và `ProductServiceConcurrencyTest`). **Tất cả các Tests đều chạy qua (BUILD SUCCESS) 100%.** Mọi luồng API của TV1 đều đã được kiện toàn và đóng băng (Frozen), chờ ráp nối với TV2 và TV3.
 
 Trạng thái hạng mục Bug Fix: `COMPLETED`.
+
+## 11. Báo Cáo Cập Nhật (Ngày 11/09/2026) - Hoàn thiện Quản trị Sản phẩm & Tích hợp Cloudinary
+
+Trong phiên làm việc này, TV1 đã hoàn thiện các tính năng cốt lõi cho trang quản trị (Admin) liên quan đến Sản phẩm, đảm bảo giao diện trực quan và dữ liệu lưu trữ chuyên nghiệp:
+
+### 11.1. Tích hợp thực tế Cloudinary API
+- **Thay thế Mock Upload:** Chuyển đổi API `/api/upload` từ giả lập sang sử dụng trực tiếp Cloudinary SDK gốc. Hình ảnh chó giống/sản phẩm tải lên giờ đây sẽ được lưu trữ thẳng lên Cloud thực tế và trả về URL CDN an toàn.
+- **Sửa lỗi Encoding:** Khắc phục lỗi sai bảng mã ký tự (encoding) đối với `cloud_name` trong `application.properties` để kết nối Cloudinary thành công.
+
+### 11.2. Hoàn thiện tính năng Cập nhật (Edit Product) & Đồng bộ Tiền tệ
+- Xây dựng luồng Frontend (`admin-products.js`) xử lý việc chỉnh sửa mặt hàng, tự động tải dữ liệu cũ vào Form.
+- Thay đổi API call sang phương thức `PUT` đối với các thao tác cập nhật.
+- **Đồng bộ UI/UX:** Cập nhật lại toàn bộ giao diện Shop và Admin để hiển thị thống nhất định dạng tiền tệ là `VND` (thay vì ký hiệu `$`), mang lại trải nghiệm chính xác cho khách hàng Việt Nam.
+
+### 11.3. Cấu trúc Giao diện Form Động (Dynamic UI Fields)
+- **Tái cấu trúc Database:** Bổ sung trực tiếp 2 cột mới `ingredients` (Thành phần) và `target_audience` (Đối tượng) vào bảng `Product` trong Database thay vì lưu dồn vào chuỗi Description.
+- **Giao diện thông minh:** Thêm menu chọn **Loại mặt hàng** (Chó giống, Thức ăn, Khác) trong HTML. Tùy thuộc vào lựa chọn, Form sẽ sử dụng JavaScript để bật/tắt (show/hide) linh hoạt các trường:
+  - **Chó giống:** Tuổi, Giống, Sức khỏe, Chăm sóc, Lưu ý đặc biệt.
+  - **Thức ăn:** Thành phần, Đối tượng, Lưu ý đặc biệt.
+  - **Khác:** Lưu ý khi sử dụng.
+- CSS cũng được căn chỉnh lại (max-height `90vh`, scroll) giúp Form chỉnh sửa tự động thu gọn vừa vặn trên màn hình laptop nhỏ mà không bị vỡ bố cục.
+
+Trạng thái hạng mục Quản trị Sản phẩm & Cloudinary: `COMPLETED`.
+
+## 12. Báo Cáo Cập Nhật (Ngày 16/09/2026) - Tích hợp Nền tảng Seed V3 và Secure Media Service (TV3)
+
+Sau khi kéo (pull) bản cập nhật mới nhất từ nhánh `main` để đồng bộ code của TV2 và TV3, **TV1 đã hoàn thành riêng phần trách nhiệm của mình** trong việc tích hợp nền tảng bảo mật và dữ liệu dùng chung do TV3 bàn giao:
+
+### 12.1. Cập nhật Entity và API Sản phẩm (Product) theo chuẩn TV3
+- Dựa trên trao đổi, TV1 tiếp tục **giữ lại và sử dụng `CloudinaryService` cùng `CloudinaryController`** để duy trì quyền chủ động về phần tích hợp Cloudinary.
+- **Entity Product:** Bổ sung trường `imagePublicId` để lưu public_id của Cloudinary (sẵn sàng cho chức năng quản lý ảnh và mở rộng về sau).
+- **Service Layer (`ProductServiceImpl`):** Cập nhật logic để nhận và lưu trữ `imagePublicId` từ DTO (`ProductRequest`). 
+
+### 12.2. Đồng bộ Giao diện Admin (Frontend)
+- Trong file `admin-products.js`, luồng upload ảnh đã được sửa để gọi trực tiếp tới API bảo mật của TV3: `POST /api/media/PRODUCT`.
+- **Dọn rác dữ liệu (Clean up):** Áp dụng luồng xử lý chuẩn của TV3: Khi Admin cập nhật ảnh mới cho một Sản phẩm (đã có ảnh cũ), frontend sẽ gọi API upload trước, sau khi lưu Product thành công, frontend sẽ tự động gọi `DELETE /api/media/PRODUCT?publicId=...` để xóa ảnh cũ trên Cloudinary.
+
+### 12.3. Sẵn sàng cho Seed V3 User Mapping
+- Bảng `Branch` của TV1 đã có sẵn cột `code` (ví dụ `BR_HCM_01`).
+- Các bảng thuộc luồng mua hàng và đặt lịch của TV1 đều đã có trường `userId` hoặc `customer_id`, sẵn sàng để TV3 tiến hành gán JWT Authentication và chạy script Seed V3 mà không gây xung đột (conflict).
+
+> **Ghi chú:** TV1 chỉ sửa đổi code thuộc phạm vi `Product` và module của TV1. Các entity của TV2 (`DogProfile`, `AdoptionPost`) hay hệ thống bảo mật của TV3 hoàn toàn được giữ nguyên đúng theo nguyên tắc làm việc độc lập và không lấn sân task của thành viên khác.
+
+Trạng thái hạng mục Tích hợp Seed V3 & Media Service (phần của TV1): `COMPLETED`.
+
+## 13. Báo Cáo Cập Nhật (Ngày 16/09/2026) - Tách Biệt PuppyListing và Product theo Seed V3
+
+Tiếp tục bám sát Data Contract v0.2 draft, TV1 đã tách biệt hoàn toàn chó giống thương mại ra khỏi bảng `Product` chung, tránh xung đột schema và logic với các tính năng của TV2/TV3.
+
+### 13.1. Tạo mới Entity và DTO cho PuppyListing
+- **Enums Mới:** Thêm `BreedType`, `LifeStage`, `ListingStatus`, `DogSize` chuẩn hóa riêng cho phân hệ thú cưng thương mại.
+- **Entity PuppyListing:** Mapping sang bảng `puppy_listings`. Entity này chuyên dùng cho thú cưng (có `breedCode`, `healthStatus`, `ageMonths`, `careInstructions`, v.v.).
+- **Tách bỏ khỏi Product:** Loại bỏ toàn bộ các cột liên quan đến chó (`isBreedingDog`, `breed`, `age`, `healthStatus`, `careInstructions`) khỏi `Product.java` để đưa `Product` về đúng nghĩa là Sản phẩm (Thức ăn, Phụ kiện, Thuốc).
+
+### 13.2. Cập nhật hệ thống Giỏ hàng (Cart) và Đơn hàng (Order)
+- **Hỗ trợ Đa thực thể:** Entity `CartItem` và `OrderItem` được thiết kế lại để trỏ đến cả `Product` (nullable) và `PuppyListing` (nullable).
+- **Service Layer logic:**
+  - `CartServiceImpl`: Tính toán stock và tính tiền linh hoạt tùy theo item là Product hay PuppyListing.
+  - `OrderServiceImpl`: Khi checkout, hệ thống tự động nhận diện và gọi đúng Repository tương ứng (`productRepository` hoặc `puppyListingRepository`) để trừ kho an toàn thông qua Atomic Update Query. Giúp ngăn chặn hiện tượng Race Condition.
+
+### 13.3. Đồng bộ giao diện Shop UI
+- File `shop.js` đã được tinh chỉnh để fetch dữ liệu từ cả 2 nguồn: `/api/products` và `/api/puppy-listings`.
+- Dữ liệu trả về được gán cờ `itemType` (product/puppy) để hiển thị đồng nhất trên giao diện thẻ sản phẩm (Card) và giỏ hàng.
+- Nút "Mua ngay" và "Thêm vào giỏ hàng" xử lý đúng logic gọi API với `productId` hoặc `puppyListingId`.
+
+Trạng thái hạng mục Tách Biệt PuppyListing: `COMPLETED`. Mọi thay đổi code đều chỉ giới hạn trong phạm vi task của TV1.
+
+## 14. Báo Cáo Cập Nhật (Ngày 16/09/2026) - Hoàn thiện 100% các Task Kỹ thuật còn lại của TV1
+
+Trong phiên làm việc này, TV1 đã hoàn thành dứt điểm toàn bộ các mục còn thiếu trong danh sách bàn giao (Data Handoff), đảm bảo hệ thống đạt chuẩn hoàn thiện để TV2 và TV3 tích hợp:
+
+### 14.1. Phân quyền Branch Manager (Scope Validation)
+- Bổ sung `branchId` vào `CustomUserDetails` để dễ dàng quản lý phân quyền theo ngữ cảnh (Security Context).
+- Cập nhật logic trong `ProductServiceImpl` và `PuppyListingServiceImpl`: **Branch Manager** hiện chỉ được phép tạo, sửa, và xóa các sản phẩm thuộc về chi nhánh của mình. Bất kỳ cố gắng nào tác động chéo chi nhánh đều ném lỗi `AccessDeniedException`.
+- Viết mới `AuthorizationIntegrationTest` (4/4 test cases passed) để bảo vệ tuyệt đối luồng dữ liệu này.
+
+### 14.2. Hoàn thiện API Lọc PuppyListing & Tự động đổi trạng thái
+- **API Lọc:** Nâng cấp `GET /api/puppy-listings` trong `PuppyListingController` để nhận các `@RequestParam` tùy chọn (`branchId`, `breedCode`, `suitableSize`). Tầng Repository đã được gắn thêm JPQL `@Query` tương ứng để tối ưu hiệu năng lọc.
+- **Tự động SOLD_OUT:** Sửa đổi Native Query `decrementStock` trong `PuppyListingRepository` để tích hợp điều kiện `CASE WHEN`: Ngay khi `stock` bị trừ về 0 sau một đơn hàng, hệ thống sẽ tự động gán `status = 'SOLD_OUT'` ở mức Database, tránh hoàn toàn Race Condition.
+
+### 14.3. Nâng cấp DevDataInitializer (Idempotent Importer)
+- Gỡ bỏ logic kiểm tra `count() > 0` lỗi thời để tránh việc chặn nạp dữ liệu khi DB bị thay đổi.
+- Áp dụng chiến lược **Upsert** thông minh:
+  - Tra cứu Branch bằng `code`.
+  - Tra cứu Category / Product bằng `name`.
+  - Tra cứu PuppyListing bằng `seed_key`.
+- Luồng seed dữ liệu đảm bảo không bao giờ sinh ra lỗi trùng lặp (Duplicate Key) hay vi phạm khóa ngoại, hỗ trợ chạy lại nhiều lần (idempotent).
+
+### 14.4. Quyết định về bảng Breed
+- Để giảm bớt sự rườm rà và tránh tạo thêm phụ thuộc cho bảng `PuppyListing`, nhóm thống nhất giữ lại trường `breedCode` dưới dạng Text, **không tạo bảng Breed** riêng lẻ. Mọi dữ liệu chó thương mại đã được map thành công từ file `commerce/puppy_listings.csv` mới của Seed V3.
+
+Trạng thái toàn bộ các module của TV1: `COMPLETED`. Sẵn sàng cho tích hợp toàn cục.
