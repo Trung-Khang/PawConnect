@@ -22,6 +22,7 @@ public class ProductRequest {
     private Integer stock;
 
     private String imageUrl;
+    private String imagePublicId;
     private String suitableSize;
     private Boolean isBreedingDog;
     private String breed;

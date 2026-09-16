@@ -55,6 +55,7 @@ public class ProductServiceImpl implements ProductService {
                 .price(request.getPrice())
                 .stock(request.getStock())
                 .imageUrl(request.getImageUrl())
+                .imagePublicId(request.getImagePublicId())
                 .suitableSize(request.getSuitableSize())
                 .isBreedingDog(request.getIsBreedingDog())
                 .breed(request.getBreed())
@@ -80,6 +81,7 @@ public class ProductServiceImpl implements ProductService {
         p.setPrice(request.getPrice());
         p.setStock(request.getStock());
         p.setImageUrl(request.getImageUrl());
+        p.setImagePublicId(request.getImagePublicId());
         p.setSuitableSize(request.getSuitableSize());
         p.setIsBreedingDog(request.getIsBreedingDog());
         p.setBreed(request.getBreed());
@@ -126,6 +128,7 @@ public class ProductServiceImpl implements ProductService {
         res.setPrice(p.getPrice());
         res.setStock(p.getStock());
         res.setImageUrl(p.getImageUrl());
+        res.setImagePublicId(p.getImagePublicId());
         res.setSuitableSize(p.getSuitableSize());
         res.setIsBreedingDog(p.getIsBreedingDog());
         res.setBreed(p.getBreed());

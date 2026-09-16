@@ -31,6 +31,8 @@ public class Product {
 
     private String imageUrl;
 
+    private String imagePublicId;
+
     private String suitableSize;
 
     @Column(name = "is_breeding_dog")

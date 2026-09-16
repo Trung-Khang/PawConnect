@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         form.reset();
         delete form.dataset.editId;
         delete form.dataset.oldImageUrl;
+        delete form.dataset.oldImagePublicId;
         document.getElementById('uploadStatus').textContent = '';
         document.querySelector('#addProductModal .modal-header h2').textContent = 'Add New Product / Dog';
         document.getElementById('p_imageFile').required = true;
@@ -53,12 +54,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const file = fileInput.files[0];
             const formElement = document.getElementById('addProductForm');
             let imageUrl = formElement.dataset.oldImageUrl || '';
+            let imagePublicId = formElement.dataset.oldImagePublicId || '';
 
             if (file) {
                 const formData = new FormData();
                 formData.append('file', file);
+                formData.append('assetKey', document.getElementById('p_name').value || 'product');
                 
-                const uploadRes = await fetch('/api/upload', {
+                let uploadUrl = '/api/media/PRODUCT';
+                if (imagePublicId) {
+                    uploadUrl = '/api/media/PRODUCT/replace';
+                    formData.append('previousPublicId', imagePublicId);
+                }
+                
+                const uploadRes = await fetch(uploadUrl, {
                     method: 'POST',
                     headers: {
                         'Authorization': token ? `Bearer ${token}` : ''
@@ -75,7 +84,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     throw new Error(errMsg);
                 }
                 const uploadData = await uploadRes.json();
-                imageUrl = uploadData.url;
+                if (imagePublicId) {
+                    imageUrl = uploadData.asset.secureUrl;
+                    imagePublicId = uploadData.asset.publicId;
+                } else {
+                    imageUrl = uploadData.secureUrl;
+                    imagePublicId = uploadData.publicId;
+                }
             }
 
             statusText.textContent = 'Saving product data...';
@@ -88,6 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 price: parseFloat(document.getElementById('p_price').value),
                 stock: parseInt(document.getElementById('p_stock').value),
                 imageUrl: imageUrl,
+                imagePublicId: imagePublicId,
                 categoryId: parseInt(document.getElementById('p_categoryId').value),
                 branchId: parseInt(document.getElementById('p_branchId').value),
                 isBreedingDog: productType === 'dog',
@@ -115,6 +131,20 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!productRes.ok) {
                 const err = await productRes.json();
                 throw new Error(err.message || 'Failed to save product');
+            }
+
+            // Step C: Delete old image if it was replaced
+            if (formElement.dataset.oldImagePublicId && file) {
+                try {
+                    await fetch(`/api/media/PRODUCT?publicId=${encodeURIComponent(formElement.dataset.oldImagePublicId)}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': token ? `Bearer ${token}` : ''
+                        }
+                    });
+                } catch (delErr) {
+                    console.error('Failed to delete old image', delErr);
+                }
             }
 
             // Success
@@ -200,6 +230,7 @@ async function editProduct(id) {
         const form = document.getElementById('addProductForm');
         form.dataset.editId = p.id;
         form.dataset.oldImageUrl = p.imageUrl || '';
+        form.dataset.oldImagePublicId = p.imagePublicId || '';
         
         document.getElementById('p_name').value = p.name;
         document.getElementById('p_description').value = p.description || '';
