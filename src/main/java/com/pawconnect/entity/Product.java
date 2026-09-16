@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 
 @Entity
 @Table(name = "products", indexes = {
-    @Index(name = "idx_product_branch_dog", columnList = "branch_id, is_breeding_dog, suitable_size")
+    @Index(name = "idx_product_branch_size", columnList = "branch_id, suitable_size")
 })
 @Getter
 @Setter
@@ -35,15 +35,7 @@ public class Product {
 
     private String suitableSize;
 
-    @Column(name = "is_breeding_dog")
-    private Boolean isBreedingDog;
 
-    private String breed;
-    private String age;
-    private String healthStatus;
-    
-    @Column(length = 1000)
-    private String careInstructions;
 
     @Column(length = 1000)
     private String ingredients;

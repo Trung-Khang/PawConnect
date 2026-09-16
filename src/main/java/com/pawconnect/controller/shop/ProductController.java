@@ -20,9 +20,8 @@ public class ProductController {
     @GetMapping
     public List<ProductResponse> getProducts(
             @RequestParam(required = false) Long branchId,
-            @RequestParam(required = false) Boolean isBreedingDog,
             @RequestParam(required = false) String suitableSize) {
-        return productService.getProducts(branchId, isBreedingDog, suitableSize);
+        return productService.getProducts(branchId, suitableSize);
     }
 
     @GetMapping("/{id}")

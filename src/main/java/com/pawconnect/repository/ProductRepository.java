@@ -19,10 +19,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     int decreaseStock(@Param("id") Long id);
 
     @Query("SELECT p FROM Product p WHERE (:branchId IS NULL OR p.branch.id = :branchId) " +
-           "AND (:isBreedingDog IS NULL OR p.isBreedingDog = :isBreedingDog) " +
            "AND (:suitableSize IS NULL OR p.suitableSize = :suitableSize)")
     List<Product> findByBranchIdAndFilters(
             @Param("branchId") Long branchId, 
-            @Param("isBreedingDog") Boolean isBreedingDog, 
             @Param("suitableSize") String suitableSize);
 }

@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import com.pawconnect.dto.cart.CartResponse;
 import com.pawconnect.exception.BusinessException;
 import com.pawconnect.exception.ResourceNotFoundException;
+import com.pawconnect.entity.PuppyListing;
+import com.pawconnect.repository.PuppyListingRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,7 @@ public class CartServiceImpl implements CartService {
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final ProductRepository productRepository;
+    private final PuppyListingRepository puppyListingRepository;
 
     @Override
     public Cart getMyCart() {
@@ -42,19 +45,42 @@ public class CartServiceImpl implements CartService {
 
     @Override
     @Transactional
-    public CartResponse.CartItemResponse addItem(Long productId, Integer quantity) {
+    public CartResponse.CartItemResponse addItem(Long productId, Long puppyListingId, Integer quantity) {
+        if (productId == null && puppyListingId == null) {
+            throw new BusinessException("Must specify product or puppy");
+        }
         Cart cart = getMyCart();
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        
+        Product product = null;
+        PuppyListing puppyListing = null;
+        Integer stock = 0;
+        
+        if (productId != null) {
+            product = productRepository.findById(productId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+            stock = product.getStock();
+        } else {
+            puppyListing = puppyListingRepository.findById(puppyListingId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Puppy listing not found"));
+            stock = puppyListing.getStock();
+        }
 
         // Check if item already in cart
+        final Long finalProductId = productId;
+        final Long finalPuppyId = puppyListingId;
         CartItem existingItem = cart.getItems().stream()
-                .filter(item -> item.getProduct().getId().equals(productId))
+                .filter(item -> {
+                    if (finalProductId != null) {
+                        return item.getProduct() != null && item.getProduct().getId().equals(finalProductId);
+                    } else {
+                        return item.getPuppyListing() != null && item.getPuppyListing().getId().equals(finalPuppyId);
+                    }
+                })
                 .findFirst()
                 .orElse(null);
 
         int totalQuantity = quantity + (existingItem != null ? existingItem.getQuantity() : 0);
-        if (product.getStock() < totalQuantity) {
+        if (stock < totalQuantity) {
             throw new BusinessException("Not enough stock available");
         }
 
@@ -66,6 +92,7 @@ public class CartServiceImpl implements CartService {
             CartItem newItem = CartItem.builder()
                     .cart(cart)
                     .product(product)
+                    .puppyListing(puppyListing)
                     .quantity(quantity)
                     .build();
             savedItem = cartItemRepository.save(newItem);
@@ -113,6 +140,10 @@ public class CartServiceImpl implements CartService {
             res.setProductId(item.getProduct().getId());
             res.setProductName(item.getProduct().getName());
             res.setPrice(item.getProduct().getPrice());
+        } else if (item.getPuppyListing() != null) {
+            res.setPuppyListingId(item.getPuppyListing().getId());
+            res.setProductName(item.getPuppyListing().getListingTitle());
+            res.setPrice(item.getPuppyListing().getPricePerPuppyVnd());
         }
         res.setQuantity(item.getQuantity());
         return res;

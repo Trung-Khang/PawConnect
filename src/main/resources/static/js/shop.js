@@ -32,15 +32,27 @@ async function loadBranches(elementId) {
 
 async function loadProducts() {
     const branchId = document.getElementById('branchFilter').value;
-    const isBreedingDog = document.getElementById('typeFilter').value;
+    const type = document.getElementById('typeFilter').value; // empty, 'true' (puppy), or 'false' (product) for legacy support
     
-    let url = '/api/products?';
-    if (branchId) url += `branchId=${branchId}&`;
-    if (isBreedingDog) url += `isBreedingDog=${isBreedingDog}`;
-
+    let products = [];
+    
     try {
-        const res = await fetch(url);
-        const products = await res.json();
+        if (!type || type === 'false' || type === 'product') {
+            let url = '/api/products?';
+            if (branchId) url += `branchId=${branchId}`;
+            const res = await fetch(url);
+            let json = await res.json();
+            json.forEach(p => p.itemType = 'product');
+            products = products.concat(json);
+        }
+        if (!type || type === 'true' || type === 'puppy') {
+            let url = '/api/puppy-listings';
+            const res = await fetch(url);
+            let json = await res.json();
+            if (branchId) json = json.filter(p => p.branchId == branchId);
+            json.forEach(p => p.itemType = 'puppy');
+            products = products.concat(json);
+        }
         renderProducts(products);
     } catch (e) {
         document.getElementById('productGrid').innerHTML = '<p>Error loading products</p>';
@@ -59,27 +71,35 @@ function renderProducts(products) {
     products.forEach(p => {
         const card = document.createElement('div');
         card.className = 'product-card';
-        if (p.isBreedingDog) card.innerHTML += `<div class="product-badge">Pet</div>`;
+        if (p.itemType === 'puppy') card.innerHTML += `<div class="product-badge">Pet</div>`;
         
         const safeProductJson = JSON.stringify(p).replace(/"/g, '&quot;');
+        const title = p.itemType === 'puppy' ? p.listingTitle : p.name;
+        const price = p.itemType === 'puppy' ? p.pricePerPuppyVnd : p.price;
         
         card.innerHTML += `
             <img src="${p.imageUrl || 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=800&auto=format&fit=crop'}" alt="product" class="product-image" onclick="openModal(${safeProductJson})" style="cursor:pointer">
             <h3 class="product-title" onclick="openModal(${safeProductJson})" style="cursor:pointer"></h3>
-            <p class="product-price">${p.price.toLocaleString()} VND</p>
+            <p class="product-price">${price.toLocaleString()} VND</p>
             <div class="product-card-actions">
-                <button class="btn-icon-cart" onclick="addToCart(${p.id})" title="Add to Cart"><i class="fas fa-cart-plus"></i></button>
-                <button class="btn-add-cart" onclick="buyNow(${p.id})" style="flex:1;">Mua ngay</button>
+                <button class="btn-icon-cart" onclick="addToCart('${p.itemType}', ${p.id})" title="Add to Cart"><i class="fas fa-cart-plus"></i></button>
+                <button class="btn-add-cart" onclick="buyNow('${p.itemType}', ${p.id})" style="flex:1;">Mua ngay</button>
             </div>
         `;
-        card.querySelector('.product-title').textContent = p.name;
+        card.querySelector('.product-title').textContent = title;
         grid.appendChild(card);
     });
 }
 
-async function addToCart(productId) {
+async function addToCart(itemType, id) {
     try {
-        const res = await fetch(`/api/cart/items?productId=${productId}&quantity=1`, { method: 'POST' });
+        let url = '/api/cart/items?quantity=1';
+        if (itemType === 'product') {
+            url += `&productId=${id}`;
+        } else {
+            url += `&puppyListingId=${id}`;
+        }
+        const res = await fetch(url, { method: 'POST' });
         if (res.ok) {
             let countSpan = document.getElementById('cartCount');
             countSpan.textContent = parseInt(countSpan.textContent) + 1;
@@ -88,7 +108,7 @@ async function addToCart(productId) {
             countSpan.style.transform = 'scale(1.5)';
             setTimeout(() => countSpan.style.transform = 'scale(1)', 200);
         } else {
-            alert('Failed to add to cart (out of stock)');
+            alert('Failed to add to cart (out of stock or error)');
         }
     } catch (e) {
         alert('Error adding to cart');
@@ -186,15 +206,19 @@ async function submitBooking() {
 // --- MODAL & BUY NOW LOGIC ---
 function openModal(p) {
     document.getElementById('modalImage').src = p.imageUrl || 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=800&auto=format&fit=crop';
-    document.getElementById('modalName').textContent = p.name;
-    document.getElementById('modalPrice').textContent = p.price.toLocaleString() + ' VND';
-    document.getElementById('modalBreed').textContent = p.breed || 'Chưa cập nhật';
-    document.getElementById('modalAge').textContent = p.age || 'Chưa cập nhật';
+    
+    const title = p.itemType === 'puppy' ? p.listingTitle : p.name;
+    const price = p.itemType === 'puppy' ? p.pricePerPuppyVnd : p.price;
+    
+    document.getElementById('modalName').textContent = title;
+    document.getElementById('modalPrice').textContent = price.toLocaleString() + ' VND';
+    document.getElementById('modalBreed').textContent = p.breedCode || p.breed || 'Chưa cập nhật';
+    document.getElementById('modalAge').textContent = p.ageMonths ? p.ageMonths + ' months' : (p.age || 'Chưa cập nhật');
     document.getElementById('modalHealth').textContent = p.healthStatus || 'Đang cập nhật';
     document.getElementById('modalCare').textContent = p.careInstructions || 'Liên hệ để biết thêm chi tiết';
     
-    document.getElementById('modalCartBtn').onclick = () => addToCart(p.id);
-    document.getElementById('modalBuyBtn').onclick = () => buyNow(p.id);
+    document.getElementById('modalCartBtn').onclick = () => addToCart(p.itemType, p.id);
+    document.getElementById('modalBuyBtn').onclick = () => buyNow(p.itemType, p.id);
     
     document.getElementById('productModal').classList.add('active');
 }
@@ -203,9 +227,9 @@ function closeModal() {
     document.getElementById('productModal').classList.remove('active');
 }
 
-async function buyNow(productId) {
+async function buyNow(itemType, id) {
     // Add to cart then go to a mock checkout or show alert
-    await addToCart(productId);
+    await addToCart(itemType, id);
     alert('Đã thêm vào giỏ hàng. Đang chuyển đến thanh toán...');
     // window.location.href = '/checkout'; // To be implemented by TV2/3
 }

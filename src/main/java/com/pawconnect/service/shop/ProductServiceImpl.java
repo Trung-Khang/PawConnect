@@ -29,8 +29,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ProductResponse> getProducts(Long branchId, Boolean isBreedingDog, String suitableSize) {
-        return productRepository.findByBranchIdAndFilters(branchId, isBreedingDog, suitableSize)
+    public List<ProductResponse> getProducts(Long branchId, String suitableSize) {
+        return productRepository.findByBranchIdAndFilters(branchId, suitableSize)
                 .stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
@@ -57,11 +57,7 @@ public class ProductServiceImpl implements ProductService {
                 .imageUrl(request.getImageUrl())
                 .imagePublicId(request.getImagePublicId())
                 .suitableSize(request.getSuitableSize())
-                .isBreedingDog(request.getIsBreedingDog())
-                .breed(request.getBreed())
-                .age(request.getAge())
-                .healthStatus(request.getHealthStatus())
-                .careInstructions(request.getCareInstructions())
+
                 .ingredients(request.getIngredients())
                 .targetAudience(request.getTargetAudience())
                 .branch(branch)
@@ -83,11 +79,7 @@ public class ProductServiceImpl implements ProductService {
         p.setImageUrl(request.getImageUrl());
         p.setImagePublicId(request.getImagePublicId());
         p.setSuitableSize(request.getSuitableSize());
-        p.setIsBreedingDog(request.getIsBreedingDog());
-        p.setBreed(request.getBreed());
-        p.setAge(request.getAge());
-        p.setHealthStatus(request.getHealthStatus());
-        p.setCareInstructions(request.getCareInstructions());
+
         p.setIngredients(request.getIngredients());
         p.setTargetAudience(request.getTargetAudience());
         
@@ -130,11 +122,7 @@ public class ProductServiceImpl implements ProductService {
         res.setImageUrl(p.getImageUrl());
         res.setImagePublicId(p.getImagePublicId());
         res.setSuitableSize(p.getSuitableSize());
-        res.setIsBreedingDog(p.getIsBreedingDog());
-        res.setBreed(p.getBreed());
-        res.setAge(p.getAge());
-        res.setHealthStatus(p.getHealthStatus());
-        res.setCareInstructions(p.getCareInstructions());
+
         res.setIngredients(p.getIngredients());
         res.setTargetAudience(p.getTargetAudience());
         if (p.getBranch() != null) {

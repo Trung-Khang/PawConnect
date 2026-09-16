@@ -24,11 +24,7 @@ public class ProductRequest {
     private String imageUrl;
     private String imagePublicId;
     private String suitableSize;
-    private Boolean isBreedingDog;
-    private String breed;
-    private String age;
-    private String healthStatus;
-    private String careInstructions;
+
     private String ingredients;
     private String targetAudience;
 

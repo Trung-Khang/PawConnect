@@ -152,3 +152,25 @@ Sau khi kéo (pull) bản cập nhật mới nhất từ nhánh `main` để đ�
 > **Ghi chú:** TV1 chỉ sửa đổi code thuộc phạm vi `Product` và module của TV1. Các entity của TV2 (`DogProfile`, `AdoptionPost`) hay hệ thống bảo mật của TV3 hoàn toàn được giữ nguyên đúng theo nguyên tắc làm việc độc lập và không lấn sân task của thành viên khác.
 
 Trạng thái hạng mục Tích hợp Seed V3 & Media Service (phần của TV1): `COMPLETED`.
+
+## 13. Báo Cáo Cập Nhật (Ngày 16/09/2026) - Tách Biệt PuppyListing và Product theo Seed V3
+
+Tiếp tục bám sát Data Contract v0.2 draft, TV1 đã tách biệt hoàn toàn chó giống thương mại ra khỏi bảng `Product` chung, tránh xung đột schema và logic với các tính năng của TV2/TV3.
+
+### 13.1. Tạo mới Entity và DTO cho PuppyListing
+- **Enums Mới:** Thêm `BreedType`, `LifeStage`, `ListingStatus`, `DogSize` chuẩn hóa riêng cho phân hệ thú cưng thương mại.
+- **Entity PuppyListing:** Mapping sang bảng `puppy_listings`. Entity này chuyên dùng cho thú cưng (có `breedCode`, `healthStatus`, `ageMonths`, `careInstructions`, v.v.).
+- **Tách bỏ khỏi Product:** Loại bỏ toàn bộ các cột liên quan đến chó (`isBreedingDog`, `breed`, `age`, `healthStatus`, `careInstructions`) khỏi `Product.java` để đưa `Product` về đúng nghĩa là Sản phẩm (Thức ăn, Phụ kiện, Thuốc).
+
+### 13.2. Cập nhật hệ thống Giỏ hàng (Cart) và Đơn hàng (Order)
+- **Hỗ trợ Đa thực thể:** Entity `CartItem` và `OrderItem` được thiết kế lại để trỏ đến cả `Product` (nullable) và `PuppyListing` (nullable).
+- **Service Layer logic:**
+  - `CartServiceImpl`: Tính toán stock và tính tiền linh hoạt tùy theo item là Product hay PuppyListing.
+  - `OrderServiceImpl`: Khi checkout, hệ thống tự động nhận diện và gọi đúng Repository tương ứng (`productRepository` hoặc `puppyListingRepository`) để trừ kho an toàn thông qua Atomic Update Query. Giúp ngăn chặn hiện tượng Race Condition.
+
+### 13.3. Đồng bộ giao diện Shop UI
+- File `shop.js` đã được tinh chỉnh để fetch dữ liệu từ cả 2 nguồn: `/api/products` và `/api/puppy-listings`.
+- Dữ liệu trả về được gán cờ `itemType` (product/puppy) để hiển thị đồng nhất trên giao diện thẻ sản phẩm (Card) và giỏ hàng.
+- Nút "Mua ngay" và "Thêm vào giỏ hàng" xử lý đúng logic gọi API với `productId` hoặc `puppyListingId`.
+
+Trạng thái hạng mục Tách Biệt PuppyListing: `COMPLETED`. Mọi thay đổi code đều chỉ giới hạn trong phạm vi task của TV1.

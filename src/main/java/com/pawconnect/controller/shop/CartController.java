@@ -21,8 +21,11 @@ public class CartController {
 
     @PreAuthorize("hasRole('CUSTOMER')")
     @PostMapping("/items")
-    public CartResponse.CartItemResponse addItemToCart(@RequestParam Long productId, @RequestParam Integer quantity) {
-        return cartService.addItem(productId, quantity);
+    public CartResponse.CartItemResponse addItemToCart(
+            @RequestParam(required = false) Long productId, 
+            @RequestParam(required = false) Long puppyListingId, 
+            @RequestParam Integer quantity) {
+        return cartService.addItem(productId, puppyListingId, quantity);
     }
 
     @PreAuthorize("hasRole('CUSTOMER')")

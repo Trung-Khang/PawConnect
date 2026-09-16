@@ -19,6 +19,7 @@ public class OrderResponse {
     public static class OrderItemResponse {
         private Long id;
         private Long productId;
+        private Long puppyListingId;
         private String productName;
         private Integer quantity;
         private BigDecimal price;
