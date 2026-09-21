@@ -46,10 +46,10 @@ async function loadProducts() {
             products = products.concat(json);
         }
         if (!type || type === 'puppy') {
-            let url = '/api/puppy-listings';
+            let url = '/api/puppy-listings?';
+            if (branchId) url += `branchId=${branchId}`;
             const res = await fetch(url);
             let json = await res.json();
-            if (branchId) json = json.filter(p => p.branchId == branchId);
             json.forEach(p => p.itemType = 'puppy');
             products = products.concat(json);
         }
