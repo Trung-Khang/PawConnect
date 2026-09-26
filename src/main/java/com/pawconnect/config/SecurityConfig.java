@@ -35,6 +35,8 @@ public class SecurityConfig {
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/", "/shop", "/service", "/admin/**", "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/branches", "/api/categories", "/api/products", "/api/products/*", "/api/service-types").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/puppy-listings", "/api/puppy-listings/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/admin/branches").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/upload", "/api/products").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/products/*").permitAll()
                         .anyRequest().authenticated())

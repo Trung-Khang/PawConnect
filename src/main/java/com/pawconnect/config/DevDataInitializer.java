@@ -26,10 +26,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+
 @Configuration
 public class DevDataInitializer {
 
     @Bean
+    @ConditionalOnProperty(name = "pawconnect.seed.enabled", havingValue = "true", matchIfMissing = false)
     CommandLineRunner initializeTV1Data(
             BranchRepository branchRepository,
             CategoryRepository categoryRepository,
