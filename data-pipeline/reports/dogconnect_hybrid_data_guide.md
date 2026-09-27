@@ -461,7 +461,7 @@ Dùng prompt theo từng gate, không giao một lần toàn bộ pipeline. Mẫ
 
 ```text
 Đọc fix.pdf, docs/Members/TV2.md, docs/Project/Workflow.md và
-docs/Project/dogconnect_hybrid_data_guide.md trước khi sửa code.
+data-pipeline/reports/dogconnect_hybrid_data_guide.md trước khi sửa code.
 
 Hãy thực hiện Gate <N> của data pipeline PawConnect.
 Phạm vi file được phép sửa: <liệt kê đường dẫn>.
