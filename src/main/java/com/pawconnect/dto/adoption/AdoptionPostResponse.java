@@ -8,6 +8,7 @@ public record AdoptionPostResponse(
         String seedKey,
         Long dogProfileId,
         String dogName,
+        DogProfileResponse dogProfile,
         Long createdByUserId,
         String title,
         String description,

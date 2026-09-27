@@ -1,6 +1,7 @@
 package com.pawconnect.dto.adoption;
 
 import com.pawconnect.entity.AdoptionPostStatus;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 
 public record AdoptionPostUpdateRequest(
@@ -9,5 +10,6 @@ public record AdoptionPostUpdateRequest(
         String healthNote,
         String imageUrl,
         String imagePublicId,
-        AdoptionPostStatus status) {
+        AdoptionPostStatus status,
+        @Valid DogProfileRequest dogProfile) {
 }
