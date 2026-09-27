@@ -24,6 +24,7 @@ import com.pawconnect.repository.AdoptionPostRepository;
 import com.pawconnect.repository.BranchRepository;
 import com.pawconnect.repository.DogProfileRepository;
 import com.pawconnect.repository.UserRepository;
+import com.pawconnect.service.chat.ConversationService;
 import java.math.BigDecimal;
 import java.util.List;
 import org.springframework.security.access.AccessDeniedException;
@@ -43,17 +44,23 @@ public class AdoptionService {
     private final AdoptionApplicationRepository adoptionApplicationRepository;
     private final BranchRepository branchRepository;
     private final UserRepository userRepository;
+    private final ConversationService conversationService;
+    private final AdoptionMediaService adoptionMediaService;
 
     public AdoptionService(DogProfileRepository dogProfileRepository,
                            AdoptionPostRepository adoptionPostRepository,
                            AdoptionApplicationRepository adoptionApplicationRepository,
                            BranchRepository branchRepository,
-                           UserRepository userRepository) {
+                           UserRepository userRepository,
+                           ConversationService conversationService,
+                           AdoptionMediaService adoptionMediaService) {
         this.dogProfileRepository = dogProfileRepository;
         this.adoptionPostRepository = adoptionPostRepository;
         this.adoptionApplicationRepository = adoptionApplicationRepository;
         this.branchRepository = branchRepository;
         this.userRepository = userRepository;
+        this.conversationService = conversationService;
+        this.adoptionMediaService = adoptionMediaService;
     }
 
     public List<AdoptionPostResponse> listAvailablePosts() {
@@ -67,6 +74,23 @@ public class AdoptionService {
         if (post.getStatus() != AdoptionPostStatus.AVAILABLE) {
             throw new ResourceNotFoundException("Adoption post is not available");
         }
+        return AdoptionMapper.toResponse(post);
+    }
+
+    public List<AdoptionPostResponse> listManagedPosts(String actorEmail) {
+        User actor = currentUser(actorEmail);
+        requireStaff(actor);
+        List<AdoptionPost> posts = actor.getRole().getName() == RoleName.ADMIN
+                ? adoptionPostRepository.findAllByOrderByCreatedAtDesc()
+                : adoptionPostRepository.findByDogProfileBranchIdOrderByCreatedAtDesc(requireBranch(actor).getId());
+        return posts.stream().map(AdoptionMapper::toResponse).toList();
+    }
+
+    public AdoptionPostResponse getManagedPost(Long postId, String actorEmail) {
+        User actor = currentUser(actorEmail);
+        requireStaff(actor);
+        AdoptionPost post = findPost(postId);
+        assertManagesBranch(actor, post.getDogProfile().getBranch().getId());
         return AdoptionMapper.toResponse(post);
     }
 
@@ -205,10 +229,27 @@ public class AdoptionService {
         post.setImageUrl(normalizeImageUrl(request.imageUrl()));
         post.setImagePublicId(blankToNull(request.imagePublicId()));
         post.setStatus(requestedStatus);
+        if (request.dogProfile() != null) {
+            updateDogProfile(post.getDogProfile().getId(), request.dogProfile(), actorEmail);
+        }
         if (requestedStatus == AdoptionPostStatus.CLOSED) {
             rejectPendingApplications(postId);
         }
         return AdoptionMapper.toResponse(post);
+    }
+
+    @Transactional
+    public void deletePost(Long postId, String actorEmail) {
+        User actor = currentUser(actorEmail);
+        requireStaff(actor);
+        AdoptionPost post = adoptionPostRepository.findByIdForUpdate(postId)
+                .orElseThrow(() -> new ResourceNotFoundException("Adoption post was not found"));
+        assertManagesBranch(actor, post.getDogProfile().getBranch().getId());
+        if (adoptionApplicationRepository.existsByAdoptionPostId(postId)) {
+            throw new ResourceConflictException("Bài đã có đơn nhận nuôi, hãy chuyển trạng thái sang Đã đóng để giữ lịch sử");
+        }
+        adoptionMediaService.removeAdoptionPostAssetForPostDeletion(postId, actorEmail);
+        adoptionPostRepository.delete(post);
     }
 
     @Transactional
@@ -265,6 +306,7 @@ public class AdoptionService {
         application.setStatus(AdoptionApplicationStatus.APPROVED);
         post.setStatus(AdoptionPostStatus.CLOSED);
         rejectPendingApplicationsExcept(post.getId(), applicationId);
+        conversationService.openForAdoption(application.getApplicant().getId(), post.getCreatedBy().getId(), post.getId());
         return AdoptionMapper.toResponse(application);
     }
 

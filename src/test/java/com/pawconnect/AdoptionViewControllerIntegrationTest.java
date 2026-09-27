@@ -23,7 +23,7 @@ class AdoptionViewControllerIntegrationTest {
         mockMvc.perform(get("/adoptions"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("community/adoptions"))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Nhận nuôi | PawConnect")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"adoption-list-view\"")));
 
         mockMvc.perform(get("/adoptions/1"))
                 .andExpect(status().isOk())
@@ -35,6 +35,10 @@ class AdoptionViewControllerIntegrationTest {
 
         mockMvc.perform(get("/adoptions/manage"))
                 .andExpect(status().isOk())
-                .andExpect(view().name("community/adoptions"));
+                .andExpect(view().name("community/adoptions"))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("name=\"dogBranchId\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"delete-dog-image\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("id=\"delete-post-image\""))))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"open-adoption-chat\"")));
     }
 }

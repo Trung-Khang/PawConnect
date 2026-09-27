@@ -20,8 +20,9 @@ public final class AdoptionMapper {
 
     public static AdoptionPostResponse toResponse(AdoptionPost post) {
         return new AdoptionPostResponse(post.getId(), post.getSeedKey(), post.getDogProfile().getId(),
-                post.getDogProfile().getName(), post.getCreatedBy().getId(), post.getTitle(), post.getDescription(),
-                post.getHealthNote(), post.getStatus(), post.getImageUrl(), post.getImagePublicId(), post.getCreatedAt());
+                post.getDogProfile().getName(), toResponse(post.getDogProfile()), post.getCreatedBy().getId(),
+                post.getTitle(), post.getDescription(), post.getHealthNote(), post.getStatus(), post.getImageUrl(),
+                post.getImagePublicId(), post.getCreatedAt());
     }
 
     public static AdoptionApplicationResponse toResponse(AdoptionApplication application) {

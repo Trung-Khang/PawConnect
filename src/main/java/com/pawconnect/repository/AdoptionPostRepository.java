@@ -13,6 +13,10 @@ public interface AdoptionPostRepository extends JpaRepository<AdoptionPost, Long
 
     List<AdoptionPost> findByDogProfileBranchId(Long branchId);
 
+    List<AdoptionPost> findAllByOrderByCreatedAtDesc();
+
+    List<AdoptionPost> findByDogProfileBranchIdOrderByCreatedAtDesc(Long branchId);
+
     @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
     @org.springframework.data.jpa.repository.Query("select post from AdoptionPost post where post.id = :id")
     Optional<AdoptionPost> findByIdForUpdate(@org.springframework.data.repository.query.Param("id") Long id);
