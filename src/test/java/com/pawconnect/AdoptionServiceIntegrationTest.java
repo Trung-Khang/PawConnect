@@ -22,6 +22,8 @@ import com.pawconnect.entity.VaccinationStatus;
 import com.pawconnect.exception.ResourceConflictException;
 import com.pawconnect.exception.ResourceNotFoundException;
 import com.pawconnect.repository.BranchRepository;
+import com.pawconnect.repository.ConversationRepository;
+import com.pawconnect.repository.DogProfileRepository;
 import com.pawconnect.repository.RoleRepository;
 import com.pawconnect.repository.UserRepository;
 import com.pawconnect.service.community.AdoptionService;
@@ -47,6 +49,8 @@ class AdoptionServiceIntegrationTest {
     @Autowired private BranchRepository branchRepository;
     @Autowired private RoleRepository roleRepository;
     @Autowired private UserRepository userRepository;
+    @Autowired private DogProfileRepository dogProfileRepository;
+    @Autowired private ConversationRepository conversationRepository;
 
     private Branch hcm;
     private Branch hanoi;
@@ -100,6 +104,12 @@ class AdoptionServiceIntegrationTest {
                 .isInstanceOf(ResourceConflictException.class);
         assertThatThrownBy(() -> adoptionService.getAvailablePost(post.id()))
                 .isInstanceOf(ResourceNotFoundException.class);
+        assertThat(conversationRepository.findAll())
+                .singleElement()
+                .satisfies(conversation -> {
+                    assertThat(conversation.getAdoptionPostId()).isEqualTo(post.id());
+                    assertThat(conversation.getCustomer().getId()).isEqualTo(first.applicantUserId());
+                });
     }
 
     @Test
@@ -112,7 +122,7 @@ class AdoptionServiceIntegrationTest {
                 .isInstanceOf(ResourceConflictException.class);
 
         adoptionService.updatePost(post.id(), new AdoptionPostUpdateRequest("Tim mai am cho Nau", "Can mot gia dinh phu hop.",
-                "Suc khoe on dinh.", null, null, AdoptionPostStatus.CLOSED), HCM_MANAGER);
+                "Suc khoe on dinh.", null, null, AdoptionPostStatus.CLOSED, null), HCM_MANAGER);
 
         assertThat(adoptionService.getMyApplications(CUSTOMER_ONE))
                 .singleElement()
@@ -136,6 +146,48 @@ class AdoptionServiceIntegrationTest {
         assertThat(adoptionService.getManagedApplications(ADMIN)).hasSize(2);
         assertThatThrownBy(() -> adoptionService.getManagedApplications(CUSTOMER_ONE))
                 .isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    void updatesDogProfileWithPostAndOnlyDeletesDogsWithoutAdoptionHistory() {
+        DogProfileResponse dog = createDog(HCM_MANAGER, hcm.getId(), "Sua");
+        AdoptionPostResponse post = adoptionService.createPost(postRequest(dog.id()), HCM_MANAGER);
+        DogProfileRequest updatedDog = new DogProfileRequest("Sua Moi", "Beagle", DogSize.MEDIUM, 24,
+                new BigDecimal("11.50"), DogGender.MALE, VaccinationStatus.PARTIALLY_VACCINATED,
+                null, null, "Than thien va nang dong.", hcm.getId());
+
+        AdoptionPostResponse updated = adoptionService.updatePost(post.id(), new AdoptionPostUpdateRequest(
+                "Tim mai am cho Sua Moi", "Thong tin da cap nhat.", "Dang theo doi dinh ky.",
+                null, null, AdoptionPostStatus.AVAILABLE, updatedDog), HCM_MANAGER);
+
+        assertThat(updated.dogProfile().name()).isEqualTo("Sua Moi");
+        assertThat(updated.dogProfile().breed()).isEqualTo("Beagle");
+        assertThat(updated.dogProfile().ageMonths()).isEqualTo(24);
+        assertThatThrownBy(() -> adoptionService.deleteDogProfile(dog.id(), HCM_MANAGER))
+                .isInstanceOf(ResourceConflictException.class);
+
+        DogProfileResponse unpostedDog = createDog(HCM_MANAGER, hcm.getId(), "Chua Dang");
+        adoptionService.deleteDogProfile(unpostedDog.id(), HCM_MANAGER);
+        assertThat(dogProfileRepository.findById(unpostedDog.id())).isEmpty();
+    }
+
+    @Test
+    void deletesOnlyUnappliedPostsWithinTheManagersBranch() {
+        DogProfileResponse dog = createDog(HCM_MANAGER, hcm.getId(), "Xoa Bai");
+        AdoptionPostResponse post = adoptionService.createPost(postRequest(dog.id()), HCM_MANAGER);
+
+        assertThatThrownBy(() -> adoptionService.deletePost(post.id(), HN_MANAGER))
+                .isInstanceOf(AccessDeniedException.class);
+
+        adoptionService.deletePost(post.id(), HCM_MANAGER);
+        assertThatThrownBy(() -> adoptionService.getAvailablePost(post.id()))
+                .isInstanceOf(ResourceNotFoundException.class);
+        assertThat(dogProfileRepository.findById(dog.id())).isPresent();
+
+        AdoptionPostResponse appliedPost = adoptionService.createPost(postRequest(dog.id()), HCM_MANAGER);
+        adoptionService.apply(appliedPost.id(), new AdoptionApplicationRequest("Toi muon nhan be."), CUSTOMER_ONE);
+        assertThatThrownBy(() -> adoptionService.deletePost(appliedPost.id(), HCM_MANAGER))
+                .isInstanceOf(ResourceConflictException.class);
     }
 
     private DogProfileResponse createDog(String actorEmail, Long branchId, String name) {

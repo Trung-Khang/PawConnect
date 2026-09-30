@@ -1,8 +1,11 @@
 package com.pawconnect;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -88,7 +91,10 @@ class AdoptionControllerIntegrationTest {
 
         mockMvc.perform(get("/api/adoptions/{id}", availablePost.getId()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.dogName").value("May"));
+                .andExpect(jsonPath("$.dogName").value("May"))
+                .andExpect(jsonPath("$.dogProfile.breed").value("Poodle"))
+                .andExpect(jsonPath("$.dogProfile.ageMonths").value(18))
+                .andExpect(jsonPath("$.dogProfile.vaccinationStatus").value("FULLY_VACCINATED"));
     }
 
     @Test
@@ -154,12 +160,20 @@ class AdoptionControllerIntegrationTest {
 
         mockMvc.perform(get("/api/adoptions/{id}", availablePost.getId()))
                 .andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/adoptions/manage/posts").with(user(HCM_MANAGER).roles("BRANCH_MANAGER")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(availablePost.getId()))
+                .andExpect(jsonPath("$[0].status").value("CLOSED"));
+        mockMvc.perform(get("/api/adoptions/manage/posts/{id}", availablePost.getId())
+                        .with(user(HCM_MANAGER).roles("BRANCH_MANAGER")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CLOSED"));
         mockMvc.perform(get("/api/adoptions/applications/manage").with(user(HCM_MANAGER).roles("BRANCH_MANAGER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].status").value("APPROVED"));
 
         AdoptionPostUpdateRequest update = new AdoptionPostUpdateRequest("Tim mai am cho May", "Noi dung moi.",
-                "Suc khoe on dinh.", null, null, AdoptionPostStatus.AVAILABLE);
+                "Suc khoe on dinh.", null, null, AdoptionPostStatus.AVAILABLE, null);
         mockMvc.perform(put("/api/adoptions/{id}", availablePost.getId()).with(user(HCM_MANAGER).roles("BRANCH_MANAGER"))
                         .contentType(MediaType.APPLICATION_JSON).content(json(update)))
                 .andExpect(status().isConflict());
@@ -178,6 +192,62 @@ class AdoptionControllerIntegrationTest {
                         .with(user(HCM_MANAGER).roles("BRANCH_MANAGER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("REJECTED"));
+    }
+
+    @Test
+    void staffCanUpdateThePostAndItsDogProfileInOneRequest() throws Exception {
+        DogProfileRequest updatedDog = new DogProfileRequest("May Moi", "Beagle", DogSize.MEDIUM, 24,
+                new BigDecimal("11.50"), DogGender.FEMALE, VaccinationStatus.PARTIALLY_VACCINATED,
+                null, null, "Than thien va nang dong.", hcm.getId());
+        AdoptionPostUpdateRequest update = new AdoptionPostUpdateRequest("Tim mai am cho May Moi",
+                "Thong tin bai dang da cap nhat.", "Dang theo doi dinh ky.", null, null,
+                AdoptionPostStatus.AVAILABLE, updatedDog);
+
+        mockMvc.perform(put("/api/adoptions/{id}", availablePost.getId())
+                        .with(user(HCM_MANAGER).roles("BRANCH_MANAGER"))
+                        .contentType(MediaType.APPLICATION_JSON).content(json(update)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.dogName").value("May Moi"))
+                .andExpect(jsonPath("$.dogProfile.breed").value("Beagle"))
+                .andExpect(jsonPath("$.dogProfile.size").value("MEDIUM"))
+                .andExpect(jsonPath("$.dogProfile.ageMonths").value(24));
+    }
+
+    @Test
+    void managerCanDeleteOnlyAnUnappliedPostFromTheirBranch() throws Exception {
+        mockMvc.perform(delete("/api/adoptions/{id}", availablePost.getId())
+                        .with(user(HN_MANAGER).roles("BRANCH_MANAGER")))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(delete("/api/adoptions/{id}", availablePost.getId())
+                        .with(user(HCM_MANAGER).roles("BRANCH_MANAGER")))
+                .andExpect(status().isNoContent());
+
+        assertThat(adoptionPostRepository.findById(availablePost.getId())).isEmpty();
+
+        AdoptionPost postWithApplication = persistPost(hcmManager, hcm, "Bap Co Don");
+        adoptionApplicationRepository.saveAndFlush(AdoptionApplication.builder()
+                .adoptionPost(postWithApplication)
+                .applicant(customer)
+                .message("Toi muon nhan be.")
+                .status(AdoptionApplicationStatus.PENDING)
+                .build());
+
+        mockMvc.perform(delete("/api/adoptions/{id}", postWithApplication.getId())
+                        .with(user(HCM_MANAGER).roles("BRANCH_MANAGER")))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void onlyStaffCanUseAdoptionImageEndpoints() throws Exception {
+        mockMvc.perform(multipart("/api/adoptions/dogs/{id}/image", availablePost.getDogProfile().getId())
+                        .file("file", new byte[]{1, 2, 3}))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(multipart("/api/adoptions/posts/{id}/image", availablePost.getId())
+                        .file("file", new byte[]{1, 2, 3})
+                        .with(user(CUSTOMER).roles("CUSTOMER")))
+                .andExpect(status().isForbidden());
     }
 
     private DogProfileRequest dogRequest() {
