@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PawConnect - Admin Products</title>
+    <title>PawConnect - Quản trị Cửa hàng</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/admin.css">
 </head>
@@ -12,21 +12,22 @@
         <aside class="sidebar">
             <div class="sidebar-header">
                 <h2>PawConnect</h2>
-                <span class="badge">Admin</span>
+                <span class="badge">Quản trị</span>
             </div>
             <nav class="sidebar-nav">
-                <a href="/admin/products" class="active">Product Management</a>
+                <a href="/shop">Trang chủ Cửa hàng</a>
+                <a href="/admin/products" class="active">Quản lý Sản phẩm</a>
                 <!-- Future links can be added here -->
             </nav>
             <div class="sidebar-footer">
-                <button id="logoutBtn" class="btn btn-secondary btn-full">Logout</button>
+                <button id="logoutBtn" class="btn btn-secondary btn-full">Đăng xuất</button>
             </div>
         </aside>
 
         <main class="main-content">
             <header class="top-header">
-                <h1>Products & Breeding Dogs</h1>
-                <button id="addProductBtn" class="btn btn-primary">+ Add New</button>
+                <h1>Sản phẩm & Chó giống</h1>
+                <button id="addProductBtn" class="btn btn-primary">+ Thêm mới</button>
             </header>
 
             <section class="content-section">
@@ -34,12 +35,12 @@
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>Image</th>
-                                <th>Name</th>
-                                <th>Category</th>
-                                <th>Price</th>
-                                <th>Stock</th>
-                                <th>Actions</th>
+                                <th>Hình ảnh</th>
+                                <th>Tên sản phẩm</th>
+                                <th>Danh mục</th>
+                                <th>Giá</th>
+                                <th>Tồn kho</th>
+                                <th>Thao tác</th>
                             </tr>
                         </thead>
                         <tbody id="productsTableBody">
@@ -55,29 +56,29 @@
     <div id="addProductModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Add New Product / Dog</h2>
+                <h2>Thêm Sản phẩm / Chó giống</h2>
                 <button class="close-btn">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="addProductForm">
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Name</label>
+                            <label>Tên</label>
                             <input type="text" id="p_name" required>
                         </div>
                         <div class="form-group">
-                            <label>Branch</label>
+                            <label>Chi nhánh</label>
                             <select id="p_branchId" required></select>
                         </div>
                     </div>
                     
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Category</label>
+                            <label>Danh mục</label>
                             <select id="p_categoryId" required></select>
                         </div>
                         <div class="form-group">
-                            <label>Product Type (Loại mặt hàng)</label>
+                            <label>Loại mặt hàng</label>
                             <select id="p_productType">
                                 <option value="dog">Chó giống (Dog)</option>
                                 <option value="food">Thức ăn (Food)</option>
@@ -88,11 +89,11 @@
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Price (VND)</label>
+                            <label>Giá (VNĐ)</label>
                             <input type="number" id="p_price" required min="0">
                         </div>
                         <div class="form-group">
-                            <label>Stock</label>
+                            <label>Tồn kho</label>
                             <input type="number" id="p_stock" required min="0">
                         </div>
                     </div>
@@ -100,21 +101,21 @@
                     <!-- Dog Fields -->
                     <div class="form-row dog-fields dynamic-fields">
                         <div class="form-group">
-                            <label>Breed (Giống)</label>
+                            <label>Giống</label>
                             <input type="text" id="p_breed">
                         </div>
                         <div class="form-group">
-                            <label>Age (Tuổi)</label>
+                            <label>Tuổi (tháng)</label>
                             <input type="text" id="p_age">
                         </div>
                     </div>
                     <div class="form-row dog-fields dynamic-fields">
                         <div class="form-group">
-                            <label>Health Status (Sức khỏe)</label>
+                            <label>Tình trạng sức khỏe</label>
                             <input type="text" id="p_healthStatus">
                         </div>
                         <div class="form-group">
-                            <label>Care Instructions (Chăm sóc)</label>
+                            <label>Hướng dẫn chăm sóc</label>
                             <input type="text" id="p_careInstructions">
                         </div>
                     </div>
@@ -122,29 +123,29 @@
                     <!-- Food Fields -->
                     <div class="form-row food-fields dynamic-fields" style="display: none;">
                         <div class="form-group">
-                            <label>Ingredients (Thành phần)</label>
+                            <label>Thành phần</label>
                             <input type="text" id="p_ingredients">
                         </div>
                         <div class="form-group">
-                            <label>Target Audience (Đối tượng)</label>
+                            <label>Đối tượng sử dụng</label>
                             <input type="text" id="p_targetAudience">
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label id="lbl_description">Special Notes (Lưu ý đặc biệt)</label>
+                        <label id="lbl_description">Lưu ý đặc biệt</label>
                         <textarea id="p_description" rows="3"></textarea>
                     </div>
 
                     <div class="form-group">
-                        <label>Image Upload (Cloudinary)</label>
+                        <label>Tải ảnh lên</label>
                         <input type="file" id="p_imageFile" accept="image/*" required>
                         <div id="uploadStatus" class="upload-status"></div>
                     </div>
 
                     <div class="form-actions">
-                        <button type="button" class="btn btn-secondary close-btn">Cancel</button>
-                        <button type="submit" class="btn btn-primary" id="saveProductBtn">Save Product</button>
+                        <button type="button" class="btn btn-secondary close-btn">Hủy</button>
+                        <button type="submit" class="btn btn-primary" id="saveProductBtn">Lưu Sản phẩm</button>
                     </div>
                 </form>
             </div>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <!-- Shared Header Fragment -->
+    <header th:fragment="header" class="main-header">
+        <div class="container">
+            <a href="/shop" class="logo">
+                <i class="fas fa-paw"></i> PawConnect
+            </a>
+            
+            <nav class="nav-menu-wrapper" aria-label="Điều hướng chính">
+                <ul class="nav-menu">
+                    <li><a href="/shop">Trang chủ / Cửa hàng</a></li>
+                    <li><a href="/service">Dịch vụ</a></li>
+                    <li><a href="/adoptions">Nhận nuôi</a></li>
+                    <li><a href="/adoptions/my-applications" data-customer-only hidden>Đơn của tôi</a></li>
+                    <li><a href="/admin/products" data-staff-only hidden>Quản trị Cửa hàng</a></li>
+                    <li><a href="/adoptions/manage" data-staff-only hidden>Quản trị Nhận nuôi</a></li>
+                </ul>
+            </nav>
+
+            <div class="header-actions">
+                <button class="icon-btn" title="Tìm kiếm"><i class="fas fa-search"></i></button>
+                <button class="icon-btn" id="cartBtn" title="Giỏ hàng">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-badge" id="cartCount">0</span>
+                </button>
+                <a href="/service" class="btn-pill">Đặt lịch ngay</a>
+                <!-- User auth icon for TV3's integration later -->
+                <div class="user-pill" title="Tài khoản" style="margin-left: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-user-circle" style="font-size: 1.5rem; color: var(--primary-color);"></i>
+                    <span id="account-status" class="account-status" style="margin-left: 5px; font-weight: 600; font-size: 0.9rem; color: var(--text-color);">Khách</span>
+                </div>
+            </div>
+        </div>
+    </header>
+</body>
+</html>
