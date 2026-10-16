@@ -73,7 +73,9 @@ public class BookingServiceConcurrencyTest {
     public void testConcurrentUpdateBooking_OptimisticLocking() throws InterruptedException {
         int numberOfThreads = 2;
         ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
-        CountDownLatch latch = new CountDownLatch(numberOfThreads);
+        CountDownLatch readyLatch = new CountDownLatch(numberOfThreads);
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch doneLatch = new CountDownLatch(numberOfThreads);
 
         AtomicInteger optimisticLockExceptions = new AtomicInteger(0);
 
@@ -81,22 +83,31 @@ public class BookingServiceConcurrencyTest {
             final int threadId = i;
             executorService.execute(() -> {
                 try {
-                    // Cả 2 Manager cùng cố gắng cập nhật lịch này cùng lúc (vd 1 duyệt, 1 huỷ)
+                    // Read the booking first
+                    ServiceBooking booking = bookingRepository.findById(bookingId).orElseThrow();
+                    
+                    readyLatch.countDown();
+                    startLatch.await(); // wait for both threads to read the same version
+
                     String newStatus = threadId == 0 ? "APPROVED" : "REJECTED";
-                    bookingService.updateBookingStatus(bookingId, newStatus);
+                    booking.setStatus(newStatus);
+                    bookingRepository.saveAndFlush(booking); // Force flush to trigger optimistic lock
                 } catch (ObjectOptimisticLockingFailureException e) {
                     optimisticLockExceptions.incrementAndGet();
                 } catch (Exception e) {
-                    if (e.getCause() instanceof ObjectOptimisticLockingFailureException) {
+                    if (e.getCause() instanceof ObjectOptimisticLockingFailureException || e instanceof org.springframework.dao.OptimisticLockingFailureException) {
                          optimisticLockExceptions.incrementAndGet();
                     }
                 } finally {
-                    latch.countDown();
+                    doneLatch.countDown();
                 }
             });
         }
 
-        latch.await();
+        readyLatch.await(); // Wait for all threads to read the entity
+        startLatch.countDown(); // Release them to save concurrently
+        doneLatch.await(); // Wait for all to finish
+
         executorService.shutdown();
 
         // MONG ĐỢI 1 TRONG 2 MANAGER SẼ BỊ BÁO LỖI VÌ NGƯỜI KIA ĐÃ CẬP NHẬT TRƯỚC

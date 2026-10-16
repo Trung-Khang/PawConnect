@@ -1,41 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book Appointment - PawConnect</title>
+    <title>Đặt lịch - PawConnect</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/shop.css">
 </head>
 <body>
 
-    <!-- TOP BAR (Copied from index for standalone layout) -->
-    <div class="top-bar">
-        <div class="container">
-            <div class="top-bar-left">
-                <span><i class="fas fa-phone-alt"></i> 24/7 Emergency: +1 (800) 123-4567</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- MAIN HEADER -->
-    <header class="main-header">
-        <div class="container">
-            <a href="/shop" class="logo">
-                <i class="fas fa-paw"></i> PawConnect
-            </a>
-            <ul class="nav-menu">
-                <li><a href="/shop">Home</a></li>
-                <li><a href="/shop#shop-section">Shop</a></li>
-                <li><a href="/adoptions">Nhận nuôi</a></li>
-            </ul>
-        </div>
-    </header>
+    <div th:replace="~{fragments/header :: header}"></div>
 
     <section class="section container">
         <div class="section-header">
-            <h2>Book an Appointment</h2>
-            <p style="color:var(--text-muted)">Schedule a visit for your furry friend in just a few steps.</p>
+            <h2>Đặt lịch hẹn</h2>
+            <p style="color:var(--text-muted)">Sắp xếp lịch hẹn cho thú cưng của bạn chỉ với vài bước đơn giản.</p>
         </div>
 
         <div class="booking-form-wrapper">
@@ -47,58 +26,51 @@
 
             <!-- STEP 1 -->
             <div class="step-content active" id="step-1">
-                <h3 style="margin-bottom:1.5rem">Select Service</h3>
+                <h3 style="margin-bottom:1.5rem">Chọn Dịch vụ</h3>
                 <div class="form-group">
-                    <label>Branch</label>
+                    <label>Chi nhánh</label>
                     <select id="branchSelect" class="form-control"></select>
                 </div>
                 <div class="form-group">
-                    <label>Service Type</label>
+                    <label>Loại dịch vụ</label>
                     <select id="serviceSelect" class="form-control"></select>
                 </div>
                 <div class="form-actions" style="justify-content: flex-end;">
-                    <button class="btn-pill" onclick="nextStep(2)">Next Step <i class="fas fa-arrow-right"></i></button>
+                    <button class="btn-pill" onclick="nextStep(2)">Bước tiếp theo <i class="fas fa-arrow-right"></i></button>
                 </div>
             </div>
 
             <!-- STEP 2 -->
             <div class="step-content" id="step-2">
-                <h3 style="margin-bottom:1.5rem">Select Date & Time</h3>
+                <h3 style="margin-bottom:1.5rem">Chọn Ngày & Giờ</h3>
                 <div class="form-group">
-                    <label>Preferred Time Slot</label>
+                    <label>Khung giờ mong muốn</label>
                     <input type="datetime-local" id="bookingTime" class="form-control">
                 </div>
                 <div class="form-actions">
-                    <button class="btn-pill btn-outline" onclick="prevStep(1)"><i class="fas fa-arrow-left"></i> Back</button>
-                    <button class="btn-pill" onclick="nextStep(3)">Next Step <i class="fas fa-arrow-right"></i></button>
+                    <button class="btn-pill btn-outline" onclick="prevStep(1)"><i class="fas fa-arrow-left"></i> Quay lại</button>
+                    <button class="btn-pill" onclick="nextStep(3)">Bước tiếp theo <i class="fas fa-arrow-right"></i></button>
                 </div>
             </div>
 
             <!-- STEP 3 -->
             <div class="step-content" id="step-3">
-                <h3 style="margin-bottom:1.5rem">Confirm Booking</h3>
+                <h3 style="margin-bottom:1.5rem">Xác nhận Đặt lịch</h3>
                 <div style="background:var(--bg-color); padding:1.5rem; border-radius:10px; margin-bottom:1.5rem;">
-                    <p><strong>Branch:</strong> <span id="confirmBranch"></span></p>
-                    <p><strong>Service:</strong> <span id="confirmService"></span></p>
-                    <p><strong>Date & Time:</strong> <span id="confirmTime"></span></p>
+                    <p><strong>Chi nhánh:</strong> <span id="confirmBranch"></span></p>
+                    <p><strong>Dịch vụ:</strong> <span id="confirmService"></span></p>
+                    <p><strong>Ngày & Giờ:</strong> <span id="confirmTime"></span></p>
                 </div>
                 <div id="bookingResult" style="margin-bottom: 1rem; font-weight: 700;"></div>
                 <div class="form-actions">
-                    <button class="btn-pill btn-outline" onclick="prevStep(2)"><i class="fas fa-arrow-left"></i> Back</button>
-                    <button class="btn-pill" id="submitBtn" onclick="submitBooking()">Confirm Appointment</button>
+                    <button class="btn-pill btn-outline" onclick="prevStep(2)"><i class="fas fa-arrow-left"></i> Quay lại</button>
+                    <button class="btn-pill" id="submitBtn" onclick="submitBooking()">Xác nhận Cuộc hẹn</button>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- FOOTER -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-bottom" style="border:none">
-                <p>&copy; 2026 PawConnect. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
+    <div th:replace="~{fragments/footer :: footer}"></div>
 
     <script src="/js/shop.js"></script>
 </body>
