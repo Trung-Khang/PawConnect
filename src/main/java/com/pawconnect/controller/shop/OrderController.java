@@ -30,6 +30,12 @@ public class OrderController {
     }
 
     @PreAuthorize("hasAnyRole('BRANCH_MANAGER', 'ADMIN')")
+    @GetMapping("/manage")
+    public List<OrderResponse> getManagedOrders() {
+        return orderService.getManagedOrders();
+    }
+
+    @PreAuthorize("hasAnyRole('BRANCH_MANAGER', 'ADMIN')")
     @PutMapping("/{id}/status")
     public OrderResponse updateOrderStatus(@PathVariable Long id, @RequestParam String status) {
         return orderService.updateOrderStatus(id, status);

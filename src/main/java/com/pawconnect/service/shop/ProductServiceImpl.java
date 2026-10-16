@@ -17,6 +17,7 @@ import com.pawconnect.exception.BusinessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import com.pawconnect.security.SecurityUtils;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.Objects;
 
 import java.util.List;
@@ -46,6 +47,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'BRANCH_MANAGER')")
     public ProductResponse createProduct(ProductRequest request) {
         Branch branch = branchRepository.findById(request.getBranchId())
                 .orElseThrow(() -> new ResourceNotFoundException("Branch not found"));
@@ -80,6 +82,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'BRANCH_MANAGER')")
     public ProductResponse updateProduct(Long id, ProductRequest request) {
         Product p = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product not found"));
         
@@ -122,6 +125,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'BRANCH_MANAGER')")
     public void deleteProduct(Long id) {
         Product p = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product not found"));
         if (SecurityUtils.hasRole("BRANCH_MANAGER")) {
@@ -134,6 +138,18 @@ public class ProductServiceImpl implements ProductService {
             productRepository.deleteById(id);
         } catch (DataIntegrityViolationException e) {
             throw new BusinessException("Cannot delete product because it is already used in an order or cart.");
+        }
+    }
+
+    @Override
+    @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'BRANCH_MANAGER')")
+    public void deleteProducts(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            throw new BusinessException("Hãy chọn ít nhất một sản phẩm để xóa.");
+        }
+        for (Long id : ids.stream().filter(Objects::nonNull).distinct().toList()) {
+            deleteProduct(id);
         }
     }
 

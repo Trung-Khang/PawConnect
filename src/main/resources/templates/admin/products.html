@@ -3,31 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PawConnect - Quản trị Cửa hàng</title>
+    <title>PawConnect - Quản lý Cửa hàng</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/shop.css">
+    <link rel="stylesheet" href="/css/header.css?v=20261016-2">
 </head>
 <body>
-    <div class="admin-layout">
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <h2>PawConnect</h2>
-                <span class="badge">Quản trị</span>
-            </div>
-            <nav class="sidebar-nav">
-                <a href="/shop">Trang chủ Cửa hàng</a>
-                <a href="/admin/products" class="active">Quản lý Sản phẩm</a>
-                <!-- Future links can be added here -->
-            </nav>
-            <div class="sidebar-footer">
-                <button id="logoutBtn" class="btn btn-secondary btn-full">Đăng xuất</button>
-            </div>
-        </aside>
-
-        <main class="main-content">
+    <div th:replace="~{fragments/header :: header}"></div>
+        <main class="main-content admin-store-page">
             <header class="top-header">
                 <h1>Sản phẩm & Chó giống</h1>
-                <button id="addProductBtn" class="btn btn-primary">+ Thêm mới</button>
+                <div class="top-header-actions">
+                    <button id="deleteSelectedBtn" class="btn btn-danger" type="button" disabled><i class="fas fa-trash"></i> Xóa đã chọn</button>
+                    <button id="addProductBtn" class="btn btn-primary" type="button"><i class="fas fa-plus"></i> Thêm mới</button>
+                </div>
             </header>
 
             <section class="content-section">
@@ -35,6 +26,7 @@
                     <table class="data-table">
                         <thead>
                             <tr>
+                                <th class="selection-cell"><input id="selectAllProducts" type="checkbox" aria-label="Chọn tất cả sản phẩm"></th>
                                 <th>Hình ảnh</th>
                                 <th>Tên sản phẩm</th>
                                 <th>Danh mục</th>
@@ -50,7 +42,6 @@
                 </div>
             </section>
         </main>
-    </div>
 
     <!-- Add Product Modal -->
     <div id="addProductModal" class="modal">

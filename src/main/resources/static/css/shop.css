@@ -506,6 +506,15 @@ body {
 }
 
 /* ---------------- BOOKING MULTI-STEP ---------------- */
+.booking-section {
+    background-color: var(--bg-color);
+    background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23e27b58' fill-opacity='0.085' transform='rotate(-12 40 40)'%3E%3Cellipse cx='40' cy='48' rx='13' ry='10'/%3E%3Cellipse cx='25' cy='32' rx='4.5' ry='6' transform='rotate(-18 25 32)'/%3E%3Cellipse cx='35' cy='23' rx='4.8' ry='6.5' transform='rotate(-6 35 23)'/%3E%3Cellipse cx='47' cy='23' rx='4.8' ry='6.5' transform='rotate(6 47 23)'/%3E%3Cellipse cx='57' cy='32' rx='4.5' ry='6' transform='rotate(18 57 32)'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 80px 80px;
+    padding: 4.5rem 0 6.5rem;
+    min-height: calc(100vh - 420px);
+    position: relative;
+}
+
 .booking-form-wrapper {
     background: white;
     border-radius: var(--radius-card);
@@ -559,6 +568,26 @@ body {
 
 .step-content.active {
     display: block;
+}
+
+.booking-access-message {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin: 1rem 0;
+    padding: 1rem 1.2rem;
+    border-left: 4px solid var(--primary-color);
+    background: #fff3ec;
+    color: var(--text-main);
+    font-weight: 700;
+}
+
+.booking-access-message i {
+    color: var(--primary-color);
+}
+
+.booking-access-message p {
+    margin: 0;
 }
 
 @keyframes fadeIn {

@@ -24,6 +24,8 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Objects;
+import org.springframework.security.access.AccessDeniedException;
 
 @Service
 @RequiredArgsConstructor
@@ -114,12 +116,25 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<OrderResponse> getManagedOrders() {
+        List<Order> orders = SecurityUtils.hasRole("BRANCH_MANAGER")
+                ? orderRepository.findByBranchIdOrderByCreatedAtDesc(SecurityUtils.getCurrentUserBranchId())
+                : orderRepository.findAllByOrderByCreatedAtDesc();
+        return orders.stream().map(this::mapToResponse).collect(Collectors.toList());
+    }
+
+    @Override
     @Transactional
     public OrderResponse updateOrderStatus(Long orderId, String status) {
         if (!List.of("PENDING", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELLED").contains(status)) {
             throw new BusinessException("Invalid order status: " + status);
         }
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+        if (SecurityUtils.hasRole("BRANCH_MANAGER")
+                && !Objects.equals(SecurityUtils.getCurrentUserBranchId(), order.getBranch().getId())) {
+            throw new AccessDeniedException("Branch managers can only update orders from their own branch");
+        }
         order.setStatus(status);
         orderRepository.save(order);
         return mapToResponse(order);

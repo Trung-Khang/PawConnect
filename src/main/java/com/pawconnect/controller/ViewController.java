@@ -20,4 +20,24 @@ public class ViewController {
     public String adminProductsPage() {
         return "admin/products"; // points to templates/admin/products.html
     }
+
+    @GetMapping("/admin/orders")
+    public String adminOrdersPage() {
+        return "admin/orders";
+    }
+
+    @GetMapping("/admin/users")
+    public String adminUsersPage() {
+        return "admin/users";
+    }
+
+    @GetMapping("/profile")
+    public String profilePage() {
+        return "profile/index";
+    }
+
+    @GetMapping({"/auth/login", "/auth/register", "/auth/verify-email", "/auth/forgot-password"})
+    public String authPage() {
+        return "auth/index";
+    }
 }

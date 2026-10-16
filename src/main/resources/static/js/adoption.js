@@ -1,16 +1,12 @@
 (function () {
     const state = { posts: [], branches: [], user: null, currentPost: null };
     const path = window.location.pathname;
-    let accessToken = localStorage.getItem('pawconnect.accessToken')
-        || localStorage.getItem('accessToken')
-        || localStorage.getItem('token')
-        || sessionStorage.getItem('pawconnect.accessToken')
-        || sessionStorage.getItem('accessToken')
-        || sessionStorage.getItem('token');
-    let refreshToken = localStorage.getItem('pawconnect.refreshToken')
-        || localStorage.getItem('refreshToken')
-        || sessionStorage.getItem('pawconnect.refreshToken')
-        || sessionStorage.getItem('refreshToken');
+    const ACCESS_TOKEN_KEY = 'pawconnect.accessToken';
+    const REFRESH_TOKEN_KEY = 'pawconnect.refreshToken';
+    const LEGACY_ACCESS_TOKEN_KEYS = ['accessToken', 'token'];
+    const LEGACY_REFRESH_TOKEN_KEYS = ['refreshToken'];
+    let accessToken = readAndMigrateToken(ACCESS_TOKEN_KEY, LEGACY_ACCESS_TOKEN_KEYS);
+    let refreshToken = readAndMigrateToken(REFRESH_TOKEN_KEY, LEGACY_REFRESH_TOKEN_KEYS);
 
     const views = {
         list: document.getElementById('adoption-list-view'),
@@ -18,6 +14,23 @@
         mine: document.getElementById('my-applications-view'),
         manage: document.getElementById('manage-view')
     };
+
+    function readAndMigrateToken(canonicalKey, legacyKeys) {
+        const canonicalValue = localStorage.getItem(canonicalKey);
+        if (canonicalValue) return canonicalValue;
+
+        const legacyValue = [...legacyKeys]
+            .map((key) => localStorage.getItem(key) || sessionStorage.getItem(key))
+            .find(Boolean);
+        if (!legacyValue) return null;
+
+        localStorage.setItem(canonicalKey, legacyValue);
+        [...legacyKeys, canonicalKey].forEach((key) => {
+            if (key !== canonicalKey) localStorage.removeItem(key);
+            sessionStorage.removeItem(key);
+        });
+        return legacyValue;
+    }
 
     document.addEventListener('DOMContentLoaded', initialise);
 
@@ -55,9 +68,17 @@
 
     function updateNavigation() {
         const role = state.user?.role;
-        document.getElementById('account-status').textContent = state.user ? state.user.fullName : 'Khách';
+        const accountStatus = document.getElementById('account-status');
+        if (accountStatus) {
+            accountStatus.textContent = role === 'ADMIN'
+                ? 'Quản trị viên'
+                : role === 'BRANCH_MANAGER'
+                    ? 'Quản lý chi nhánh'
+                    : 'Khách';
+        }
         document.querySelectorAll('[data-customer-only]').forEach((link) => link.hidden = role !== 'CUSTOMER');
         document.querySelectorAll('[data-staff-only]').forEach((link) => link.hidden = !isStaff());
+        document.querySelectorAll('[data-admin-only]').forEach((link) => link.hidden = role !== 'ADMIN');
     }
 
     async function showList() {
@@ -376,7 +397,7 @@
                 response = await fetch(url, { method: options.method || 'GET', headers, body });
             }
         }
-        if (authenticated && response.status === 401) clearStoredAuth();
+        if (authenticated && response.status === 401) handleSessionExpired();
         if (!response.ok) throw new Error(await responseMessage(response));
         return response.status === 204 ? null : response.json();
     }
@@ -389,20 +410,21 @@
                 body: JSON.stringify({ refreshToken })
             });
             if (!response.ok) {
-                clearStoredAuth();
+                handleSessionExpired();
                 return false;
             }
             const auth = await response.json();
             if (!auth.accessToken || !auth.refreshToken) {
-                clearStoredAuth();
+                handleSessionExpired();
                 return false;
             }
             accessToken = auth.accessToken;
             refreshToken = auth.refreshToken;
-            localStorage.setItem('pawconnect.accessToken', accessToken);
-            localStorage.setItem('pawconnect.refreshToken', refreshToken);
+            localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+            localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
             return true;
         } catch (_) {
+            handleSessionExpired();
             return false;
         }
     }
@@ -410,11 +432,18 @@
     function clearStoredAuth() {
         accessToken = null;
         refreshToken = null;
-        ['pawconnect.accessToken', 'accessToken', 'token', 'pawconnect.refreshToken', 'refreshToken']
+        [ACCESS_TOKEN_KEY, ...LEGACY_ACCESS_TOKEN_KEYS, REFRESH_TOKEN_KEY, ...LEGACY_REFRESH_TOKEN_KEYS]
             .forEach((key) => {
                 localStorage.removeItem(key);
                 sessionStorage.removeItem(key);
             });
+    }
+
+    function handleSessionExpired() {
+        clearStoredAuth();
+        if (window.location.pathname !== '/adoptions') {
+            window.location.assign('/adoptions?session=expired');
+        }
     }
 
     async function uploadImage(url, file) {

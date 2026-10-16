@@ -7,35 +7,63 @@
     <!-- Shared Header Fragment -->
     <header th:fragment="header" class="main-header">
         <div class="container">
-            <a href="/shop" class="logo">
-                <i class="fas fa-paw"></i> PawConnect
-            </a>
+            <div class="brand-cluster">
+                <button id="management-menu-toggle" class="management-menu-toggle" type="button" aria-controls="management-sidebar" aria-expanded="false" title="Mở menu quản lý" hidden>
+                    <i class="fas fa-bars"></i>
+                    <span class="sr-only">Mở menu quản lý</span>
+                </button>
+                <a href="/shop" class="logo">
+                    <i class="fas fa-paw"></i> PawConnect
+                </a>
+            </div>
             
             <nav class="nav-menu-wrapper" aria-label="Điều hướng chính">
                 <ul class="nav-menu">
-                    <li><a href="/shop">Trang chủ / Cửa hàng</a></li>
+                    <li><a href="/shop">Cửa hàng</a></li>
                     <li><a href="/service">Dịch vụ</a></li>
                     <li><a href="/adoptions">Nhận nuôi</a></li>
                     <li><a href="/adoptions/my-applications" data-customer-only hidden>Đơn của tôi</a></li>
-                    <li><a href="/admin/products" data-staff-only hidden>Quản trị Cửa hàng</a></li>
-                    <li><a href="/adoptions/manage" data-staff-only hidden>Quản trị Nhận nuôi</a></li>
                 </ul>
             </nav>
 
             <div class="header-actions">
-                <button class="icon-btn" title="Tìm kiếm"><i class="fas fa-search"></i></button>
-                <button class="icon-btn" id="cartBtn" title="Giỏ hàng">
+                <button class="icon-btn" id="headerSearchBtn" type="button" title="Tìm kiếm" aria-label="Tìm kiếm">
+                    <i class="fas fa-search"></i>
+                </button>
+                <button class="icon-btn" id="cartBtn" type="button" title="Giỏ hàng" aria-label="Mở giỏ hàng">
                     <i class="fas fa-shopping-cart"></i>
                     <span class="cart-badge" id="cartCount">0</span>
                 </button>
-                <a href="/service" class="btn-pill">Đặt lịch ngay</a>
-                <!-- User auth icon for TV3's integration later -->
-                <div class="user-pill" title="Tài khoản" style="margin-left: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-                    <i class="fas fa-user-circle" style="font-size: 1.5rem; color: var(--primary-color);"></i>
-                    <span id="account-status" class="account-status" style="margin-left: 5px; font-weight: 600; font-size: 0.9rem; color: var(--text-color);">Khách</span>
-                </div>
+                <a href="/service" class="btn-pill" data-booking-access>Đặt lịch ngay</a>
+                <a class="user-pill account-profile-link" id="account-summary" href="/profile" title="Mở hồ sơ tài khoản" hidden>
+                    <i id="account-icon" class="fas fa-user-circle"></i>
+                    <img id="account-avatar" class="header-avatar" alt="Ảnh đại diện" hidden>
+                    <span id="account-status" class="account-status">Khách</span>
+                </a>
+                <button class="btn-pill btn-outline header-auth-action" id="auth-action" type="button">Đăng nhập</button>
             </div>
         </div>
+        <div id="management-sidebar-backdrop" class="management-sidebar-backdrop" hidden></div>
+        <aside id="management-sidebar" class="management-sidebar" aria-label="Menu quản lý" hidden>
+            <div class="management-sidebar-header">
+                <div>
+                    <p>PAWCONNECT</p>
+                    <h2>Quản lý</h2>
+                </div>
+                <button id="management-menu-close" class="management-menu-close" type="button" title="Đóng menu quản lý" aria-label="Đóng menu quản lý">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <nav class="management-sidebar-links" aria-label="Chức năng quản lý">
+                <a href="/admin/products" data-staff-only hidden><i class="fas fa-store"></i> Quản lý Cửa hàng</a>
+                <a href="/adoptions/manage" data-staff-only hidden><i class="fas fa-paw"></i> Quản lý Nhận nuôi</a>
+                <a href="/admin/orders" data-staff-only hidden><i class="fas fa-receipt"></i> Quản lý đơn hàng</a>
+                <a href="/admin/users" data-admin-only hidden><i class="fas fa-users-gear"></i> Quản lý tài khoản</a>
+            </nav>
+            <div class="management-sidebar-visual" aria-hidden="true">
+            </div>
+        </aside>
+        <script src="/js/header.js" defer></script>
     </header>
 </body>
 </html>

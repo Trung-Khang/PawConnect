@@ -21,6 +21,9 @@ public class DatabaseUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) {
         User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Account was not found"));
+        if (!user.isActive() || user.isLocked()) {
+            throw new UsernameNotFoundException("Account is unavailable");
+        }
         return new CustomUserDetails(
                 user.getId(),
                 user.getBranch() != null ? user.getBranch().getId() : null,

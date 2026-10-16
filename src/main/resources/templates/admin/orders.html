@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý đơn hàng | PawConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/shop.css">
+    <link rel="stylesheet" href="/css/header.css?v=20261016-2">
+    <link rel="stylesheet" href="/css/admin-orders.css">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<main class="admin-orders-page">
+    <a class="admin-brand" href="/shop">PawConnect</a>
+    <header class="top-header">
+        <div>
+            <p class="orders-kicker">Vận hành cửa hàng</p>
+            <h1>Quản lý đơn hàng</h1>
+            <p class="orders-subtitle">Theo dõi và cập nhật trạng thái đơn hàng thuộc phạm vi được phân quyền.</p>
+        </div>
+        <button id="reload-orders" class="btn btn-secondary" type="button">Tải lại</button>
+    </header>
+    <p id="orders-notice" class="orders-notice" hidden></p>
+    <section class="table-container">
+        <table class="data-table">
+            <thead><tr><th>Mã đơn</th><th>Thời gian</th><th>Chi nhánh</th><th>Sản phẩm</th><th>Tổng tiền</th><th>Trạng thái</th></tr></thead>
+            <tbody id="orders-table-body"></tbody>
+        </table>
+    </section>
+</main>
+<script src="/js/admin-orders.js"></script>
+</body>
+</html>

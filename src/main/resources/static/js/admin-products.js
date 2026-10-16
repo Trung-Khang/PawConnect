@@ -1,284 +1,215 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. Check Auth (JWT)
-    const token = localStorage.getItem('token');
-    // For local testing, we might not have a login page yet. 
-    // Just add token to headers if it exists.
-    
-    // 2. Load Initial Data
-    loadProducts();
-    loadCategories();
-    loadBranches();
+(() => {
+    const tokenKey = 'pawconnect.accessToken';
+    const selectedIds = new Set();
+    let products = [];
 
-    // 3. Setup Modal
-    const modal = document.getElementById('addProductModal');
-    const addBtn = document.getElementById('addProductBtn');
-    const closeBtns = document.querySelectorAll('.close-btn');
+    document.addEventListener('DOMContentLoaded', initialise);
 
-    addBtn.addEventListener('click', () => {
+    function initialise() {
+        bindEvents();
+        loadProducts();
+        loadCategories();
+        loadBranches();
+    }
+
+    function bindEvents() {
+        const modal = document.getElementById('addProductModal');
+        document.getElementById('addProductBtn').addEventListener('click', () => openCreateModal(modal));
+        document.querySelectorAll('.close-btn').forEach((button) => button.addEventListener('click', () => modal.classList.remove('active')));
+        document.getElementById('p_productType').addEventListener('change', (event) => updateDynamicFields(event.target.value));
+        document.getElementById('addProductForm').addEventListener('submit', saveProduct);
+        document.getElementById('selectAllProducts').addEventListener('change', toggleAllProducts);
+        document.getElementById('deleteSelectedBtn').addEventListener('click', deleteSelectedProducts);
+    }
+
+    function authHeaders() {
+        const token = localStorage.getItem(tokenKey);
+        return token ? { Authorization: `Bearer ${token}` } : {};
+    }
+
+    async function loadProducts() {
+        try {
+            const response = await fetch('/api/products');
+            if (!response.ok) throw new Error('Không thể tải danh sách sản phẩm.');
+            products = await response.json();
+            selectedIds.clear();
+            renderProducts();
+        } catch (error) {
+            window.alert(error.message);
+        }
+    }
+
+    function renderProducts() {
+        const body = document.getElementById('productsTableBody');
+        body.replaceChildren();
+        products.forEach((product) => {
+            const row = document.createElement('tr');
+            const defaultImage = 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=150&auto=format&fit=crop';
+            row.innerHTML = `
+                <td class="selection-cell"><input class="product-selector" type="checkbox" value="${product.id}" aria-label="Chọn ${escapeHtml(product.name)}"></td>
+                <td><img src="${escapeAttribute(product.imageUrl || defaultImage)}" class="product-img-cell" alt=""></td>
+                <td><strong></strong><br><small>${product.ingredients || product.targetAudience ? 'Sản phẩm' : 'Mặt hàng cửa hàng'}</small></td>
+                <td></td>
+                <td>${formatCurrency(product.price)}</td>
+                <td>${product.stock}</td>
+                <td class="row-actions"><button class="btn btn-secondary edit-product" type="button">Sửa</button><button class="btn btn-danger delete-product" type="button">Xóa</button></td>`;
+            row.querySelector('strong').textContent = product.name;
+            row.children[3].textContent = product.categoryName || 'Chưa phân loại';
+            row.querySelector('.product-selector').addEventListener('change', (event) => toggleProductSelection(product.id, event.target.checked));
+            row.querySelector('.edit-product').addEventListener('click', () => editProduct(product.id));
+            row.querySelector('.delete-product').addEventListener('click', () => deleteProducts([product.id]));
+            body.append(row);
+        });
+        updateSelectionControls();
+    }
+
+    function toggleProductSelection(id, selected) {
+        if (selected) selectedIds.add(id);
+        else selectedIds.delete(id);
+        updateSelectionControls();
+    }
+
+    function toggleAllProducts(event) {
+        selectedIds.clear();
+        if (event.target.checked) products.forEach((product) => selectedIds.add(product.id));
+        document.querySelectorAll('.product-selector').forEach((box) => box.checked = selectedIds.has(Number(box.value)));
+        updateSelectionControls();
+    }
+
+    function updateSelectionControls() {
+        const all = document.getElementById('selectAllProducts');
+        const deleteButton = document.getElementById('deleteSelectedBtn');
+        all.checked = products.length > 0 && selectedIds.size === products.length;
+        all.indeterminate = selectedIds.size > 0 && selectedIds.size < products.length;
+        deleteButton.disabled = selectedIds.size === 0;
+        deleteButton.innerHTML = `<i class="fas fa-trash"></i> Xóa đã chọn${selectedIds.size ? ` (${selectedIds.size})` : ''}`;
+    }
+
+    async function deleteSelectedProducts() {
+        if (selectedIds.size) await deleteProducts([...selectedIds]);
+    }
+
+    async function deleteProducts(ids) {
+        const label = ids.length === 1 ? 'mặt hàng này' : `${ids.length} mặt hàng đã chọn`;
+        if (!window.confirm(`Bạn có chắc muốn xóa ${label}?`)) return;
+        const response = await fetch('/api/products', {
+            method: 'DELETE',
+            headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+            body: JSON.stringify(ids)
+        });
+        if (!response.ok) return window.alert(await responseMessage(response, 'Không thể xóa sản phẩm.'));
+        await loadProducts();
+    }
+
+    function openCreateModal(modal) {
         const form = document.getElementById('addProductForm');
         form.reset();
         delete form.dataset.editId;
         delete form.dataset.oldImageUrl;
         delete form.dataset.oldImagePublicId;
         document.getElementById('uploadStatus').textContent = '';
-        document.querySelector('#addProductModal .modal-header h2').textContent = 'Add New Product / Dog';
+        document.querySelector('#addProductModal .modal-header h2').textContent = 'Thêm sản phẩm';
         document.getElementById('p_imageFile').required = true;
+        updateDynamicFields(document.getElementById('p_productType').value);
         modal.classList.add('active');
-    });
+    }
 
-    closeBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            modal.classList.remove('active');
-        });
-    });
-
-    // Handle Product Type Change
-    const typeSelect = document.getElementById('p_productType');
-    typeSelect.addEventListener('change', (e) => {
-        updateDynamicFields(e.target.value);
-    });
-
-    // 4. Handle Form Submit (Upload image first, then save product)
-    document.getElementById('addProductForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const saveBtn = document.getElementById('saveProductBtn');
-        const statusText = document.getElementById('uploadStatus');
-        
+    async function saveProduct(event) {
+        event.preventDefault();
+        const form = document.getElementById('addProductForm');
+        const saveButton = document.getElementById('saveProductBtn');
+        const status = document.getElementById('uploadStatus');
         try {
-            saveBtn.disabled = true;
-            statusText.textContent = 'Uploading image...';
-
-            // Step A: Upload Image
-            const fileInput = document.getElementById('p_imageFile');
-            const file = fileInput.files[0];
-            const formElement = document.getElementById('addProductForm');
-            let imageUrl = formElement.dataset.oldImageUrl || '';
-            let imagePublicId = formElement.dataset.oldImagePublicId || '';
-
+            saveButton.disabled = true;
+            let imageUrl = form.dataset.oldImageUrl || '';
+            let imagePublicId = form.dataset.oldImagePublicId || '';
+            const file = document.getElementById('p_imageFile').files[0];
             if (file) {
+                status.textContent = 'Đang tải ảnh...';
                 const formData = new FormData();
                 formData.append('file', file);
                 formData.append('assetKey', document.getElementById('p_name').value || 'product');
-                
-                let uploadUrl = '/api/media/PRODUCT';
-                if (imagePublicId) {
-                    uploadUrl = '/api/media/PRODUCT/replace';
-                    formData.append('previousPublicId', imagePublicId);
-                }
-                
-                const uploadRes = await fetch(uploadUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': token ? `Bearer ${token}` : ''
-                    },
-                    body: formData
-                });
-
-                if (!uploadRes.ok) {
-                    let errMsg = 'Image upload failed';
-                    try {
-                        const errData = await uploadRes.json();
-                        if (errData.message) errMsg = errData.message;
-                    } catch (e) {}
-                    throw new Error(errMsg);
-                }
-                const uploadData = await uploadRes.json();
-                if (imagePublicId) {
-                    imageUrl = uploadData.asset.secureUrl;
-                    imagePublicId = uploadData.asset.publicId;
-                } else {
-                    imageUrl = uploadData.secureUrl;
-                    imagePublicId = uploadData.publicId;
-                }
+                if (imagePublicId) formData.append('previousPublicId', imagePublicId);
+                const upload = await fetch(imagePublicId ? '/api/media/PRODUCT/replace' : '/api/media/PRODUCT', { method: 'POST', headers: authHeaders(), body: formData });
+                if (!upload.ok) throw new Error(await responseMessage(upload, 'Không thể tải ảnh lên.'));
+                const asset = await upload.json();
+                imageUrl = asset.asset?.secureUrl || asset.secureUrl;
+                imagePublicId = asset.asset?.publicId || asset.publicId;
             }
-
-            statusText.textContent = 'Saving product data...';
-
-            // Step B: Save Product
-            const productType = document.getElementById('p_productType').value;
-            const productRequest = {
-                name: document.getElementById('p_name').value,
-                description: document.getElementById('p_description').value,
-                price: parseFloat(document.getElementById('p_price').value),
-                stock: parseInt(document.getElementById('p_stock').value),
-                imageUrl: imageUrl,
-                imagePublicId: imagePublicId,
-                categoryId: parseInt(document.getElementById('p_categoryId').value),
-                branchId: parseInt(document.getElementById('p_branchId').value),
-                isBreedingDog: productType === 'dog',
-                breed: productType === 'dog' ? document.getElementById('p_breed').value || null : null,
-                age: productType === 'dog' ? document.getElementById('p_age').value || null : null,
-                healthStatus: productType === 'dog' ? document.getElementById('p_healthStatus').value || null : null,
-                careInstructions: productType === 'dog' ? document.getElementById('p_careInstructions').value || null : null,
-                ingredients: productType === 'food' ? document.getElementById('p_ingredients').value || null : null,
-                targetAudience: productType === 'food' ? document.getElementById('p_targetAudience').value || null : null
+            const request = {
+                name: document.getElementById('p_name').value.trim(),
+                description: document.getElementById('p_description').value.trim(),
+                price: Number(document.getElementById('p_price').value),
+                stock: Number(document.getElementById('p_stock').value),
+                imageUrl, imagePublicId,
+                categoryId: Number(document.getElementById('p_categoryId').value),
+                branchId: Number(document.getElementById('p_branchId').value),
+                ingredients: document.getElementById('p_productType').value === 'food' ? document.getElementById('p_ingredients').value.trim() || null : null,
+                targetAudience: document.getElementById('p_productType').value === 'food' ? document.getElementById('p_targetAudience').value.trim() || null : null
             };
-
-            const isEdit = !!formElement.dataset.editId;
-            const url = isEdit ? `/api/products/${formElement.dataset.editId}` : '/api/products';
-            const method = isEdit ? 'PUT' : 'POST';
-
-            const productRes = await fetch(url, {
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': token ? `Bearer ${token}` : ''
-                },
-                body: JSON.stringify(productRequest)
+            const editing = Boolean(form.dataset.editId);
+            const response = await fetch(editing ? `/api/products/${form.dataset.editId}` : '/api/products', {
+                method: editing ? 'PUT' : 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' }, body: JSON.stringify(request)
             });
-
-            if (!productRes.ok) {
-                const err = await productRes.json();
-                throw new Error(err.message || 'Failed to save product');
-            }
-
-            // Step C: Delete old image if it was replaced
-            if (formElement.dataset.oldImagePublicId && file) {
-                try {
-                    await fetch(`/api/media/PRODUCT?publicId=${encodeURIComponent(formElement.dataset.oldImagePublicId)}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'Authorization': token ? `Bearer ${token}` : ''
-                        }
-                    });
-                } catch (delErr) {
-                    console.error('Failed to delete old image', delErr);
-                }
-            }
-
-            // Success
-            alert(isEdit ? 'Product updated successfully!' : 'Product added successfully!');
-            modal.classList.remove('active');
-            loadProducts(); // refresh list
-
+            if (!response.ok) throw new Error(await responseMessage(response, 'Không thể lưu sản phẩm.'));
+            document.getElementById('addProductModal').classList.remove('active');
+            await loadProducts();
         } catch (error) {
-            alert(error.message);
-            statusText.textContent = 'Error: ' + error.message;
+            status.textContent = error.message;
         } finally {
-            saveBtn.disabled = false;
+            saveButton.disabled = false;
         }
-    });
-});
-
-async function loadProducts() {
-    try {
-        const res = await fetch('/api/products');
-        const data = await res.json();
-        
-        const tbody = document.getElementById('productsTableBody');
-        tbody.innerHTML = '';
-
-        data.forEach(p => {
-            const tr = document.createElement('tr');
-            const defaultImg = 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=150&auto=format&fit=crop';
-            tr.innerHTML = `
-                <td><img src="${p.imageUrl || defaultImg}" class="product-img-cell" alt="${p.name}"></td>
-                <td><strong>${p.name}</strong><br><small style="color:var(--text-muted)">${p.isBreedingDog ? 'Dog' : 'Product'}</small></td>
-                <td>${p.category ? p.category.name : '-'}</td>
-                <td>${p.price.toLocaleString()} VND</td>
-                <td>${p.stock}</td>
-                <td>
-                    <button class="btn btn-secondary" onclick="editProduct(${p.id})" style="padding: 0.4rem 0.8rem; font-size: 0.8rem">Edit</button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    } catch (e) {
-        console.error('Failed to load products', e);
     }
-}
 
-async function loadCategories() {
-    try {
-        const res = await fetch('/api/categories');
-        const data = await res.json();
-        const select = document.getElementById('p_categoryId');
-        data.forEach(c => {
-            const opt = document.createElement('option');
-            opt.value = c.id;
-            opt.textContent = c.name;
-            select.appendChild(opt);
-        });
-    } catch (e) {
-        console.error('Failed to load categories', e);
-    }
-}
-
-async function loadBranches() {
-    try {
-        const res = await fetch('/api/branches');
-        const data = await res.json();
-        const select = document.getElementById('p_branchId');
-        data.forEach(b => {
-            const opt = document.createElement('option');
-            opt.value = b.id;
-            opt.textContent = b.name;
-            select.appendChild(opt);
-        });
-    } catch (e) {
-        console.error('Failed to load branches', e);
-    }
-}
-
-async function editProduct(id) {
-    try {
-        const res = await fetch(`/api/products/${id}`);
-        if (!res.ok) throw new Error('Failed to fetch product');
-        const p = await res.json();
-        
+    async function editProduct(id) {
+        const response = await fetch(`/api/products/${id}`);
+        if (!response.ok) return window.alert(await responseMessage(response, 'Không thể tải sản phẩm.'));
+        const product = await response.json();
         const form = document.getElementById('addProductForm');
-        form.dataset.editId = p.id;
-        form.dataset.oldImageUrl = p.imageUrl || '';
-        form.dataset.oldImagePublicId = p.imagePublicId || '';
-        
-        document.getElementById('p_name').value = p.name;
-        document.getElementById('p_description').value = p.description || '';
-        document.getElementById('p_price').value = p.price;
-        document.getElementById('p_stock').value = p.stock;
-        
-        let pType = 'other';
-        if (p.isBreedingDog) pType = 'dog';
-        else if (p.ingredients || p.targetAudience) pType = 'food';
-        
-        document.getElementById('p_productType').value = pType;
-        updateDynamicFields(pType);
-        
-        document.getElementById('p_breed').value = p.breed || '';
-        document.getElementById('p_age').value = p.age || '';
-        document.getElementById('p_healthStatus').value = p.healthStatus || '';
-        document.getElementById('p_careInstructions').value = p.careInstructions || '';
-        document.getElementById('p_ingredients').value = p.ingredients || '';
-        document.getElementById('p_targetAudience').value = p.targetAudience || '';
-        
-        if (p.category) document.getElementById('p_categoryId').value = p.category.id;
-        if (p.branch) document.getElementById('p_branchId').value = p.branch.id;
-        
-        document.getElementById('p_imageFile').required = false; // Not required on edit
-        document.getElementById('uploadStatus').textContent = p.imageUrl ? '(Has existing image)' : '';
-        
-        document.querySelector('#addProductModal .modal-header h2').textContent = 'Edit Product / Dog';
+        form.dataset.editId = product.id;
+        form.dataset.oldImageUrl = product.imageUrl || '';
+        form.dataset.oldImagePublicId = product.imagePublicId || '';
+        document.getElementById('p_name').value = product.name;
+        document.getElementById('p_description').value = product.description || '';
+        document.getElementById('p_price').value = product.price;
+        document.getElementById('p_stock').value = product.stock;
+        document.getElementById('p_categoryId').value = product.categoryId;
+        document.getElementById('p_branchId').value = product.branchId;
+        document.getElementById('p_productType').value = product.ingredients || product.targetAudience ? 'food' : 'other';
+        document.getElementById('p_ingredients').value = product.ingredients || '';
+        document.getElementById('p_targetAudience').value = product.targetAudience || '';
+        document.getElementById('p_imageFile').required = false;
+        updateDynamicFields(document.getElementById('p_productType').value);
+        document.querySelector('#addProductModal .modal-header h2').textContent = 'Sửa sản phẩm';
         document.getElementById('addProductModal').classList.add('active');
-    } catch (e) {
-        alert('Error loading product details: ' + e.message);
     }
-}
 
-function updateDynamicFields(type) {
-    const dogFields = document.querySelectorAll('.dog-fields');
-    const foodFields = document.querySelectorAll('.food-fields');
-    const lblDescription = document.getElementById('lbl_description');
-    
-    dogFields.forEach(f => f.style.display = 'none');
-    foodFields.forEach(f => f.style.display = 'none');
-    
-    if (type === 'dog') {
-        dogFields.forEach(f => f.style.display = 'flex');
-        lblDescription.textContent = 'Special Notes (Lưu ý đặc biệt)';
-    } else if (type === 'food') {
-        foodFields.forEach(f => f.style.display = 'flex');
-        lblDescription.textContent = 'Special Notes (Lưu ý đặc biệt)';
-    } else {
-        lblDescription.textContent = 'Usage Notes (Lưu ý khi sử dụng)';
+    async function loadCategories() {
+        const response = await fetch('/api/categories');
+        if (!response.ok) return;
+        const select = document.getElementById('p_categoryId');
+        select.replaceChildren();
+        (await response.json()).forEach((category) => select.add(new Option(category.name, category.id)));
     }
-}
+
+    async function loadBranches() {
+        const response = await fetch('/api/branches');
+        if (!response.ok) return;
+        const select = document.getElementById('p_branchId');
+        select.replaceChildren();
+        (await response.json()).forEach((branch) => select.add(new Option(branch.name, branch.id)));
+    }
+
+    function updateDynamicFields(type) {
+        document.querySelectorAll('.dog-fields').forEach((field) => field.style.display = 'none');
+        document.querySelectorAll('.food-fields').forEach((field) => field.style.display = type === 'food' ? 'flex' : 'none');
+    }
+
+    async function responseMessage(response, fallback) {
+        try { return (await response.json()).message || fallback; } catch (_) { return fallback; }
+    }
+
+    function formatCurrency(value) { return `${new Intl.NumberFormat('vi-VN').format(value || 0)} VND`; }
+    function escapeHtml(value) { const node = document.createElement('span'); node.textContent = value || ''; return node.innerHTML; }
+    function escapeAttribute(value) { return String(value).replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;'); }
+})();

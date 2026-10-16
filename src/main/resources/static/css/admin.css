@@ -33,6 +33,22 @@ h1, h2, h3 {
     min-height: 100vh;
 }
 
+.admin-store-page {
+    width: min(1400px, 94vw);
+    margin: 0 auto;
+    padding: 1.5rem 0 3rem;
+}
+
+.admin-brand {
+    display: inline-block;
+    margin-bottom: 1.8rem;
+    color: var(--primary);
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.65rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
 .sidebar {
     width: 250px;
     background: var(--white);
@@ -142,6 +158,21 @@ h1, h2, h3 {
     color: var(--text-main);
 }
 
+.btn-danger {
+    background: #fff1ef;
+    border: 1px solid #ef8d7a;
+    color: #b43b2a;
+}
+
+.btn-danger:hover:not(:disabled) {
+    background: #ffe2dc;
+}
+
+.btn-danger:disabled {
+    cursor: not-allowed;
+    opacity: .5;
+}
+
 .btn-full {
     width: 100%;
 }
@@ -163,6 +194,30 @@ h1, h2, h3 {
     padding: 1rem;
     text-align: left;
     border-bottom: 1px solid var(--border);
+}
+
+.selection-cell {
+    width: 3.5rem;
+    text-align: center !important;
+}
+
+.selection-cell input {
+    width: 1rem;
+    height: 1rem;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
+.top-header-actions,
+.row-actions {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+}
+
+.row-actions .btn {
+    padding: .45rem .75rem;
+    font-size: .8rem;
 }
 
 .data-table th {
@@ -288,4 +343,11 @@ h1, h2, h3 {
     margin-top: 0.5rem;
     color: var(--primary);
     font-weight: 500;
+}
+
+@media (max-width: 900px) {
+    .admin-store-page { width: min(94vw, 48rem); }
+    .top-header { align-items: flex-start; flex-direction: column; }
+    .data-table { min-width: 760px; }
+    .table-container { overflow-x: auto; }
 }
