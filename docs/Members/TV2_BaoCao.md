@@ -195,6 +195,39 @@
 - Integration test xác nhận approve tạo Conversation đúng Customer/Post; `ConversationServiceIntegrationTest` tiếp tục PASS participant rule và gửi/đọc tin nhắn.
 - `mvn test` chạy 41 test: 40 PASS, 1 FAIL tại `BookingServiceConcurrencyTest` của TV1 (kỳ vọng một optimistic-lock conflict nhưng nhận 0). Đây là blocker Giai đoạn 8, không phát sinh từ Adoption/Chat và TV2 không sửa module Booking.
 
+## Giai đoạn 7A - Kiểm kê Seed V3 và contract
+
+**Trạng thái: DONE WITH FOLLOW-UP - nhóm đã chấp nhận giữ hai Product `DOG` của Shop; không rollback/reseed hay phát hành Seed V4.**
+
+### Phạm vi và evidence
+
+- Đã chạy `python data-pipeline/src/build_seed_release.py --verify v3`: **FAIL** với `count failure`.
+- Đã chạy `python data-pipeline/src/build_seed_release.py --self-test-v3`: **PASS**; validator vẫn chặn PuppyListing có stock không hợp lệ.
+- `manifest.json`/builder/tài liệu cũ vẫn công bố 18 Product, trong khi CSV hiện có 20 record: 9 `FOOD`, 9 `ACCESSORY` và 2 `DOG`.
+- Quyết định nhóm: giữ hai Product `DOG` phục vụ Shop và cho phép chỉnh qua giao diện quản trị; không khôi phục dữ liệu, không chạy lại seed chung và không phát hành Seed V4.
+- `--verify v3` còn FAIL `count failure`; đây là nợ đồng bộ manifest/validator/tài liệu sau demo, không phải blocker vận hành hiện tại.
+
+### Ảnh hưởng importer và mapping Breed
+
+- `DevDataInitializer` hiện đọc toàn bộ `products.csv` theo dòng, không validate `product_kind`, và lookup Product bằng `name`; nếu bật seed ở trạng thái hiện tại, hai record `DOG` vẫn được nhập như Product thương mại.
+- Không có `Breed` entity trong source. `PuppyListing.breedCode` là `String`; `DogProfile.breed` là tên giống chuẩn. `AdoptionSeedImportService` dùng `catalog/breeds.csv` và `breed_references.csv` để validate, không map Breed ID/FK.
+- Vì vậy mô tả cũ trong `data_handoff.md` về import Breed và map `breed_code -> Breed ID` không khớp implementation hiện tại. Đây là điểm cần đồng bộ tài liệu sau khi nhóm chốt mô hình dữ liệu, không phải lý do để TV2 tự tạo entity/FK.
+
+### Bàn giao sau 7A
+
+- **TV1:** giữ Product CRUD theo phân quyền mới; khi chốt data-contract sau demo, phối hợp đồng bộ manifest/validator/tài liệu với dữ liệu 20 Product.
+- **TV3:** dùng key token chuẩn `pawconnect.accessToken`/`pawconnect.refreshToken`; ở 7B thay fallback public bằng login UI có `returnTo`.
+- **TV2:** không đổi stable key Adoption/mapping `DogProfile.breed`; regression Adoption/Cloudinary tiếp tục thuộc 7D.
+
+## Giai đoạn 7B - Shop và header dùng chung
+
+**Trạng thái: IN PROGRESS.** Đã sửa contract lọc Shop: UI gửi `product` hoặc `puppy` đúng với API, thay vì giá trị boolean khiến danh sách trống. Ô tìm kiếm Shop lọc tên/nội dung ở dữ liệu công khai đã tải; header chung có icon search focus đúng ô tìm kiếm của từng trang và icon cart mở panel giỏ hàng gọi API thật.
+
+- Thêm giỏ/mua yêu cầu JWT của `CUSTOMER`, đúng rule `CartController`; thiếu token, role Manager/Admin hoặc hết stock đều hiện thông báo cụ thể thay vì báo lỗi chung.
+- Nút “Mua ngay” chỉ thêm vào giỏ rồi mở panel giỏ; không còn thông báo chuyển thanh toán khi chưa có checkout/payment flow thật.
+- Shop, Adoption và Service dùng CSS icon chung nên không còn nút native lệch giao diện trên Adoption.
+- TV3 cần hoàn tất login UI ở 7B để Customer dùng giỏ không cần PowerShell/DevTools. TV1 tiếp tục kiểm kê và thống nhất menu/nút/layout của các trang còn lại.
+
 ## Progress log
 
 | Ngày | Chức năng | File/Module | API | Test | Trạng thái | Bàn giao |
@@ -208,3 +241,4 @@
 | 15/09/2026 | Giai đoạn 5: giao diện nhận nuôi | `AdoptionViewController`, template, CSS/JS, view integration test | UI list/detail/apply/my applications/manage; sửa DogProfile cùng post và quản lý ảnh qua API hiện có | PASS: 4 route view, control hồ sơ/ảnh và JavaScript syntax; bộ test mục tiêu Adoption/Chat 18/18 | ✅ | TV3 giữ key lưu JWT; TV1 giữ điều hướng/commerce tách biệt; browser E2E trên MySQL thuộc Giai đoạn 8 |
 | 27/09/2026 | Giai đoạn 6: ảnh DogProfile và AdoptionPost | `AdoptionMediaService`, controller, UI Adoption và Cloudinary media service | POST/DELETE `/api/adoptions/dogs/{id}/image`; POST/DELETE `/api/adoptions/posts/{id}/image` | Thực hiện: tạo account test cục bộ qua Register API, gán tạm BRANCH_MANAGER cho branch HCM trong MySQL, đăng nhập lại để lấy JWT có role/branch mới; thử file ảnh không đọc được và nhận 400; dùng ảnh JPEG local hợp lệ để upload.<br>PASS: 14 test mục tiêu; upload/replace/delete thật cho DogProfile 7 và AdoptionPost 7; public ID thay đổi sau replace, asset cũ được xử lý, hai DELETE trả 204 và SQL xác nhận `image_url`/`image_public_id` cuối cùng là NULL. Lỗi provider được bọc thành thông báo storage chung, không trả chi tiết credential. | ✅ | TV1/TV3 tiếp tục giữ Cloudinary credential ở biến môi trường; TV2 xóa account Manager HCM tạm khi không còn cần nghiệm thu |
 | 27/09/2026 | Hoàn thiện UI DogProfile và Giai đoạn 7 Chat handoff | DTO/mapper/service Adoption, template/CSS/JS, test Adoption/Chat | Giữ 9 API cốt lõi; response có nested DogProfile; `PUT /api/adoptions/{id}` cập nhật hồ sơ; approve mở Conversation | JavaScript syntax PASS; 18/18 test mục tiêu PASS. Full Maven: 40/41 PASS, chỉ còn `BookingServiceConcurrencyTest` của TV1 FAIL ngoài phạm vi TV2. | ✅ | TV3 giữ ổn định `ConversationService.openForAdoption` và participant rule; TV1 xử lý Booking concurrency để Giai đoạn 8 full build PASS |
+| 16/10/2026 | Giai đoạn 7A: seed decision, Product authorization và token contract | `SecurityConfig`, Product controller/service/test, Adoption/Admin JS, `auth_token_contract.md`, Seed evidence | Product write yêu cầu ADMIN/BRANCH_MANAGER; token chuẩn hóa; không đổi Seed/runtime DB | PASS: 47 test, 0 failure/error, 1 MySQL skip; test Product HTTP 401/403/branch A-B, auth refresh/401, JS syntax. `--verify v3` cũ vẫn FAIL vì 20 Product gồm 2 DOG nhưng nhóm chấp nhận giữ dữ liệu, không rollback/reseed/release mới. | ✅ DONE WITH FOLLOW-UP | TV1 duy trì scope Product; TV3 làm login UI/OTP ở 7B và nối `returnTo`; đồng bộ manifest/validator Seed sau demo là debt riêng. |

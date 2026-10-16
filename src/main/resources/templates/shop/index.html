@@ -6,6 +6,7 @@
     <title>PawConnect - E-Commerce & Pet Care</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/shop.css">
+    <link rel="stylesheet" href="/css/header.css?v=20261016-2">
 </head>
 <body>
 
@@ -19,7 +20,7 @@
                 <h1 class="hero-title">Tận tâm vì Hạnh phúc của Thú cưng</h1>
                 <p class="hero-desc">Trải nghiệm dịch vụ chăm sóc y tế đẳng cấp và các sản phẩm cao cấp. Chúng tôi chăm sóc thú cưng của bạn như người thân trong gia đình, mang đến tình yêu thương và dinh dưỡng tốt nhất.</p>
                 <div class="hero-btns">
-                    <a href="/service" class="btn-pill">Đặt lịch ngay</a>
+                    <a href="/service" class="btn-pill" data-booking-access>Đặt lịch ngay</a>
                     <a href="#shop-section" class="btn-pill btn-outline">Khám phá Cửa hàng</a>
                 </div>
             </div>
@@ -92,6 +93,11 @@
                 <h3>Bộ lọc</h3>
                 
                 <div class="filter-group">
+                    <label for="shopSearch"><strong>Tìm kiếm</strong></label>
+                    <input id="shopSearch" class="form-control" type="search" placeholder="Tên sản phẩm hoặc giống chó" autocomplete="off">
+                </div>
+
+                <div class="filter-group">
                     <label><strong>Chi nhánh</strong></label>
                     <select id="branchFilter" class="form-control" style="width:100%; border-radius:8px;">
                         <option value="">Tất cả Chi nhánh</option>
@@ -102,8 +108,8 @@
                     <label><strong>Danh mục</strong></label>
                     <select id="typeFilter" class="form-control" style="width:100%; border-radius:8px;">
                         <option value="">Tất cả Sản phẩm</option>
-                        <option value="true">Chó giống</option>
-                        <option value="false">Thức ăn & Phụ kiện</option>
+                        <option value="puppy">Chó con</option>
+                        <option value="product">Sản phẩm</option>
                     </select>
                 </div>
             </aside>

@@ -3,12 +3,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Determine which page we are on
     if (document.getElementById('productGrid')) {
         await loadBranches('branchFilter');
+        const query = new URLSearchParams(window.location.search).get('search');
+        if (query) document.getElementById('shopSearch').value = query;
         await loadProducts();
         document.getElementById('branchFilter').addEventListener('change', loadProducts);
         document.getElementById('typeFilter').addEventListener('change', loadProducts);
+        document.getElementById('shopSearch').addEventListener('input', loadProducts);
     }
     
     if (document.getElementById('branchSelect')) {
+        const bookingUser = await requireBookingLogin();
+        if (!bookingUser) return;
+        if (bookingUser.role !== 'CUSTOMER') {
+            showBookingAccessMessage('Đặt lịch dịch vụ chỉ dành cho tài khoản khách hàng.');
+            return;
+        }
         await loadBranches('branchSelect');
         await loadServices();
     }
@@ -32,7 +41,8 @@ async function loadBranches(elementId) {
 
 async function loadProducts() {
     const branchId = document.getElementById('branchFilter').value;
-    const type = document.getElementById('typeFilter').value; // empty, 'true' (puppy), or 'false' (product) for legacy support
+    const type = document.getElementById('typeFilter').value;
+    const query = document.getElementById('shopSearch').value.trim().toLocaleLowerCase('vi');
     
     let products = [];
     
@@ -53,18 +63,32 @@ async function loadProducts() {
             json.forEach(p => p.itemType = 'puppy');
             products = products.concat(json);
         }
-        renderProducts(products);
+        const matches = products.filter((product) => {
+            if (!query) return true;
+            const searchable = product.itemType === 'puppy'
+                ? [product.listingTitle, product.breedCode, product.description]
+                : [product.name, product.description, product.ingredients, product.targetAudience];
+            return searchable.filter(Boolean).join(' ').toLocaleLowerCase('vi').includes(query);
+        });
+        renderProducts(matches, type, query);
     } catch (e) {
-        document.getElementById('productGrid').innerHTML = '<p>Error loading products</p>';
+        document.getElementById('productGrid').innerHTML = '<p>Không thể tải sản phẩm. Vui lòng thử lại.</p>';
     }
 }
 
-function renderProducts(products) {
+function renderProducts(products, type, query) {
     const grid = document.getElementById('productGrid');
     grid.innerHTML = '';
     
     if(products.length === 0) {
-        grid.innerHTML = '<p>No items found.</p>';
+        const emptyMessage = query
+            ? `Không tìm thấy sản phẩm phù hợp với “${escapeHtml(query)}”.`
+            : type === 'puppy'
+                ? 'Hiện chưa có chó con đang được rao bán.'
+                : type === 'product'
+                    ? 'Hiện chưa có sản phẩm thuộc lựa chọn này.'
+                    : 'Hiện chưa có sản phẩm để hiển thị.';
+        grid.innerHTML = `<p>${emptyMessage}</p>`;
         return;
     }
 
@@ -82,7 +106,7 @@ function renderProducts(products) {
             <h3 class="product-title" onclick="openModal(${safeProductJson})" style="cursor:pointer"></h3>
             <p class="product-price">${price.toLocaleString()} VND</p>
             <div class="product-card-actions">
-                <button class="btn-icon-cart" onclick="addToCart('${p.itemType}', ${p.id})" title="Add to Cart"><i class="fas fa-cart-plus"></i></button>
+                <button class="btn-icon-cart" onclick="addToCart('${p.itemType}', ${p.id})" title="Thêm vào giỏ hàng" aria-label="Thêm vào giỏ hàng"><i class="fas fa-cart-plus"></i></button>
                 <button class="btn-add-cart" onclick="buyNow('${p.itemType}', ${p.id})" style="flex:1;">Mua ngay</button>
             </div>
         `;
@@ -92,26 +116,15 @@ function renderProducts(products) {
 }
 
 async function addToCart(itemType, id) {
+    if (!window.PawConnectCart) {
+        alert('Chức năng giỏ hàng đang được tải. Vui lòng tải lại trang rồi thử lại.');
+        return false;
+    }
     try {
-        let url = '/api/cart/items?quantity=1';
-        if (itemType === 'product') {
-            url += `&productId=${id}`;
-        } else {
-            url += `&puppyListingId=${id}`;
-        }
-        const res = await fetch(url, { method: 'POST' });
-        if (res.ok) {
-            let countSpan = document.getElementById('cartCount');
-            countSpan.textContent = parseInt(countSpan.textContent) + 1;
-            
-            // Add a small bounce animation
-            countSpan.style.transform = 'scale(1.5)';
-            setTimeout(() => countSpan.style.transform = 'scale(1)', 200);
-        } else {
-            alert('Failed to add to cart (out of stock or error)');
-        }
+        return await window.PawConnectCart.add(itemType, id);
     } catch (e) {
-        alert('Error adding to cart');
+        alert('Không thể thêm vào giỏ hàng. Vui lòng thử lại.');
+        return false;
     }
 }
 
@@ -182,9 +195,17 @@ async function submitBooking() {
     submitBtn.disabled = true;
 
     try {
+        const accessToken = localStorage.getItem('pawconnect.accessToken');
+        if (!accessToken) {
+            window.location.assign('/auth/login?returnTo=%2Fservice');
+            return;
+        }
         const res = await fetch('/api/bookings', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${accessToken}`
+            },
             body: JSON.stringify(request)
         });
         
@@ -201,6 +222,34 @@ async function submitBooking() {
         resultDiv.textContent = 'Network error.';
         submitBtn.disabled = false;
     }
+}
+
+async function requireBookingLogin() {
+    const accessToken = localStorage.getItem('pawconnect.accessToken');
+    if (!accessToken) {
+        window.location.replace('/auth/login?returnTo=%2Fservice');
+        return null;
+    }
+
+    try {
+        const response = await fetch('/api/auth/me', {
+            headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        if (response.ok) return await response.json();
+    } catch (_) {
+        // A failed validation is handled as an unavailable session below.
+    }
+
+    ['pawconnect.accessToken', 'pawconnect.refreshToken', 'accessToken', 'refreshToken', 'token']
+        .forEach((key) => localStorage.removeItem(key));
+    window.location.replace('/auth/login?returnTo=%2Fservice');
+    return null;
+}
+
+function showBookingAccessMessage(message) {
+    const wrapper = document.querySelector('.booking-form-wrapper');
+    if (!wrapper) return;
+    wrapper.innerHTML = `<div class="booking-access-message"><i class="fas fa-circle-info"></i><p>${message}</p></div>`;
 }
 
 // --- MODAL & BUY NOW LOGIC ---
@@ -228,8 +277,12 @@ function closeModal() {
 }
 
 async function buyNow(itemType, id) {
-    // Add to cart then go to a mock checkout or show alert
-    await addToCart(itemType, id);
-    alert('Đã thêm vào giỏ hàng. Đang chuyển đến thanh toán...');
-    // window.location.href = '/checkout'; // To be implemented by TV2/3
+    const added = await addToCart(itemType, id);
+    if (added) window.PawConnectCart.open();
+}
+
+function escapeHtml(value) {
+    const element = document.createElement('div');
+    element.textContent = value;
+    return element.innerHTML;
 }

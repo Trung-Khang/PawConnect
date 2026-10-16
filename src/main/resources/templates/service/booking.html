@@ -6,16 +6,18 @@
     <title>Đặt lịch - PawConnect</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/shop.css">
+    <link rel="stylesheet" href="/css/header.css?v=20261016-2">
 </head>
 <body>
 
     <div th:replace="~{fragments/header :: header}"></div>
 
-    <section class="section container">
-        <div class="section-header">
-            <h2>Đặt lịch hẹn</h2>
-            <p style="color:var(--text-muted)">Sắp xếp lịch hẹn cho thú cưng của bạn chỉ với vài bước đơn giản.</p>
-        </div>
+    <section class="section booking-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Đặt lịch hẹn</h2>
+                <p style="color:var(--text-muted)">Sắp xếp lịch hẹn cho thú cưng của bạn chỉ với vài bước đơn giản.</p>
+            </div>
 
         <div class="booking-form-wrapper">
             <div class="step-indicator">
@@ -68,7 +70,8 @@
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
     <div th:replace="~{fragments/footer :: footer}"></div>
 
