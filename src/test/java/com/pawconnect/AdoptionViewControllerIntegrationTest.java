@@ -23,7 +23,10 @@ class AdoptionViewControllerIntegrationTest {
         mockMvc.perform(get("/adoptions"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("community/adoptions"))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"adoption-list-view\"")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"adoption-list-view\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"headerSearchBtn\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"cartBtn\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("src=\"/js/header.js\"")));
 
         mockMvc.perform(get("/adoptions/1"))
                 .andExpect(status().isOk())
@@ -40,5 +43,30 @@ class AdoptionViewControllerIntegrationTest {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"delete-dog-image\"")))
                 .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("id=\"delete-post-image\""))))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"open-adoption-chat\"")));
+    }
+
+    @Test
+    void adminUsersPageRendersTheManagementTemplate() throws Exception {
+        mockMvc.perform(get("/admin/users"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/users"))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"admin-users-table-body\"")));
+    }
+
+    @Test
+    void adminOrdersPageRendersTheManagementTemplate() throws Exception {
+        mockMvc.perform(get("/admin/orders"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/orders"))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"orders-table-body\"")));
+    }
+
+    @Test
+    void profilePageRendersTheSharedHeaderAndProfileForm() throws Exception {
+        mockMvc.perform(get("/profile"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("profile/index"))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"profile-form\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"avatar-file\"")));
     }
 }

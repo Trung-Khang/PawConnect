@@ -7,5 +7,6 @@ import java.util.List;
 public interface OrderService {
     OrderResponse createOrder(OrderRequest request);
     List<OrderResponse> getMyOrders();
+    List<OrderResponse> getManagedOrders();
     OrderResponse updateOrderStatus(Long orderId, String status);
 }

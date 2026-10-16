@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý tài khoản | PawConnect</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/shop.css">
+    <link rel="stylesheet" href="/css/header.css?v=20261016-2">
+    <link rel="stylesheet" href="/css/admin-users.css">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+
+<main class="admin-users-page container">
+    <header class="admin-users-heading">
+        <div>
+            <p class="admin-eyebrow">Hệ thống PawConnect</p>
+            <h1>Quản lý tài khoản</h1>
+            <p>Chỉnh sửa thông tin, kích hoạt, khóa hoặc xóa tài khoản khi không còn dữ liệu liên quan.</p>
+        </div>
+        <button id="reload-users" class="admin-reload-button" type="button"><i class="fas fa-rotate-right"></i><span>Tải lại</span></button>
+    </header>
+
+    <p id="admin-users-notice" class="admin-users-notice" hidden></p>
+
+    <section class="admin-users-table-wrap" aria-labelledby="accounts-title">
+        <div class="admin-users-table-title">
+            <h2 id="accounts-title">Danh sách tài khoản</h2>
+            <span id="account-total" class="account-total">0 tài khoản</span>
+        </div>
+        <div class="admin-users-table-scroll">
+            <table>
+                <thead>
+                <tr><th>Tài khoản</th><th>Email</th><th>Số điện thoại</th><th>Vai trò</th><th>Trạng thái</th><th><span class="sr-only">Thao tác</span></th></tr>
+                </thead>
+                <tbody id="admin-users-table-body"></tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<div id="user-edit-modal" class="admin-user-modal" hidden>
+    <div class="admin-user-modal-backdrop" data-close-user-modal></div>
+    <section class="admin-user-modal-content" role="dialog" aria-modal="true" aria-labelledby="edit-user-title">
+        <div class="admin-user-modal-header"><h2 id="edit-user-title">Cập nhật tài khoản</h2><button type="button" class="icon-btn" data-close-user-modal title="Đóng" aria-label="Đóng"><i class="fas fa-xmark"></i></button></div>
+        <form id="edit-user-form" class="admin-user-form">
+            <input id="edit-user-id" type="hidden">
+            <label>Email<input id="edit-user-email" type="email" disabled></label>
+            <label>Họ và tên<input id="edit-user-full-name" maxlength="120" required></label>
+            <label>Số điện thoại<input id="edit-user-phone" maxlength="30" required></label>
+            <label class="admin-user-toggle"><input id="edit-user-active" type="checkbox"> Tài khoản đang hoạt động</label>
+            <label class="admin-user-toggle"><input id="edit-user-locked" type="checkbox"> Khóa tài khoản</label>
+            <div class="admin-user-form-actions"><button class="btn-pill" type="submit">Lưu thay đổi</button><button class="secondary-button" type="button" data-close-user-modal>Hủy</button></div>
+        </form>
+    </section>
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script src="/js/admin-users.js"></script>
+</body>
+</html>
