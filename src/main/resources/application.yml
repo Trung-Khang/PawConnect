@@ -12,6 +12,17 @@ spring:
   h2:
     console:
       enabled: false
+  mail:
+    host: ${SMTP_HOST:smtp.gmail.com}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: ${SMTP_STARTTLS:true}
+      mail.smtp.connectiontimeout: ${SMTP_CONNECTION_TIMEOUT_MS:10000}
+      mail.smtp.timeout: ${SMTP_TIMEOUT_MS:20000}
+      mail.smtp.writetimeout: ${SMTP_WRITE_TIMEOUT_MS:20000}
 
 app:
   jwt:
@@ -19,6 +30,13 @@ app:
     secret: ${JWT_SECRET:replace-this-development-only-secret-with-at-least-32-characters}
     access-token-ttl: ${JWT_ACCESS_TOKEN_TTL:PT15M}
     refresh-token-ttl: ${JWT_REFRESH_TOKEN_TTL:P14D}
+  auth:
+    otp-ttl: ${AUTH_OTP_TTL:PT5M}
+    otp-resend-cooldown: ${AUTH_OTP_RESEND_COOLDOWN:PT60S}
+    reset-token-ttl: ${AUTH_RESET_TOKEN_TTL:PT10M}
+  mail:
+    from: ${SMTP_FROM:${SMTP_USERNAME:}}
+    from-name: ${SMTP_FROM_NAME:PawConnect}
   websocket:
     allowed-origin-pattern: ${WEBSOCKET_ALLOWED_ORIGIN_PATTERN:http://localhost:*}
   cloudinary:
