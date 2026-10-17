@@ -453,6 +453,8 @@ body {
     position: relative;
     overflow: hidden;
     animation: fadeInUp 0.8s ease forwards;
+    display: flex;
+    flex-direction: column;
 }
 
 .product-card:hover {
@@ -483,6 +485,10 @@ body {
 .product-title {
     font-size: 1.1rem;
     margin-bottom: 0.5rem;
+    min-height: 2.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .product-price {
@@ -508,7 +514,8 @@ body {
 .product-card-actions {
     display: flex;
     gap: 0.5rem;
-    margin-top: 1rem;
+    margin-top: auto;
+    padding-top: 1rem;
 }
 
 .btn-icon-cart {

@@ -692,9 +692,12 @@
     border: 0;
     background: rgba(255, 255, 255, 0.22);
     color: #ffffff;
-    font-size: 13px;
+    min-height: 36px;
+    padding: 0 12px;
+    font-family: var(--font-main, 'Nunito', -apple-system, sans-serif);
+    font-size: 14px;
     font-weight: 800;
-    padding: 5px 11px;
+    letter-spacing: 0;
     border-radius: 16px;
     cursor: pointer;
     display: inline-flex;
@@ -702,6 +705,12 @@
     gap: 7px;
     line-height: 1;
     transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.chat-back-btn span,
+.chat-back-btn .fas {
+    display: block;
+    line-height: 1;
 }
 
 .chat-back-btn:hover {

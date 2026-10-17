@@ -2,7 +2,7 @@
     const TOKEN_KEY = 'pawconnect.accessToken';
     const AVATAR_MAP_KEY = 'pawconnect.avatar_map';
     const avatarCache = new Map();
-    const state = { user: null, conversations: [], selectedId: null, client: null, poll: null, prefill: '', historyRequest: 0, sending: false, subscriptions: new Set() };
+    const state = { user: null, conversations: [], selectedId: null, client: null, poll: null, prefill: '', historyRequest: 0, historyLoadingId: null, openingConversation: false, sending: false, subscriptions: new Set() };
 
     document.addEventListener('pawconnect:authenticated', (event) => initialize(event.detail));
     document.addEventListener('pawconnect:profile-updated', reloadUser);
@@ -87,7 +87,7 @@
 
     function destroy() {
         clearInterval(state.poll); state.client?.deactivate();
-        state.user = null; state.client = null; state.conversations = []; state.selectedId = null; state.subscriptions.clear();
+        state.user = null; state.client = null; state.conversations = []; state.selectedId = null; state.historyLoadingId = null; state.openingConversation = false; state.subscriptions.clear();
         document.getElementById('chatWidgetToggle')?.remove(); close();
     }
 
@@ -192,6 +192,11 @@
         if (!panel) return;
         updateHeader();
 
+        if (state.openingConversation) {
+            renderOpeningConversation(panel);
+            return;
+        }
+
         // If staff and no conversation selected: render inbox list
         if (state.user && state.user.role !== 'CUSTOMER' && !state.selectedId) {
             renderInbox(panel);
@@ -201,6 +206,7 @@
         if (state.selectedId) {
             const messages = panel.querySelector('.chat-widget-messages');
             if (!messages || Number(messages.dataset.conversationId) !== state.selectedId) {
+                if (state.historyLoadingId === state.selectedId) return;
                 selectConversation(state.selectedId);
             }
             return;
@@ -215,6 +221,11 @@
         if (!panel.querySelector('.chat-widget-compose')) {
             renderNewConversation(panel);
         }
+    }
+
+    function renderOpeningConversation(panel) {
+        if (panel.querySelector('.chat-widget-opening')) return;
+        panel.replaceChildren(el('p', 'chat-widget-notice chat-widget-opening', 'Đang mở cuộc trò chuyện...'));
     }
 
     function formatTime(dateStr) {
@@ -324,13 +335,15 @@
         panel.append(messages, composer(null, messages));
     }
 
-    async function selectConversation(id) {
+    async function selectConversation(id, showLoading = true) {
         const panel = document.querySelector('#chatWidgetDrawer .chat-widget-panel');
         if (!panel) return;
+        if (state.historyLoadingId === id) return;
         state.selectedId = id;
         updateHeader();
         const request = ++state.historyRequest;
-        panel.replaceChildren(el('p', 'chat-widget-notice', 'Đang tải lịch sử...'));
+        state.historyLoadingId = id;
+        if (showLoading) panel.replaceChildren(el('p', 'chat-widget-notice', 'Đang tải lịch sử...'));
         try {
             const response = await fetch(`/api/conversations/${id}/messages?size=100`, { headers: headers() });
             if (!response.ok) return showError(panel, response);
@@ -343,6 +356,8 @@
             if (request === state.historyRequest) {
                 panel.replaceChildren(el('p', 'chat-widget-notice', 'Không thể tải nội dung cuộc trò chuyện.'));
             }
+        } finally {
+            if (state.historyLoadingId === id) state.historyLoadingId = null;
         }
     }
 
@@ -449,8 +464,16 @@
         if (!branches.length) throw new Error('No branch');
         const response = await fetch('/api/conversations/support', { method: 'POST', headers: headers(), body: JSON.stringify({ branchId: branches[0].id }) });
         if (!response.ok) throw new Error('Cannot create conversation');
-        const conversation = await response.json(); state.selectedId = conversation.id; await refresh();
+        const conversation = await response.json(); upsertConversation(conversation); state.selectedId = conversation.id;
         return conversation.id;
+    }
+
+    function upsertConversation(conversation) {
+        const index = state.conversations.findIndex((item) => item.id === conversation.id);
+        if (index >= 0) state.conversations[index] = { ...state.conversations[index], ...conversation };
+        else state.conversations.unshift(conversation);
+        subscribe(conversation.id);
+        updateBadge();
     }
 
     function appendMessage(container, message) {
@@ -591,17 +614,40 @@
         if (!localStorage.getItem(TOKEN_KEY)) return window.location.assign(`/auth/login?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}`);
         if (!state.user) { const response = await fetch('/api/auth/me', { headers: headers() }); if (!response.ok) return; initialize(await response.json()); }
         if (state.user.role !== 'CUSTOMER') return window.alert('Tư vấn mua hàng chỉ dành cho tài khoản khách hàng.');
-        state.prefill = `Mình muốn được tư vấn về ${context.title}.`; open(); if (!context.branchId) return;
-        const response = await fetch('/api/conversations/support', { method: 'POST', headers: headers(), body: JSON.stringify({ branchId: context.branchId, productId: context.productId, puppyListingId: context.puppyListingId }) });
-        if (!response.ok) return showError(document.querySelector('#chatWidgetDrawer .chat-widget-panel'), response);
-        const conversation = await response.json(); state.selectedId = conversation.id; await refresh(); selectConversation(conversation.id);
+        if (!context.branchId) return;
+        return openContextConversation('/api/conversations/support', { branchId: context.branchId, productId: context.productId, puppyListingId: context.puppyListingId }, `Mình muốn được tư vấn về ${context.title}.`);
     }
 
     async function openAdoption(postId) {
         if (!localStorage.getItem(TOKEN_KEY)) return window.location.assign(`/auth/login?returnTo=${encodeURIComponent(window.location.pathname)}`);
-        open(); const response = await fetch(`/api/conversations/adoption/${postId}`, { method: 'POST', headers: headers() });
-        if (!response.ok) return showError(document.querySelector('#chatWidgetDrawer .chat-widget-panel'), response);
-        const conversation = await response.json(); state.selectedId = conversation.id; await refresh(); selectConversation(conversation.id);
+        return openContextConversation(`/api/conversations/adoption/${postId}`, null, 'Mình muốn được tư vấn về việc nhận nuôi này.');
+    }
+
+    async function openContextConversation(url, payload, prefill) {
+        state.prefill = prefill;
+        state.openingConversation = true;
+        open();
+        syncOpenDrawer();
+        const panel = document.querySelector('#chatWidgetDrawer .chat-widget-panel');
+        try {
+            const response = await fetch(url, {
+                method: 'POST', headers: headers(), body: payload ? JSON.stringify(payload) : undefined
+            });
+            if (!response.ok) {
+                state.openingConversation = false;
+                syncOpenDrawer();
+                return showError(panel, response);
+            }
+            const conversation = await response.json();
+            upsertConversation(conversation);
+            state.selectedId = conversation.id;
+            state.openingConversation = false;
+            await selectConversation(conversation.id, false);
+        } catch (_) {
+            state.openingConversation = false;
+            syncOpenDrawer();
+            panel?.prepend(el('p', 'chat-widget-notice', 'Không thể mở cuộc trò chuyện. Vui lòng thử lại.'));
+        }
     }
 
     window.PawConnectChat = { open, openSupport, openAdoption, refresh };
