@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface AdoptionPostRepository extends JpaRepository<AdoptionPost, Long> {
     Optional<AdoptionPost> findBySeedKey(String seedKey);
 
+    long countBySeedKeyIsNotNull();
+
     List<AdoptionPost> findByStatus(AdoptionPostStatus status);
 
     List<AdoptionPost> findByDogProfileBranchId(Long branchId);

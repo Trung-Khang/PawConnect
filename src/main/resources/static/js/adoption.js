@@ -461,7 +461,7 @@
             showError('Chat tư vấn dành cho tài khoản khách hàng.');
             return;
         }
-        showNotice('Chat tư vấn cho hồ sơ này sẽ được tích hợp ở Giai đoạn 7.');
+        window.PawConnectChat?.openAdoption(Number(document.getElementById('open-adoption-chat').dataset.adoptionPostId));
     }
 
     function redirectToManagement(message) {

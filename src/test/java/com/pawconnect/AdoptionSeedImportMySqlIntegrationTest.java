@@ -15,7 +15,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-/** Runs only when an operator explicitly enables the shared MySQL acceptance test. */
+/**
+ * Runs only when an operator explicitly enables the shared MySQL acceptance test.
+ * It scopes assertions to stable Seed V3 keys so operational records are preserved.
+ */
 @Tag("mysql")
 @EnabledIfEnvironmentVariable(named = "RUN_MYSQL_INTEGRATION_TESTS", matches = "true")
 @ActiveProfiles({"mysql", "dev"})
@@ -39,9 +42,9 @@ class AdoptionSeedImportMySqlIntegrationTest {
         assertThat(first.createdDogProfiles() + first.existingDogProfiles()).isEqualTo(30);
         assertThat(first.createdAdoptionPosts() + first.existingAdoptionPosts()).isEqualTo(30);
         assertThat(first.createdAdoptionApplications() + first.existingAdoptionApplications()).isEqualTo(36);
-        assertThat(dogProfileRepository.count()).isEqualTo(30);
-        assertThat(adoptionPostRepository.count()).isEqualTo(30);
-        assertThat(adoptionApplicationRepository.count()).isEqualTo(36);
+        assertThat(dogProfileRepository.countBySeedKeyIsNotNull()).isEqualTo(30);
+        assertThat(adoptionPostRepository.countBySeedKeyIsNotNull()).isEqualTo(30);
+        assertThat(adoptionApplicationRepository.countBySeedKeyIsNotNull()).isEqualTo(36);
 
         AdoptionSeedImportSummary second = adoptionSeedImportService.importSeed(SEED_V3);
         assertThat(second.createdDogProfiles()).isZero();

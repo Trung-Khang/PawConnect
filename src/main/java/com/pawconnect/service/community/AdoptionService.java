@@ -300,13 +300,19 @@ public class AdoptionService {
         AdoptionPost post = adoptionPostRepository.findByIdForUpdate(application.getAdoptionPost().getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Adoption post was not found"));
         assertManagesBranch(actor, post.getDogProfile().getBranch().getId());
+        if (application.getStatus() == AdoptionApplicationStatus.APPROVED
+                && post.getStatus() == AdoptionPostStatus.CLOSED) {
+            conversationService.openForAdoption(application.getApplicant().getId(),
+                    post.getDogProfile().getBranch().getId(), post.getId());
+            return AdoptionMapper.toResponse(application);
+        }
         if (post.getStatus() != AdoptionPostStatus.AVAILABLE || application.getStatus() != AdoptionApplicationStatus.PENDING) {
             throw new ResourceConflictException("Only a pending application on an available post can be approved");
         }
         application.setStatus(AdoptionApplicationStatus.APPROVED);
         post.setStatus(AdoptionPostStatus.CLOSED);
         rejectPendingApplicationsExcept(post.getId(), applicationId);
-        conversationService.openForAdoption(application.getApplicant().getId(), post.getCreatedBy().getId(), post.getId());
+        conversationService.openForAdoption(application.getApplicant().getId(), post.getDogProfile().getBranch().getId(), post.getId());
         return AdoptionMapper.toResponse(application);
     }
 

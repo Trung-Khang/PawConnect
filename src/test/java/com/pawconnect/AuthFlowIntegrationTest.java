@@ -120,6 +120,9 @@ class AuthFlowIntegrationTest {
         mockMvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"usernameOrEmail\":\"reset.user\",\"password\":\"NewPassword123!\"}"))
                 .andExpect(status().isOk());
+        mockMvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"usernameOrEmail\":\"reset.user\",\"password\":\"Password123!\"}"))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -133,6 +136,28 @@ class AuthFlowIntegrationTest {
         mockMvc.perform(post("/api/auth/refresh-token").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"refreshToken\":\"invalid-token\"}"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void forgotPasswordDoesNotRevealWhetherAnIdentityExists() throws Exception {
+        MvcResult unknown = mockMvc.perform(post("/api/auth/forgot-password").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"identity\":\"missing-account@example.com\"}"))
+                .andExpect(status().isOk())
+                .andReturn();
+        MvcResult existingButUnverified = mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"forgot.user\",\"fullName\":\"Forgot User\",\"email\":\"forgot@example.com\",\"password\":\"Password123!\",\"confirmPassword\":\"Password123!\",\"phone\":\"0912345689\"}"))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        MvcResult known = mockMvc.perform(post("/api/auth/forgot-password").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"identity\":\"forgot.user\"}"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        JsonNode unknownBody = objectMapper.readTree(unknown.getResponse().getContentAsString());
+        JsonNode knownBody = objectMapper.readTree(known.getResponse().getContentAsString());
+        org.junit.jupiter.api.Assertions.assertEquals(unknownBody.path("message").asText(), knownBody.path("message").asText());
+        org.junit.jupiter.api.Assertions.assertEquals(unknownBody.path("emailSent").asBoolean(), knownBody.path("emailSent").asBoolean());
     }
 
     @Test

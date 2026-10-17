@@ -1,4 +1,7 @@
 // --- SHOP PAGE LOGIC ---
+let productRequestController = null;
+let productLoadSequence = 0;
+
 document.addEventListener('DOMContentLoaded', async () => {
     // Determine which page we are on
     if (document.getElementById('productGrid')) {
@@ -6,9 +9,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         const query = new URLSearchParams(window.location.search).get('search');
         if (query) document.getElementById('shopSearch').value = query;
         await loadProducts();
-        document.getElementById('branchFilter').addEventListener('change', loadProducts);
-        document.getElementById('typeFilter').addEventListener('change', loadProducts);
-        document.getElementById('shopSearch').addEventListener('input', loadProducts);
+        await openLinkedItemModal();
+        document.getElementById('applyShopFilters').addEventListener('click', loadProducts);
+        document.getElementById('shopSearch').addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                loadProducts();
+            }
+        });
     }
     
     if (document.getElementById('branchSelect')) {
@@ -43,14 +51,21 @@ async function loadProducts() {
     const branchId = document.getElementById('branchFilter').value;
     const type = document.getElementById('typeFilter').value;
     const query = document.getElementById('shopSearch').value.trim().toLocaleLowerCase('vi');
-    
+    const requestSequence = ++productLoadSequence;
+    const searchButton = document.getElementById('applyShopFilters');
+
+    productRequestController?.abort();
+    productRequestController = new AbortController();
+    const { signal } = productRequestController;
+    if (searchButton) searchButton.disabled = true;
+
     let products = [];
-    
+
     try {
         if (!type || type === 'product') {
             let url = '/api/products?';
             if (branchId) url += `branchId=${branchId}`;
-            const res = await fetch(url);
+            const res = await fetch(url, { signal });
             let json = await res.json();
             json.forEach(p => p.itemType = 'product');
             products = products.concat(json);
@@ -58,7 +73,7 @@ async function loadProducts() {
         if (!type || type === 'puppy') {
             let url = '/api/puppy-listings?';
             if (branchId) url += `branchId=${branchId}`;
-            const res = await fetch(url);
+            const res = await fetch(url, { signal });
             let json = await res.json();
             json.forEach(p => p.itemType = 'puppy');
             products = products.concat(json);
@@ -70,9 +85,16 @@ async function loadProducts() {
                 : [product.name, product.description, product.ingredients, product.targetAudience];
             return searchable.filter(Boolean).join(' ').toLocaleLowerCase('vi').includes(query);
         });
+        if (requestSequence !== productLoadSequence) return;
         renderProducts(matches, type, query);
     } catch (e) {
+        if (e.name === 'AbortError') return;
+        if (requestSequence !== productLoadSequence) return;
         document.getElementById('productGrid').innerHTML = '<p>Không thể tải sản phẩm. Vui lòng thử lại.</p>';
+    } finally {
+        if (requestSequence === productLoadSequence && searchButton) {
+            searchButton.disabled = false;
+        }
     }
 }
 
@@ -267,6 +289,19 @@ function openModal(p) {
     document.getElementById('modalCare').textContent = p.careInstructions || 'Liên hệ để biết thêm chi tiết';
     
     document.getElementById('modalCartBtn').onclick = () => addToCart(p.itemType, p.id);
+    document.getElementById('modalConsultBtn').onclick = () => {
+        if (!window.PawConnectChat) {
+            alert('Chức năng tin nhắn đang được tải. Vui lòng thử lại sau ít giây.');
+            return;
+        }
+        closeModal();
+        window.PawConnectChat.openSupport({
+            branchId: p.branchId,
+            productId: p.itemType === 'product' ? p.id : null,
+            puppyListingId: p.itemType === 'puppy' ? p.id : null,
+            title
+        });
+    };
     document.getElementById('modalBuyBtn').onclick = () => buyNow(p.itemType, p.id);
     
     document.getElementById('productModal').classList.add('active');
@@ -274,6 +309,47 @@ function openModal(p) {
 
 function closeModal() {
     document.getElementById('productModal').classList.remove('active');
+    clearItemDeepLink();
+}
+
+async function openLinkedItemModal() {
+    const params = new URLSearchParams(window.location.search);
+    const itemType = params.get('itemType');
+    const itemId = Number(params.get('itemId'));
+    if (!['product', 'puppy'].includes(itemType) || !Number.isSafeInteger(itemId) || itemId <= 0) return;
+
+    const endpoint = itemType === 'product' ? `/api/products/${itemId}` : `/api/puppy-listings/${itemId}`;
+    try {
+        const response = await fetch(endpoint);
+        if (!response.ok) throw new Error(`Item request failed with status ${response.status}`);
+        const item = await response.json();
+        item.itemType = itemType;
+        openModal(item);
+    } catch (_) {
+        showLinkedItemNotice('Sản phẩm bạn muốn xem không còn khả dụng hoặc đã bị xóa.');
+    }
+}
+
+function clearItemDeepLink() {
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has('itemType') && !url.searchParams.has('itemId')) return;
+    url.searchParams.delete('itemType');
+    url.searchParams.delete('itemId');
+    const query = url.searchParams.toString();
+    window.history.replaceState({}, '', `${url.pathname}${query ? `?${query}` : ''}${url.hash}`);
+}
+
+function showLinkedItemNotice(message) {
+    const grid = document.getElementById('productGrid');
+    if (!grid) return;
+    let notice = document.getElementById('shopDeepLinkNotice');
+    if (!notice) {
+        notice = document.createElement('p');
+        notice.id = 'shopDeepLinkNotice';
+        notice.className = 'shop-deep-link-notice';
+        grid.before(notice);
+    }
+    notice.textContent = message;
 }
 
 async function buyNow(itemType, id) {

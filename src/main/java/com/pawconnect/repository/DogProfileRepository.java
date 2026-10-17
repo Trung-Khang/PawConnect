@@ -8,5 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface DogProfileRepository extends JpaRepository<DogProfile, Long> {
     Optional<DogProfile> findBySeedKey(String seedKey);
 
+    long countBySeedKeyIsNotNull();
+
     List<DogProfile> findByBranchId(Long branchId);
 }
