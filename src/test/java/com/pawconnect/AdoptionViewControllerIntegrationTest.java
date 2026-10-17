@@ -26,7 +26,7 @@ class AdoptionViewControllerIntegrationTest {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"adoption-list-view\"")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"headerSearchBtn\"")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"cartBtn\"")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("src=\"/js/header.js\"")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("src=\"/js/header.js?v=")));
 
         mockMvc.perform(get("/adoptions/1"))
                 .andExpect(status().isOk())
