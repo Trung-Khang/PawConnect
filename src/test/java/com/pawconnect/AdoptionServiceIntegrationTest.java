@@ -95,8 +95,10 @@ class AdoptionServiceIntegrationTest {
         AdoptionApplicationResponse second = adoptionService.apply(post.id(), new AdoptionApplicationRequest("Gia dinh toi san sang don be ve nha."), CUSTOMER_TWO);
 
         AdoptionApplicationResponse approved = adoptionService.approve(first.id(), HCM_MANAGER);
+        AdoptionApplicationResponse retriedApproval = adoptionService.approve(first.id(), HCM_MANAGER);
 
         assertThat(approved.status()).isEqualTo(AdoptionApplicationStatus.APPROVED);
+        assertThat(retriedApproval.status()).isEqualTo(AdoptionApplicationStatus.APPROVED);
         assertThat(adoptionService.getManagedApplications(HCM_MANAGER))
                 .extracting(AdoptionApplicationResponse::status)
                 .containsExactlyInAnyOrder(AdoptionApplicationStatus.APPROVED, AdoptionApplicationStatus.REJECTED);
@@ -109,6 +111,8 @@ class AdoptionServiceIntegrationTest {
                 .satisfies(conversation -> {
                     assertThat(conversation.getAdoptionPostId()).isEqualTo(post.id());
                     assertThat(conversation.getCustomer().getId()).isEqualTo(first.applicantUserId());
+                    assertThat(conversation.getAssignedStaff()).isNull();
+                    assertThat(conversation.getStatus().name()).isEqualTo("OPEN");
                 });
     }
 

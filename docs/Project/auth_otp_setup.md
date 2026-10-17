@@ -38,6 +38,20 @@ HAVING COUNT(*) > 1;
 
 Nếu không có dòng trùng, chạy **một lần** script [V4_0_0__pawconnect_auth_otp_mysql.sql](../../data-pipeline/migrations/V4_0_0__pawconnect_auth_otp_mysql.sql) bằng MySQL client. Script chỉ thêm cột/bảng/index; không xóa user, seed hoặc dữ liệu nghiệp vụ.
 
+### Chat MySQL compatibility
+
+Sau khi sao luu database, chay **một lần** [V4_1_0__rename_chat_message_read_column_mysql.sql](../../data-pipeline/migrations/V4_1_0__rename_chat_message_read_column_mysql.sql). Script nay xu ly ca ba trang thai: tao `chat_messages` neu database cu chua co bang, doi cot cu ``read`` thanh `is_read` de tranh tu khoa MySQL, hoac bo qua neu schema da dung. No khong xoa conversation hay message.
+
+Sau khi chay, kiem tra:
+
+```sql
+USE pawconnect;
+SHOW COLUMNS FROM chat_messages;
+SELECT COUNT(*) AS messages FROM chat_messages;
+```
+
+Ten cot phai la `is_read`; frontend/API van nhan field JSON `read` nhu cu.
+
 Khi migration được quản lý thủ công, chạy ứng dụng MySQL với `JPA_DDL_AUTO=validate` để phát hiện schema sai thay vì để Hibernate tự sửa schema. Không chạy lại script sau khi nó thành công.
 
 ## SMTP qua environment

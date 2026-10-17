@@ -20,17 +20,17 @@
 
 | Hạng mục | Kết quả | Ghi chú |
 | --- | --- | --- |
-| `mvn clean test` | PASS | 56 test, 0 failure, 0 error, 1 test MySQL bị skip theo điều kiện môi trường. |
+| `mvn clean test` | PASS | 62 test, 0 failure, 0 error, 1 test MySQL bị skip theo điều kiện môi trường. Baseline chạy ngày 17/10/2026 sau khi thêm regression mapping Chat. |
 | Build source Java | PASS | Biên dịch 158 class chính và 23 class test bằng Java 17. |
 | Seed V3 `--verify v3` | Quyết định đã ghi nhận | CSV 20 Product, gồm 2 `DOG`, được TV1/nhóm giữ làm dữ liệu Shop. Validator/manifest cũ vẫn báo `count failure`; đây là nợ đồng bộ tài liệu/validator, không chạy lại seed để xử lý. |
 | Seed V3 self-test | PASS | Builder vẫn từ chối stock PuppyListing không hợp lệ. |
-| MySQL thật | Nghiệm thu một phần | Kết nối MySQL 8 thành công. Sáu account demo và `trungkhang` đã có trong database `pawconnect`; app user LAN `pawconnect_app` đã xác minh kết nối được từ host. Chưa nghiệm thu full app/MySQL integration test. |
+| MySQL/Railway thật | PASS schema và Seed V3 acceptance | Ngày 17/10/2026: backup tạo trước migration; `V4_1_0__rename_chat_message_read_column_mysql.sql` đã chạy trên `pawconnect`, `JPA_DDL_AUTO=validate` qua schema và `AdoptionSeedImportMySqlIntegrationTest` PASS. Dữ liệu hậu kiểm: 8 user, 30/30/36 record Seed V3 và các record vận hành thêm được giữ nguyên. Cần manual browser/Tomcat trên máy native trước release. |
 | Cloudinary thật | Cần nghiệm thu lại | Backend/test unit có; cần xác nhận upload, replace, delete trên MySQL chung trước demo. |
 
 ### 1.3. Blocker không được bỏ qua
 
 1. **Seed V3 validation cần đồng bộ sau demo.** `products.csv` có 20 record, gồm 2 `DOG` được TV1/nhóm chấp nhận cho Shop. Không khôi phục CSV và không phát hành Seed V4; chỉ ghi nhận validator/manifest/tài liệu cũ đang chưa phản ánh quyết định này.
-2. **MySQL profile chưa khởi động hoàn chỉnh.** Khi chạy profile `mysql`, Hibernate tạo `chat_messages.read`, nhưng `read` là từ khóa MySQL. Cần sửa mapping/migration Chat rồi chạy lại profile MySQL trước khi nhóm có thể login qua UI dùng database chung.
+2. **MySQL Chat schema đã được khắc phục, cần giữ nghiệm thu native.** Mapping Chat dùng `is_read`; migration `V4_1_0__rename_chat_message_read_column_mysql.sql` đã chạy sau backup trên Railway, `JPA_DDL_AUTO=validate` và MySQL Seed V3 acceptance đã PASS. Spring context đã khởi tạo JPA trên Railway; Tomcat/browser còn cần chạy thủ công trên máy native vì môi trường Codex không tạo được loopback selector.
 3. **Chia sẻ MySQL qua LAN chưa hoàn tất.** `pawconnect_app` đã tồn tại cho `localhost` và dải `192.168.1.*`; Windows firewall rule port `3306` cần được tạo từ PowerShell Administrator trên máy chủ `192.168.1.45`. Không chia sẻ credential qua Git/tài liệu công khai.
 4. **Chat chưa có giao diện nghiệp vụ hoàn chỉnh.** Auth UI/OTP/reset password đã có source và test H2; cần nghiệm thu SMTP và migration trên MySQL với environment local trước demo.
 5. **UI chưa thống nhất hoàn toàn.** Một số trang còn tiếng Anh/nội dung mẫu, Admin dùng layout riêng, và các nút không có nghiệp vụ hoặc route thật phải được xử lý.
@@ -87,7 +87,7 @@ Source H2/test đã hoạt động; giao diện header mới cần restart backe
 
 - [ ] Chạy migration V4 **một lần** trên MySQL local/shared theo quy trình nhóm; kiểm tra schema additive và dữ liệu user cũ còn nguyên.
 - [ ] Cấu hình biến môi trường MySQL/JWT/SMTP trong process chạy backend; restart Tomcat/backend sau cấu hình. Không commit hoặc in SMTP password/JWT secret ra terminal, docs hay Git.
-- [ ] Sửa mapping/migration Chat để không dùng tên cột `read` trên MySQL, sau đó chạy lại profile `mysql` và xác nhận backend khởi động hoàn chỉnh.
+- [x] Chạy migration Chat `V4_1_0__rename_chat_message_read_column_mysql.sql` trên Railway sau backup; `JPA_DDL_AUTO=validate` và MySQL Seed V3 acceptance PASS ngày 17/10/2026. Cần bổ sung manual browser/Tomcat trên máy native vào checklist release do môi trường Codex không tạo được loopback selector.
 - [ ] Trên máy chủ MySQL `192.168.1.45`, chạy PowerShell Administrator để đặt Wi-Fi là Private và tạo inbound firewall rule TCP `3306` cho subnet `192.168.1.0/24`; thành viên khác xác nhận kết nối LAN bằng app user đã được cấp riêng.
 - [ ] Manual E2E: register -> nhận OTP email PawConnect -> verify -> login username -> refresh -> logout -> login email -> forgot password -> verify reset OTP -> đổi password -> login lại.
 - [ ] Regression tất cả lỗi bảo mật: OTP hết hạn/sai quá số lần/cooldown/OTP cũ bị vô hiệu; reset token hết hạn/dùng lại; không dùng lại mật khẩu cũ; response quên mật khẩu không lộ account tồn tại.

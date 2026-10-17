@@ -7,5 +7,6 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
-      ddl-auto: ${JPA_DDL_AUTO:update}
+      # Shared/production MySQL must be migrated explicitly; do not let Hibernate mutate it on startup.
+      ddl-auto: ${JPA_DDL_AUTO:validate}
     show-sql: false

@@ -57,6 +57,7 @@ application-local.yml
 # ==============================
 # Database local files
 # ==============================
+backups/
 *.db
 *.sqlite
 *.sqlite3

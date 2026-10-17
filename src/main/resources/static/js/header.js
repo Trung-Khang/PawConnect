@@ -47,6 +47,7 @@
             }
             updateAccountAvatar(user.avatarUrl);
             updateRoleNavigation(user.role);
+            document.dispatchEvent(new CustomEvent('pawconnect:authenticated', { detail: user }));
             const action = document.getElementById('auth-action');
             if (action) {
                 action.textContent = 'Đăng xuất';
@@ -80,6 +81,7 @@
             .forEach((link) => link.hidden = true);
         document.getElementById('management-menu-toggle')?.setAttribute('hidden', '');
         closeManagementMenu();
+        document.dispatchEvent(new Event('pawconnect:signed-out'));
     }
 
     function updateRoleNavigation(role) {
@@ -135,7 +137,7 @@
     }
 
     function accountLabel(user) {
-        if (user.role !== 'CUSTOMER') return roleLabel(user.role);
+        if (user.role !== 'CUSTOMER') return user.fullName || user.username || roleLabel(user.role);
         const names = (user.fullName || '').trim().split(/\s+/).filter(Boolean);
         return names.at(-1) || user.username || 'Khách';
     }
