@@ -171,11 +171,16 @@ body .main-header > .container {
     text-decoration: none;
     transform: translateX(.2rem);
 }
+.account-profile-link[hidden] { display: none !important; }
 .header-avatar { width: 2rem; height: 2rem; border-radius: 50%; object-fit: cover; }
 .account-profile-link > [hidden] { display: none !important; }
 
 @media (min-width: 761px) {
     .header-auth-action { margin-right: -1rem; }
+    .main-header:not(.main-header-signed-in) .header-auth-action {
+        margin-right: 0;
+        margin-left: -.35rem;
+    }
 }
 
 .management-menu-toggle {
