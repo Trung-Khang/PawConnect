@@ -72,13 +72,20 @@ class ConversationServiceIntegrationTest {
                 });
         assertThat(conversationService.getMessages(first.id(), hcmManager.getEmail(), PageRequest.of(0, 20)).getContent())
                 .hasSize(1);
+        assertThat(conversationService.getMyConversations(hcmManager.getEmail()))
+                .singleElement().extracting(ConversationResponse::unreadCount).isEqualTo(1L);
         assertThat(conversationService.getMessages(first.id(), competingHcmManager.getEmail(), PageRequest.of(0, 20)).getContent())
                 .hasSize(1);
         assertThat(conversationService.getMessages(first.id(), hnManager.getEmail(), PageRequest.of(0, 20)).getContent())
                 .hasSize(1);
         assertThat(conversationService.sendMessage(first.id(), "Manager chi nhanh cung da phan hoi.", competingHcmManager.getEmail()).content())
                 .contains("phan hoi");
-        assertThat(conversationService.getMyConversations(hnManager.getEmail())).hasSize(1);
+        assertThat(conversationService.getMyConversations(hnManager.getEmail()))
+                .singleElement()
+                .satisfies(inboxItem -> {
+                    assertThat(inboxItem.unreadCount()).isZero();
+                    assertThat(inboxItem.assignedStaffId()).isEqualTo(competingHcmManager.getId());
+                });
     }
 
     private Branch branch(String code, String name) {

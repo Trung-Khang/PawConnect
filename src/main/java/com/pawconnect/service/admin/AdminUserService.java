@@ -7,6 +7,7 @@ import com.pawconnect.exception.BusinessException;
 import com.pawconnect.exception.ResourceNotFoundException;
 import com.pawconnect.repository.UserRepository;
 import com.pawconnect.security.SecurityUtils;
+import com.pawconnect.util.UserDisplayName;
 import java.util.List;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Sort;
@@ -74,7 +75,7 @@ public class AdminUserService {
     }
 
     private AdminUserResponse toResponse(User user) {
-        return new AdminUserResponse(user.getId(), user.getUsername(), user.getFullName(), user.getEmail(), user.getPhone(), user.getAvatarUrl(),
+        return new AdminUserResponse(user.getId(), user.getUsername(), UserDisplayName.of(user), user.getEmail(), user.getPhone(), user.getAvatarUrl(),
                 user.getRole().getName().name(), user.isActive(), user.isLocked(), user.isEmailVerified(), user.getCreatedAt());
     }
 }

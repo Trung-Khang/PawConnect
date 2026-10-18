@@ -22,6 +22,7 @@ import com.pawconnect.repository.UserRepository;
 import com.pawconnect.repository.AdoptionPostRepository;
 import com.pawconnect.repository.ProductRepository;
 import com.pawconnect.repository.PuppyListingRepository;
+import com.pawconnect.util.UserDisplayName;
 import java.time.Instant;
 import java.util.List;
 import org.springframework.data.domain.Page;
@@ -166,8 +167,10 @@ public class ConversationService {
     public Page<ChatMessageResponse> getMessages(Long conversationId, String email, Pageable pageable) {
         Conversation conversation = requireReadable(conversationId, email);
         User reader = currentUser(email);
-        markHandledWhenStaffOpens(conversation, reader);
-        messages.markUnreadFromOtherParticipantRead(conversation.getId(), reader.getId());
+        // Opening an inbox is not an acknowledgement. Customer messages are handled by a staff reply.
+        if (isCustomer(conversation, reader)) {
+            messages.markUnreadFromOtherParticipantRead(conversation.getId(), reader.getId());
+        }
         return messages.findByConversationIdOrderBySentAtDesc(conversation.getId(), pageable).map(this::toResponse);
     }
 
@@ -179,6 +182,11 @@ public class ConversationService {
         String normalizedContent = content == null ? "" : content.trim();
         if (normalizedContent.isEmpty()) throw new IllegalArgumentException("Message content must not be blank");
         Instant now = Instant.now();
+        if (!isCustomer(conversation, sender)) {
+            // The latest staff reply acknowledges customer messages and becomes the visible handler.
+            conversation.claim(sender, now);
+            messages.markUnreadCustomerMessagesHandled(conversation.getId());
+        }
         conversation.touch(now);
         return toResponse(messages.save(new ChatMessage(conversation, sender, normalizedContent)));
     }
@@ -247,11 +255,6 @@ public class ConversationService {
         return actor.isActive() && !actor.isLocked()
                 && (role == RoleName.ADMIN || role == RoleName.BRANCH_MANAGER);
     }
-    private void markHandledWhenStaffOpens(Conversation conversation, User actor) {
-        if (conversation.getAssignedStaff() == null && isEligibleConversationStaff(conversation, actor)) {
-            conversations.claimIfOpen(conversation.getId(), actor, Instant.now());
-        }
-    }
     private void appendSupportContext(Conversation conversation, User customer, CreateSupportConversationRequest request) {
         if (request.productId() != null) {
             Product product = products.findById(request.productId()).orElseThrow(() -> new ResourceNotFoundException("Product was not found"));
@@ -284,7 +287,7 @@ public class ConversationService {
                 : isEligibleConversationStaff(value, viewer) ? messages.countUnreadMessagesBySenderRole(value.getId(), RoleName.CUSTOMER) : 0;
         return new ConversationResponse(value.getId(), value.getType(), value.getStatus(), value.getCustomer().getId(),
                 value.getCustomer().getFullName(), value.getCustomer().getAvatarUrl(),
-                staff == null ? null : staff.getId(), staff == null ? null : staff.getFullName(),
+                staff == null ? null : staff.getId(), UserDisplayName.of(staff),
                 value.getBranch() == null ? null : value.getBranch().getId(), value.getAdoptionPostId(),
                 value.getProductId(), value.getPuppyListingId(), value.getAssignedAt(), value.getLastMessageAt(), value.getCreatedAt(), unreadCount,
                 lastMessagePreview);
@@ -292,7 +295,7 @@ public class ConversationService {
 
     private ChatMessageResponse toResponse(ChatMessage message) {
         return new ChatMessageResponse(message.getId(), message.getConversation().getId(), message.getSender().getId(),
-                message.getSender().getFullName(), message.getSender().getRole().getName().name(), message.getContent(),
+                UserDisplayName.of(message.getSender()), message.getSender().getRole().getName().name(), message.getContent(),
                 message.getSentAt(), message.isRead(), message.getMessageType(), message.getContextUrl(), message.getContextTitle(),
                 message.getContextSummary(), message.getContextImageUrl());
     }

@@ -95,7 +95,10 @@ Hiện tại nút **Mua ngay** chỉ thêm item vào giỏ và mở giỏ. Entit
 - [ ] Lưu snapshot tối thiểu cho order item: tên item, đơn giá tại thời điểm mua và số lượng, để lịch sử không đổi khi catalog bị sửa/xóa.
 - [ ] Trừ hoặc giữ tồn kho đúng một lần, rollback toàn bộ khi có item hết hàng, xóa/cập nhật cart sau khi order được tạo thành công và chống tạo đơn trùng khi khách nhấn nhiều lần.
 - [ ] Chuẩn hóa trạng thái và transition: `PENDING_PAYMENT`, `PAID`, `CONFIRMED`, `PREPARING`, `SHIPPING` hoặc `READY_FOR_PICKUP`, `COMPLETED`, `CANCELLED`, `REFUNDED`. Mỗi transition phải kiểm tra trạng thái trước đó, role, branch và lưu audit tối thiểu ai/thời điểm/lý do.
-- [ ] Bổ sung trang **Đơn mua của tôi**, chi tiết đơn, hủy đơn khi còn hợp lệ và thông báo trạng thái. Customer chỉ đọc/sửa đơn của chính mình; branch manager chỉ xử lý đơn chi nhánh mình; admin xem toàn hệ thống.
+- [ ] Giữ **một** mục menu **Đơn của tôi** cho customer, không tạo thêm menu “Đơn mua hàng”. Trang này phải là nơi tập trung toàn bộ giao dịch và có ít nhất hai tab: **Đơn mua hàng** (mặc định khi luồng commerce hoàn tất) và **Đơn nhận nuôi**.
+- [ ] Tab **Đơn mua hàng** hiển thị lịch sử mua sản phẩm/phụ kiện: mã đơn, thời điểm, tổng tiền, phương thức/trạng thái thanh toán, trạng thái xử lý-giao/nhận hàng, nút xem chi tiết bill và hủy đơn khi còn hợp lệ.
+- [ ] Tab **Đơn nhận nuôi** giữ luồng hiện tại tại `/adoptions/my-applications`: trạng thái chờ/duyệt/từ chối, thời điểm gửi và liên kết về bài nhận nuôi. Có thể tái sử dụng component/API hiện có nhưng phải chuyển entry điều hướng về trang **Đơn của tôi** thống nhất.
+- [ ] Customer chỉ đọc/sửa đơn của chính mình; branch manager chỉ xử lý đơn chi nhánh mình; admin xem toàn hệ thống. Mọi dữ liệu hai tab phải được phân quyền ở API, không chỉ ẩn bằng giao diện.
 - [ ] Chốt phương thức thanh toán với nhóm trước khi code: tối thiểu hỗ trợ COD hoặc mô phỏng thanh toán cho demo. Nếu tích hợp cổng thật như VNPay, MoMo hoặc Stripe, callback/webhook phải xác thực chữ ký, idempotent, không tin trạng thái trả về từ browser và không commit credential.
 
 **Nghiệm thu:** customer checkout được từ cart, chỉ một order được tạo cho một lần xác nhận, stock/tổng tiền đúng, trạng thái không nhảy sai và các role không truy cập/sửa order vượt quyền.

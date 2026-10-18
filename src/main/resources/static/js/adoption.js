@@ -1,5 +1,5 @@
 (function () {
-    const state = { posts: [], branches: [], user: null, currentPost: null };
+    const state = { posts: [], branches: [], user: null, currentPost: null, managedApplicationsPoll: null };
     const path = window.location.pathname;
     const ACCESS_TOKEN_KEY = 'pawconnect.accessToken';
     const REFRESH_TOKEN_KEY = 'pawconnect.refreshToken';
@@ -73,12 +73,20 @@
             accountStatus.textContent = role === 'ADMIN'
                 ? 'Quản trị viên'
                 : role === 'BRANCH_MANAGER'
-                    ? 'Quản lý chi nhánh'
+                    ? supportDisplayName(state.user?.fullName) || 'Nhân viên chi nhánh'
                     : 'Khách';
         }
         document.querySelectorAll('[data-customer-only]').forEach((link) => link.hidden = role !== 'CUSTOMER');
         document.querySelectorAll('[data-staff-only]').forEach((link) => link.hidden = !isStaff());
         document.querySelectorAll('[data-admin-only]').forEach((link) => link.hidden = role !== 'ADMIN');
+    }
+
+    function supportDisplayName(name) {
+        return ({
+            'Quản lý TP.HCM': 'Nhân viên TP.HCM',
+            'Quản lý Hà Nội': 'Nhân viên Hà Nội',
+            'Quản lý Đà Nẵng': 'Nhân viên Đà Nẵng'
+        })[name] || name;
     }
 
     async function showList() {
@@ -113,6 +121,7 @@
             }
             if (isStaff()) await loadBranches();
             renderDetail(state.currentPost);
+            await refreshApplicationState();
         } catch (error) {
             showError(error.message);
         }
@@ -138,13 +147,15 @@
             `Giới tính: ${dog.gender === 'MALE' ? 'Đực' : dog.gender === 'FEMALE' ? 'Cái' : 'Chưa cập nhật'}`,
             `Tiêm chủng: ${vaccinationLabel(dog.vaccinationStatus)}`,
             `Ghi chú sức khỏe: ${post.healthNote || 'Chưa cập nhật'}`,
+            `Chi nhánh đăng: ${post.branchName || 'Chưa cập nhật'}`,
             `Mã bài: ${post.id}`,
             `Đăng lúc: ${formatDate(post.createdAt)}`
         ].forEach((value) => meta.append(textElement('span', value)));
         content.append(meta);
         detail.append(content);
 
-        document.getElementById('application-form').hidden = state.user?.role !== 'CUSTOMER';
+        document.getElementById('application-form').hidden = state.user?.role !== 'CUSTOMER' || post.status !== 'AVAILABLE';
+        document.getElementById('application-status-hint').hidden = true;
         document.getElementById('application-login-hint').hidden = Boolean(state.user) || state.user?.role === 'CUSTOMER';
         const chatEntry = document.getElementById('consultation-chat-entry');
         const chatButton = document.getElementById('open-adoption-chat');
@@ -187,7 +198,7 @@
         setPage('manage', 'Quản lý nhận nuôi', 'Tạo bài nhận nuôi và xử lý đơn thuộc phạm vi được phân quyền.');
         if (!isStaff()) {
             document.querySelector('#manage-view .manage-layout').hidden = true;
-            return showError('Đăng nhập bằng tài khoản Admin hoặc Quản lý chi nhánh để sử dụng trang này.');
+            return showError('Đăng nhập bằng tài khoản Admin hoặc Nhân viên chi nhánh để sử dụng trang này.');
         }
         document.querySelector('#manage-view .manage-layout').hidden = false;
         try {
@@ -199,6 +210,12 @@
         showStoredNotice();
         await loadManagedApplications();
         await loadManagedPosts();
+        startManagedApplicationsPolling();
+    }
+
+    function startManagedApplicationsPolling() {
+        if (state.managedApplicationsPoll) window.clearInterval(state.managedApplicationsPoll);
+        state.managedApplicationsPoll = window.setInterval(loadManagedApplications, 10000);
     }
 
     async function loadManagedApplications() {
@@ -248,28 +265,65 @@
             const row = document.createElement('article');
             row.className = 'application-row';
             row.append(statusElement(application.status));
+            if (manageable) row.append(textElement('strong', application.applicantName || 'Khách hàng'));
             row.append(textElement('p', application.message));
-            row.append(textElement('small', `Bài nhận nuôi #${application.adoptionPostId} · ${formatDate(application.createdAt)}`));
+            const details = document.createElement('div');
+            details.className = 'application-actions';
+            const postLink = document.createElement('a');
+            postLink.className = 'secondary-button';
+            postLink.href = `/adoptions/${application.adoptionPostId}`;
+            postLink.textContent = `Xem bài nhận nuôi #${application.adoptionPostId}`;
+            details.append(postLink);
+            row.append(textElement('small', `${application.status === 'PENDING' ? 'Gửi lúc' : 'Cập nhật lúc'}: ${formatDate(application.status === 'PENDING' ? application.createdAt : application.updatedAt)}`));
             if (manageable && application.status === 'PENDING') {
-                const actions = document.createElement('div');
-                actions.className = 'application-actions';
-                actions.append(actionButton('Duyệt đơn', () => updateApplication(application.id, 'approve')));
-                actions.append(actionButton('Từ chối', () => updateApplication(application.id, 'reject'), true));
-                row.append(actions);
+                details.append(actionButton('Duyệt đơn', () => updateApplication(application.id, 'approve')));
+                details.append(actionButton('Từ chối', () => updateApplication(application.id, 'reject'), true));
             }
+            row.append(details);
             container.append(row);
         });
     }
 
     async function submitApplication(event) {
         event.preventDefault();
+        const form = event.currentTarget;
+        const submitButton = form.querySelector('button[type="submit"]');
+        if (submitButton.disabled) return;
+        submitButton.disabled = true;
         try {
             await request(`/api/adoptions/${state.currentPost.id}/apply`, {
-                method: 'POST', body: { message: event.currentTarget.message.value }
+                method: 'POST', body: { message: form.message.value }
             });
-            event.currentTarget.reset();
-            showNotice('Đơn đăng ký đã được gửi.');
-        } catch (error) { showError(error.message); }
+            form.reset();
+            showNotice('Đơn đăng ký đã được gửi. Nhân viên sẽ xem xét và phản hồi sớm nhất có thể.');
+            await refreshApplicationState();
+        } catch (error) {
+            showError(error.message);
+            submitButton.disabled = false;
+        }
+    }
+
+    async function refreshApplicationState() {
+        const form = document.getElementById('application-form');
+        const hint = document.getElementById('application-status-hint');
+        if (state.user?.role !== 'CUSTOMER' || !state.currentPost) {
+            hint.hidden = true;
+            return;
+        }
+        try {
+            const applications = await request('/api/adoptions/applications/my');
+            const existing = applications.find((application) => Number(application.adoptionPostId) === Number(state.currentPost.id));
+            if (!existing) return;
+            form.hidden = true;
+            hint.hidden = false;
+            hint.textContent = existing.status === 'PENDING'
+                ? 'Bạn đã gửi đơn đăng ký cho bài này. Đơn đang chờ nhân viên chi nhánh xử lý.'
+                : existing.status === 'APPROVED'
+                    ? 'Đơn đăng ký của bạn đã được duyệt. Nhân viên sẽ hỗ trợ bạn trong cuộc trò chuyện.'
+                    : 'Đơn đăng ký trước đó đã được từ chối hoặc bài nhận nuôi đã đóng.';
+        } catch (_) {
+            // Keep the form available if the status lookup temporarily fails.
+        }
     }
 
     async function updatePost(event) {

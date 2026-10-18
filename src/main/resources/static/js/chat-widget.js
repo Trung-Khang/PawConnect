@@ -120,6 +120,7 @@
             }
             state.conversations.forEach((item) => subscribe(item.id));
             updateBadge();
+            updateActiveConversationStatus();
             if (document.getElementById('chatWidgetDrawer')) syncOpenDrawer();
         } catch (_) {
             // A failed background refresh must never replace the active message composer.
@@ -362,7 +363,10 @@
     }
 
     function renderConversation(panel, conversation, history) {
-        panel.replaceChildren(); panel.append(el('p', 'chat-widget-notice', staffStatus(conversation)));
+        panel.replaceChildren();
+        const notice = el('p', 'chat-widget-notice', staffStatus(conversation));
+        notice.dataset.conversationStatus = 'true';
+        panel.append(notice);
         const messages = el('div', 'chat-widget-messages'); messages.dataset.conversationId = String(conversation.id);
         history.forEach((message) => appendMessage(messages, message)); messages.scrollTop = messages.scrollHeight; panel.append(messages);
         if (conversation.status !== 'CLOSED') panel.append(composer(conversation.id, messages));
@@ -383,8 +387,11 @@
                 messages.dataset.conversationId = String(activeConversationId);
                 const response = await fetch(`/api/conversations/${activeConversationId}/messages`, { method: 'POST', headers: headers(), body: JSON.stringify({ conversationId: activeConversationId, content }) });
                 if (!response.ok) { await showError(form, response); return; }
-                appendMessage(messages, await response.json()); // WebSocket delivery is deduplicated by message id.
-                input.value = ''; refresh();
+                const sentMessage = await response.json();
+                appendMessage(messages, sentMessage); // WebSocket delivery is deduplicated by message id.
+                updateLocalConversationAfterReply(activeConversationId, sentMessage);
+                input.value = '';
+                refresh();
             } catch (_) {
                 form.prepend(el('p', 'chat-widget-notice', 'Không thể gửi tin nhắn. Nội dung vẫn được giữ để bạn thử lại.'));
             } finally {
@@ -605,6 +612,30 @@
     }
 
     function selected() { return state.conversations.find((item) => item.id === state.selectedId) || null; }
+    function updateLocalConversationAfterReply(conversationId, message) {
+        if (!state.user || state.user.role === 'CUSTOMER') return;
+        const conversation = state.conversations.find((item) => item.id === conversationId);
+        if (!conversation) return;
+        conversation.assignedStaffId = state.user.id;
+        conversation.assignedStaffName = supportDisplayName(state.user.fullName);
+        conversation.lastMessageAt = message.sentAt || new Date().toISOString();
+        conversation.lastMessagePreview = message.content || conversation.lastMessagePreview;
+        conversation.unreadCount = 0;
+        updateBadge();
+        updateActiveConversationStatus();
+    }
+    function updateActiveConversationStatus() {
+        const notice = document.querySelector('#chatWidgetDrawer [data-conversation-status="true"]');
+        const conversation = selected();
+        if (notice && conversation) notice.textContent = staffStatus(conversation);
+    }
+    function supportDisplayName(name) {
+        return ({
+            'Quản lý TP.HCM': 'Nhân viên TP.HCM',
+            'Quản lý Hà Nội': 'Nhân viên Hà Nội',
+            'Quản lý Đà Nẵng': 'Nhân viên Đà Nẵng'
+        })[name] || name;
+    }
     function staffStatus(item) { return item.status === 'CLOSED' ? 'Cuộc trò chuyện đã đóng.' : (item.assignedStaffName ? `Đang được ${item.assignedStaffName} hỗ trợ.` : 'Đang chờ nhân viên PawConnect hỗ trợ.'); }
     async function showError(parent, response) { let text = 'Thao tác chưa thực hiện được.'; try { text = (await response.json()).message || text; } catch (_) {} parent.prepend(el('p', 'chat-widget-notice', text)); }
     function el(tag, className, text) { const node = document.createElement(tag); if (className) node.className = className; if (text != null) node.textContent = text; return node; }

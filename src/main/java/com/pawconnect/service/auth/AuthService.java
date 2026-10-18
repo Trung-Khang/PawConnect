@@ -21,6 +21,7 @@ import com.pawconnect.repository.PasswordResetSessionRepository;
 import com.pawconnect.repository.RoleRepository;
 import com.pawconnect.repository.UserRepository;
 import com.pawconnect.security.JwtService;
+import com.pawconnect.util.UserDisplayName;
 import io.jsonwebtoken.JwtException;
 import java.security.SecureRandom;
 import java.time.Duration;
@@ -185,7 +186,7 @@ public class AuthService {
                 : new AuthMessageResponse("Chưa thể gửi email. Vui lòng thử lại sau.", false, result.retryAfterSeconds());
     }
     private AuthResponse tokensFor(User user) { return new AuthResponse(jwtService.generateAccessToken(user), jwtService.generateRefreshToken(user), "Bearer", toResponse(user)); }
-    private UserResponse toResponse(User user) { return new UserResponse(user.getId(), user.getUsername(), user.getFullName(), user.getEmail(), user.getPhone(), user.getAvatarUrl(), user.getRole().getName().name(), user.getCreatedAt()); }
+    private UserResponse toResponse(User user) { return new UserResponse(user.getId(), user.getUsername(), UserDisplayName.of(user), user.getEmail(), user.getPhone(), user.getAvatarUrl(), user.getRole().getName().name(), user.getCreatedAt()); }
     private User findByEmail(String email) { return users.findByEmailIgnoreCase(email).orElseThrow(() -> new ResourceNotFoundException("Account was not found")); }
     private User findByIdentity(String identity) { User user = findByIdentityOrNull(identity); if (user == null) throw new AuthException(HttpStatus.BAD_REQUEST, "Thông tin xác minh không hợp lệ."); return user; }
     private User findByIdentityOrNull(String identity) {

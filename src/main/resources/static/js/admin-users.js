@@ -121,7 +121,7 @@
 
     function roleLabel(role) {
         if (role === 'ADMIN') return 'Quản trị viên';
-        if (role === 'BRANCH_MANAGER') return 'Quản lý chi nhánh';
+        if (role === 'BRANCH_MANAGER') return 'Nhân viên chi nhánh';
         return 'Khách hàng';
     }
 })();
