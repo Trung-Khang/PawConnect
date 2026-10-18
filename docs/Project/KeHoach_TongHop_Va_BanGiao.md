@@ -82,40 +82,76 @@ Tài liệu contract chi tiết vẫn được giữ riêng tại `auth_token_co
 - Khi đưa lên production, cần chạy WebSocket trên HTTPS/WSS, cấu hình origin/domain chuẩn và theo dõi retry; không xem polling liên tục là cơ chế realtime chính.
 - Cần đo thời gian mở widget/tư vấn với Railway thật. Mục tiêu là không reload toàn chatbox và chỉ có một tải lịch sử cho thao tác mở một context.
 
-## 4. Phần đã có nhưng chưa được xem là hoàn tất
+## 4. Bàn giao TV3 - Hoàn thiện backend, mobile và release
 
-### 4.1. Thương mại điện tử khách hàng
+**Owner:** TV3. Mục này thay thế toàn bộ danh sách “chưa hoàn tất” trước đây bằng đầu việc có tiêu chí nghiệm thu rõ ràng. TV3 có thể tách thành nhiều commit/PR, nhưng không được thay đổi contract chat một khách - một inbox hoặc làm giảm phân quyền hiện có để test dễ hơn.
 
-Source đã có giỏ hàng, entity/API order, order item và màn quản trị đơn. Có kiểm thử service liên quan tới trừ tồn kho/ủy quyền. Tuy vậy, **chưa được coi là chức năng mua hàng hoàn chỉnh** vì giao diện khách hiện hành khi bấm **Mua ngay** chỉ:
+### 4.1. Checkout, mua hàng và quản lý đơn
 
-1. Gọi thêm item vào giỏ.
-2. Mở giỏ hàng.
+Hiện tại nút **Mua ngay** chỉ thêm item vào giỏ và mở giỏ. Entity/API order cùng logic trừ tồn kho đã có, nhưng luồng mua phía khách chưa hoàn chỉnh. TV3 thực hiện:
 
-Các phần bắt buộc còn thiếu:
+- [ ] Thiết kế màn checkout Bootstrap 5 cho customer: thông tin nhận hàng, chi nhánh, danh sách item, số lượng, giá, tổng tiền, phí (nếu áp dụng), phương thức thanh toán và nút xác nhận.
+- [ ] Tạo order từ cart ở server-side transaction. Không nhận `userId`, giá hay tổng tiền từ client; lấy user từ JWT và tính lại giá/tổng từ dữ liệu server.
+- [ ] Lưu snapshot tối thiểu cho order item: tên item, đơn giá tại thời điểm mua và số lượng, để lịch sử không đổi khi catalog bị sửa/xóa.
+- [ ] Trừ hoặc giữ tồn kho đúng một lần, rollback toàn bộ khi có item hết hàng, xóa/cập nhật cart sau khi order được tạo thành công và chống tạo đơn trùng khi khách nhấn nhiều lần.
+- [ ] Chuẩn hóa trạng thái và transition: `PENDING_PAYMENT`, `PAID`, `CONFIRMED`, `PREPARING`, `SHIPPING` hoặc `READY_FOR_PICKUP`, `COMPLETED`, `CANCELLED`, `REFUNDED`. Mỗi transition phải kiểm tra trạng thái trước đó, role, branch và lưu audit tối thiểu ai/thời điểm/lý do.
+- [ ] Bổ sung trang **Đơn mua của tôi**, chi tiết đơn, hủy đơn khi còn hợp lệ và thông báo trạng thái. Customer chỉ đọc/sửa đơn của chính mình; branch manager chỉ xử lý đơn chi nhánh mình; admin xem toàn hệ thống.
+- [ ] Chốt phương thức thanh toán với nhóm trước khi code: tối thiểu hỗ trợ COD hoặc mô phỏng thanh toán cho demo. Nếu tích hợp cổng thật như VNPay, MoMo hoặc Stripe, callback/webhook phải xác thực chữ ký, idempotent, không tin trạng thái trả về từ browser và không commit credential.
 
-- Trang checkout cho khách: địa chỉ/nhận hàng, chi nhánh, tóm tắt giá, phí, phương thức thanh toán và xác nhận đặt đơn.
-- Cổng thanh toán thật hoặc chiến lược thanh toán khi nhận hàng được phê duyệt; callback/webhook phải được xác thực và idempotent.
-- Tạo order từ cart trong transaction, snapshot tên/giá/item tại thời điểm mua, giữ/trừ tồn kho đúng một lần, xử lý hết hàng cạnh tranh và xóa/cập nhật cart sau thành công.
-- Trạng thái thống nhất tối thiểu: `PENDING_PAYMENT`, `PAID`, `CONFIRMED`, `PREPARING`, `SHIPPING` hoặc `READY_FOR_PICKUP`, `COMPLETED`, `CANCELLED`, `REFUNDED`. Chỉ chuyển trạng thái hợp lệ và lưu audit ai/thời điểm/lý do.
-- Lịch sử đơn hàng phía khách, trang chi tiết đơn, hủy đơn đúng điều kiện, thông báo trạng thái và quyền xem đơn chỉ cho chủ đơn hoặc staff hợp lệ.
-- Biên lai/xác nhận đơn có thể in hoặc tải; chỉ phát hành sau điều kiện thanh toán/xác nhận đã được thống nhất. Không tự gọi là hóa đơn VAT nếu chưa có yêu cầu dữ liệu pháp lý.
-- Ràng buộc tài khoản: chỉ customer đăng nhập, đang hoạt động/không bị khóa được checkout; xác nhận email/địa chỉ/số điện thoại theo chính sách nhóm; không để client truyền `userId`, tổng tiền hoặc giá item tùy ý.
-- Kiểm thử API, security, transaction/concurrency và UI end-to-end cho toàn bộ vòng đời trên.
+**Nghiệm thu:** customer checkout được từ cart, chỉ một order được tạo cho một lần xác nhận, stock/tổng tiền đúng, trạng thái không nhảy sai và các role không truy cập/sửa order vượt quyền.
 
-### 4.2. Release và mobile
+### 4.2. Bill, xác nhận và in ấn
 
-- Chưa có website public được nghiệm thu end-to-end. Cần triển khai backend thành service Railway/hosting phù hợp, database private, biến môi trường thật, domain/HTTPS và WSS.
-- Chưa có quy trình deploy chính thức, smoke test sau deploy, backup/restore, monitoring/log alert hoặc rollback release.
-- Chưa nghiệm thu responsive mobile cho toàn bộ luồng: header, shop/filter, modal, cart/checkout tương lai, adoption, chat widget và các trang quản trị theo phạm vi cần thiết.
-- Cloudinary, SMTP và các biến bảo mật production cần được xác minh trên môi trường thật; tuyệt đối không commit key/secret vào Git.
+- [ ] Tạo trang xác nhận đơn sau checkout và trang chi tiết bill/biên lai cho customer và staff hợp lệ.
+- [ ] Bill phải có mã đơn, thời gian, khách hàng, chi nhánh, danh sách item, số lượng, đơn giá snapshot, tổng tiền, phương thức và trạng thái thanh toán/đơn.
+- [ ] Có nút in bằng CSS `@media print`; chỉ bổ sung PDF khi có thư viện/đầu ra ổn định và kiểm thử được. Không gọi là hóa đơn VAT nếu nhóm chưa xây dữ liệu hóa đơn hợp lệ.
+- [ ] Bill chỉ xem được bởi chủ đơn, branch manager đúng chi nhánh hoặc admin. Không để ID tuần tự trong URL trở thành cách truy cập dữ liệu người khác.
 
-### 4.3. Việc kỹ thuật còn mở
+**Nghiệm thu:** in preview đúng khổ A4, không in header/chat/navigation thừa, thông tin khớp order server-side và kiểm tra quyền trả về `403` khi truy cập trái phép.
 
-- Đối soát đầy đủ migration trên Railway, đặc biệt V4.5 trước khi dùng tên nhân viên mới trong demo shared database.
-- Kiểm kê/chuẩn hóa seed catalog nếu dữ liệu file và manifest không khớp; không tự reseed database dùng chung đang có dữ liệu demo.
-- Bổ sung kiểm thử UI/E2E và kiểm thử WebSocket/reconnect cho chat. Test Java xanh không thay thế được kiểm thử trình duyệt.
-- Rà soát accessibility, trạng thái loading/error/empty state và văn bản tiếng Việt cho mọi trang trước release.
-- Phân công rõ owner và acceptance criteria cho mỗi task thay vì tiếp tục gộp yêu cầu UI, nghiệp vụ và hạ tầng trong một ticket.
+### 4.3. Phân quyền, branch isolation và dữ liệu còn thiếu
+
+- [ ] Sửa `BookingService` để branch manager chỉ cập nhật booking thuộc chi nhánh của mình; thêm test cho nhánh bị từ chối.
+- [ ] Chốt và áp dụng rule xóa product theo đặc tả: chỉ `ADMIN` được xóa, hoặc cập nhật tài liệu/ERD nếu nhóm chính thức chọn cho branch manager xóa item của chính chi nhánh. Không chỉ đổi UI, phải kiểm tra server-side.
+- [ ] Bổ sung quản lý chi nhánh cấp admin nếu đây vẫn là phạm vi đề tài: danh sách, tạo, sửa, vô hiệu hóa/xóa có kiểm tra dữ liệu phụ thuộc.
+- [ ] Rà soát mapping/cascade, foreign key, index và ERD theo source thực tế, đặc biệt mô hình tách `PuppyListing` khỏi `Product` thay cho `isBreedingDog`.
+- [ ] Đối soát migration Railway, gồm V4.5, theo quy trình backup/xác nhận trước khi chạy; không reseed shared database đang có dữ liệu demo.
+
+**Nghiệm thu:** mọi endpoint nhạy cảm có test `CUSTOMER`/manager sai chi nhánh/admin; không có API nào chỉ dựa vào việc ẩn nút ở frontend.
+
+### 4.4. Site mobile bằng Bootstrap 5
+
+Bootstrap 5 là công nghệ bắt buộc theo tên đề tài. TV3 phải tích hợp và **sử dụng thực tế**, không chỉ thêm một thẻ CDN.
+
+- [ ] Đưa Bootstrap 5 CSS và Bootstrap Bundle JS vào layout/header dùng chung bằng phiên bản cố định; tránh nạp trùng trên từng trang.
+- [ ] Dùng class/component Bootstrap trong các màn chính: `container`, `row`, `col-*`, `navbar`, `offcanvas`, `btn`, `form-control`, `modal`, `toast`, `spinner` hoặc tương đương phù hợp.
+- [ ] Làm responsive cho header/menu, shop/filter/card/modal, cart/checkout/bill, service booking, adoption, profile/auth, chat widget và các màn quản trị trong phạm vi demo.
+- [ ] Giữ màu sắc và nhận diện PawConnect hiện có; không thay toàn bộ giao diện bằng theme Bootstrap mặc định hoặc phá CSS chat đang ổn định.
+- [ ] Kiểm tra ít nhất viewport 320px, 375px, 390px, 768px, 1024px và desktop. Không có text/nút/modal bị tràn, che nhau hoặc không thao tác được.
+
+**Nghiệm thu:** có bằng chứng source dùng Bootstrap 5 thực tế và các luồng khách chính chạy được trên mobile, không chỉ co nhỏ giao diện desktop.
+
+### 4.5. Production, Railway và vận hành
+
+- [ ] Deploy backend lên Railway/hosting được nhóm chốt, dùng profile production, MySQL private, HTTPS và WebSocket qua WSS.
+- [ ] Cấu hình biến môi trường cho database, JWT, SMTP, Cloudinary và allowed origin; không commit `.env`, password, token hoặc URL private.
+- [ ] Kiểm tra Cloudinary upload/xóa ảnh và SMTP/OTP thật trên staging/production; ghi nhận lỗi rõ nếu provider không khả dụng.
+- [ ] Viết runbook ngắn: deploy, migration, smoke test, backup/rollback, log cần kiểm tra và cách quay về bản release trước.
+- [ ] Thiết lập smoke test sau deploy cho auth, shop, booking, adoption, cart/order, chat WebSocket và upload ảnh.
+
+**Nghiệm thu:** môi trường public/staging mở được qua HTTPS, API/auth/WebSocket hoạt động đúng origin, không lộ secret và có cách rollback đã thử nghiệm.
+
+### 4.6. Checklist kiểm thử bắt buộc của TV3
+
+- [ ] `mvn clean test` không có failure/error; bổ sung test cho checkout, order state transition, stock race, idempotency, booking cross-branch và authorization.
+- [ ] Test API bằng ít nhất customer, manager TP.HCM, manager Hà Nội/Đà Nẵng và admin; kiểm tra `401`/`403` cho mọi truy cập sai.
+- [ ] Test đồng thời: hai customer checkout item stock 1; nhấn xác nhận liên tiếp; payment callback bị gửi lại; hai staff đổi trạng thái đơn cùng lúc.
+- [ ] Test bill: chủ đơn/staff đúng branch/admin xem được; user khác và manager sai branch bị chặn.
+- [ ] Test responsive bằng DevTools/device thật; kiểm tra console, network, loading/error/empty states và hard refresh để loại trừ cache cũ.
+- [ ] Test chat regression: một customer một inbox, context/deep-link đúng, realtime/reconnect không nhân đôi hoặc mất message. Không refactor chat ngoài việc cần thiết cho Bootstrap/mobile.
+- [ ] Báo cáo bàn giao gồm commit/PR, migration đã chạy, biến môi trường cần có (chỉ tên biến), kết quả test, ảnh desktop/mobile, known issues và hướng rollback.
+
+**Điều kiện hoàn thành mục 4:** toàn bộ checklist liên quan được đánh dấu, có commit/evidence, TV1 regression UI pass và không có lỗi P0/P1 về thanh toán, stock, quyền, chat hoặc deploy.
 
 ## 5. Bàn giao kiểm thử cho TV1
 
@@ -152,11 +188,11 @@ Kiểm thử tối thiểu bằng: khách chưa đăng nhập, `CUSTOMER`, Nhân
 
 ## 6. Thứ tự ưu tiên tiếp theo
 
-1. **TV1:** hoàn tất checklist regression chat/shop/adoption ở mục 5; ghi rõ lỗi để sửa trước demo.
-2. **Nhóm backend + frontend:** thiết kế và triển khai checkout/order lifecycle trước khi quảng bá chức năng “Mua ngay”; chốt payment provider và chính sách hủy/hoàn tiền trước khi code.
-3. **TV3/hạ tầng:** đối soát Railway migration, secrets, SMTP/Cloudinary, HTTPS/WSS và production security; chuẩn bị deploy/rollback guide không chứa secret.
-4. **TV2 + TV1:** nghiệm thu performance chat/deep-link, bổ sung E2E/reconnect tests, xử lý catalog seed debt và hoàn thiện responsive mobile.
-5. **Cả nhóm:** deploy staging/public, smoke test theo role, sau đó mới xác nhận release demo hoặc release thật.
+1. **TV3:** thực hiện mục 4 theo thứ tự checkout/order, phân quyền backend, bill, Bootstrap 5/mobile, rồi staging/release. Chốt phương thức thanh toán và chính sách hủy/hoàn tiền trước khi code.
+2. **TV1:** hoàn tất checklist regression chat/shop/adoption ở mục 5 và retest các thay đổi TV3; ghi rõ lỗi để sửa trước demo.
+3. **TV2 + TV1:** nghiệm thu performance chat/deep-link, bổ sung E2E/reconnect test theo phạm vi chat và xử lý catalog seed debt. Không thay đổi contract chat đã chốt.
+4. **TV3/hạ tầng:** đối soát Railway migration, secrets, SMTP/Cloudinary, HTTPS/WSS, smoke test và deploy/rollback guide không chứa secret.
+5. **Cả nhóm:** chỉ xác nhận staging/public hoặc release demo sau khi checklist TV3 và regression TV1 đều pass.
 
 ## 7. Quy tắc vận hành và bàn giao
 
