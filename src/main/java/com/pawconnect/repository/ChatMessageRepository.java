@@ -19,6 +19,11 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
             + "and message.sender.id <> :readerId and message.read = false")
     int markUnreadFromOtherParticipantRead(@Param("conversationId") Long conversationId, @Param("readerId") Long readerId);
 
+    @Modifying
+    @Query("update ChatMessage message set message.read = true where message.conversation.id = :conversationId "
+            + "and message.sender.role.name = com.pawconnect.entity.RoleName.CUSTOMER and message.read = false")
+    int markUnreadCustomerMessagesHandled(@Param("conversationId") Long conversationId);
+
     @Query("select count(message) from ChatMessage message where message.conversation.id = :conversationId "
             + "and message.sender.id <> :readerId and message.read = false")
     long countUnreadForReader(@Param("conversationId") Long conversationId, @Param("readerId") Long readerId);

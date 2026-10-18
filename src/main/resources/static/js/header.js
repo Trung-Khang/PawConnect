@@ -132,14 +132,22 @@
 
     function roleLabel(role) {
         if (role === 'ADMIN') return 'Quản trị viên';
-        if (role === 'BRANCH_MANAGER') return 'Quản lý chi nhánh';
+        if (role === 'BRANCH_MANAGER') return 'Nhân viên chi nhánh';
         return 'Khách';
     }
 
     function accountLabel(user) {
-        if (user.role !== 'CUSTOMER') return user.fullName || user.username || roleLabel(user.role);
+        if (user.role !== 'CUSTOMER') return supportDisplayName(user.fullName) || user.username || roleLabel(user.role);
         const names = (user.fullName || '').trim().split(/\s+/).filter(Boolean);
         return names.at(-1) || user.username || 'Khách';
+    }
+
+    function supportDisplayName(name) {
+        return ({
+            'Quản lý TP.HCM': 'Nhân viên TP.HCM',
+            'Quản lý Hà Nội': 'Nhân viên Hà Nội',
+            'Quản lý Đà Nẵng': 'Nhân viên Đà Nẵng'
+        })[name] || name;
     }
 
     function updateAccountAvatar(avatarUrl) {

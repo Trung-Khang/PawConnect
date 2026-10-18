@@ -263,7 +263,7 @@ public class AdoptionService {
         }
         if (adoptionApplicationRepository.existsByAdoptionPostIdAndApplicantIdAndStatus(
                 postId, applicant.getId(), AdoptionApplicationStatus.PENDING)) {
-            throw new ResourceConflictException("Customer already has a pending application for this adoption post");
+            throw new ResourceConflictException("Bạn đã gửi một đơn đăng ký đang chờ xử lý cho bài nhận nuôi này.");
         }
         String message = request == null ? null : requiredText(request.message(), "Application message");
         AdoptionApplication application = AdoptionApplication.builder()
@@ -289,7 +289,16 @@ public class AdoptionService {
         List<AdoptionApplication> applications = actor.getRole().getName() == RoleName.ADMIN
                 ? adoptionApplicationRepository.findAll()
                 : adoptionApplicationRepository.findByAdoptionPostDogProfileBranchId(requireBranch(actor).getId());
-        return applications.stream().map(AdoptionMapper::toResponse).toList();
+        return applications.stream()
+                .sorted((left, right) -> {
+                    boolean leftPending = left.getStatus() == AdoptionApplicationStatus.PENDING;
+                    boolean rightPending = right.getStatus() == AdoptionApplicationStatus.PENDING;
+                    if (leftPending && rightPending) return left.getCreatedAt().compareTo(right.getCreatedAt());
+                    if (!leftPending && !rightPending) return right.getUpdatedAt().compareTo(left.getUpdatedAt());
+                    return leftPending ? -1 : 1;
+                })
+                .map(AdoptionMapper::toResponse)
+                .toList();
     }
 
     @Transactional
@@ -308,6 +317,12 @@ public class AdoptionService {
         }
         if (post.getStatus() != AdoptionPostStatus.AVAILABLE || application.getStatus() != AdoptionApplicationStatus.PENDING) {
             throw new ResourceConflictException("Only a pending application on an available post can be approved");
+        }
+        AdoptionApplication earliestPending = adoptionApplicationRepository
+                .findFirstByAdoptionPostIdAndStatusOrderByCreatedAtAsc(post.getId(), AdoptionApplicationStatus.PENDING)
+                .orElseThrow(() -> new ResourceConflictException("Không còn đơn đăng ký đang chờ xử lý."));
+        if (!earliestPending.getId().equals(applicationId)) {
+            throw new ResourceConflictException("Cần xử lý đơn đăng ký gửi sớm nhất cho bé này trước.");
         }
         application.setStatus(AdoptionApplicationStatus.APPROVED);
         post.setStatus(AdoptionPostStatus.CLOSED);

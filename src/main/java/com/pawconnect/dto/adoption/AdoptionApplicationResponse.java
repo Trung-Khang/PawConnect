@@ -8,7 +8,9 @@ public record AdoptionApplicationResponse(
         String seedKey,
         Long adoptionPostId,
         Long applicantUserId,
+        String applicantName,
         String message,
         AdoptionApplicationStatus status,
-        Instant createdAt) {
+        Instant createdAt,
+        Instant updatedAt) {
 }

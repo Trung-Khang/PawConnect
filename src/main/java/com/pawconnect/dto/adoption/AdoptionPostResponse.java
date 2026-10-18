@@ -9,6 +9,7 @@ public record AdoptionPostResponse(
         Long dogProfileId,
         String dogName,
         DogProfileResponse dogProfile,
+        String branchName,
         Long createdByUserId,
         String title,
         String description,

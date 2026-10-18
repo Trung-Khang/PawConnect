@@ -94,6 +94,12 @@ class AdoptionServiceIntegrationTest {
         AdoptionApplicationResponse first = adoptionService.apply(post.id(), new AdoptionApplicationRequest("Toi co the cham soc lau dai."), CUSTOMER_ONE);
         AdoptionApplicationResponse second = adoptionService.apply(post.id(), new AdoptionApplicationRequest("Gia dinh toi san sang don be ve nha."), CUSTOMER_TWO);
 
+        assertThat(adoptionService.getManagedApplications(HCM_MANAGER))
+                .extracting(AdoptionApplicationResponse::id)
+                .containsExactly(first.id(), second.id());
+        assertThatThrownBy(() -> adoptionService.approve(second.id(), HCM_MANAGER))
+                .isInstanceOf(ResourceConflictException.class);
+
         AdoptionApplicationResponse approved = adoptionService.approve(first.id(), HCM_MANAGER);
         AdoptionApplicationResponse retriedApproval = adoptionService.approve(first.id(), HCM_MANAGER);
 
@@ -120,6 +126,7 @@ class AdoptionServiceIntegrationTest {
     void preventsDuplicatePendingApplicationsAndRejectsPendingWhenPostIsClosedManually() {
         DogProfileResponse dog = createDog(HCM_MANAGER, hcm.getId(), "Nau");
         AdoptionPostResponse post = adoptionService.createPost(postRequest(dog.id()), HCM_MANAGER);
+        assertThat(post.branchName()).isEqualTo(hcm.getName());
         AdoptionApplicationResponse application = adoptionService.apply(post.id(), new AdoptionApplicationRequest("Toi muon nhan be."), CUSTOMER_ONE);
 
         assertThatThrownBy(() -> adoptionService.apply(post.id(), new AdoptionApplicationRequest("Toi van muon nhan be."), CUSTOMER_ONE))
