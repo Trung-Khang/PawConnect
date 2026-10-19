@@ -7,7 +7,6 @@ import com.pawconnect.entity.Branch;
 import com.pawconnect.entity.ChatMessage;
 import com.pawconnect.entity.Conversation;
 import com.pawconnect.entity.ConversationStatus;
-import com.pawconnect.entity.ConversationType;
 import com.pawconnect.entity.AdoptionPost;
 import com.pawconnect.entity.Product;
 import com.pawconnect.entity.PuppyListing;
@@ -272,7 +271,6 @@ public class ConversationService {
     }
     private String abbreviate(String value) { return value == null ? "" : value.length() <= 180 ? value : value.substring(0, 177) + "..."; }
     private void requireCustomer(User user) { if (user.getRole().getName() != RoleName.CUSTOMER) throw new AccessDeniedException("Only CUSTOMER can open support conversations"); }
-    private Branch requireBranch(User user) { if (user.getBranch() == null) throw new AccessDeniedException("Branch manager must be assigned to a branch"); return user.getBranch(); }
     private Conversation findConversation(Long id) { return conversations.findById(id).orElseThrow(() -> new ResourceNotFoundException("Conversation was not found")); }
     private User findUser(Long id) { return users.findById(id).orElseThrow(() -> new ResourceNotFoundException("Account was not found")); }
     private User currentUser(String email) { return users.findByEmailIgnoreCase(email).orElseThrow(() -> new ResourceNotFoundException("Account was not found")); }

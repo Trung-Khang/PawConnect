@@ -34,9 +34,6 @@ public class BookingServiceConcurrencyTest {
     @Autowired
     private ServiceTypeRepository serviceTypeRepository;
 
-    @Autowired
-    private BookingService bookingService;
-
     private Long bookingId;
 
     @BeforeEach

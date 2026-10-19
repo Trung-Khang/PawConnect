@@ -36,9 +36,6 @@ public class PuppyListingServiceConcurrencyTest {
     @Autowired
     private CategoryRepository categoryRepository;
 
-    @Autowired
-    private ProductRepository productRepository;
-
     private PuppyListing testPuppy;
 
     @BeforeEach
