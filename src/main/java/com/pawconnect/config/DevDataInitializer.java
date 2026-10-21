@@ -27,11 +27,13 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.annotation.Order;
 
 @Configuration
 public class DevDataInitializer {
 
     @Bean
+    @Order(15)
     @ConditionalOnProperty(name = "pawconnect.seed.enabled", havingValue = "true", matchIfMissing = false)
     CommandLineRunner initializeTV1Data(
             BranchRepository branchRepository,

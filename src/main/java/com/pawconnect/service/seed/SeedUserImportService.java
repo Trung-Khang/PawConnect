@@ -58,6 +58,7 @@ public class SeedUserImportService {
             User user = userRepository.findBySeedKey(seedKey)
                     .or(() -> userRepository.findByEmailIgnoreCase(email))
                     .orElseGet(() -> new User(fullName, email, passwordEncoder.encode(properties.password()), blankToNull(row[4]), role));
+            user.setPassword(passwordEncoder.encode(properties.password()));
             user.updateSeedProfile(seedKey, role, branch);
             userRepository.save(user);
         }
