@@ -4,7 +4,9 @@ import com.pawconnect.dto.product.ProductRequest;
 import com.pawconnect.dto.product.ProductResponse;
 import com.pawconnect.service.shop.ProductService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -18,9 +20,8 @@ public class ProductController {
     @GetMapping
     public List<ProductResponse> getProducts(
             @RequestParam(required = false) Long branchId,
-            @RequestParam(required = false) Boolean isBreedingDog,
             @RequestParam(required = false) String suitableSize) {
-        return productService.getProducts(branchId, isBreedingDog, suitableSize);
+        return productService.getProducts(branchId, suitableSize);
     }
 
     @GetMapping("/{id}")
@@ -29,17 +30,26 @@ public class ProductController {
     }
 
     @PostMapping
-    public ProductResponse createProduct(@RequestBody ProductRequest request) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'BRANCH_MANAGER')")
+    public ProductResponse createProduct(@RequestBody @Valid ProductRequest request) {
         return productService.createProduct(request);
     }
 
     @PutMapping("/{id}")
-    public ProductResponse updateProduct(@PathVariable Long id, @RequestBody ProductRequest request) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'BRANCH_MANAGER')")
+    public ProductResponse updateProduct(@PathVariable Long id, @RequestBody @Valid ProductRequest request) {
         return productService.updateProduct(id, request);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'BRANCH_MANAGER')")
     @DeleteMapping("/{id}")
     public void deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'BRANCH_MANAGER')")
+    @DeleteMapping
+    public void deleteProducts(@RequestBody List<Long> ids) {
+        productService.deleteProducts(ids);
     }
 }

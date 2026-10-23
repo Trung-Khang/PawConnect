@@ -18,6 +18,11 @@ public class ApiExceptionHandler {
         return response(HttpStatus.CONFLICT, exception.getMessage());
     }
 
+    @ExceptionHandler(AuthException.class)
+    ResponseEntity<Map<String, Object>> authException(AuthException exception) {
+        return response(exception.getStatus(), exception.getMessage());
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     ResponseEntity<Map<String, Object>> notFound(ResourceNotFoundException exception) {
         return response(HttpStatus.NOT_FOUND, exception.getMessage());
@@ -49,6 +54,16 @@ public class ApiExceptionHandler {
         exception.getBindingResult().getFieldErrors()
                 .forEach(error -> fields.putIfAbsent(error.getField(), error.getDefaultMessage()));
         return ResponseEntity.badRequest().body(Map.of("timestamp", Instant.now(), "status", 400, "errors", fields));
+    }
+
+    @ExceptionHandler(BusinessException.class)
+    ResponseEntity<Map<String, Object>> businessException(BusinessException exception) {
+        return response(HttpStatus.CONFLICT, exception.getMessage());
+    }
+
+    @ExceptionHandler(Exception.class)
+    ResponseEntity<Map<String, Object>> generalException(Exception exception) {
+        return response(HttpStatus.INTERNAL_SERVER_ERROR, "Đã xảy ra lỗi máy chủ. Vui lòng thử lại sau.");
     }
 
     private ResponseEntity<Map<String, Object>> response(HttpStatus status, String message) {

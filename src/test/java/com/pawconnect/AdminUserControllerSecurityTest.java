@@ -1,6 +1,8 @@
 package com.pawconnect;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.Test;
@@ -30,5 +32,17 @@ class AdminUserControllerSecurityTest {
         mockMvc.perform(get("/api/admin/users")).andExpect(status().isForbidden());
         mockMvc.perform(get("/api/admin/users/seed-mapping")).andExpect(status().isForbidden());
         mockMvc.perform(get("/api/admin/branches")).andExpect(status().isForbidden());
+        mockMvc.perform(patch("/api/admin/users/1").contentType("application/json")
+                .content("{\"fullName\":\"Test User\",\"phone\":\"0912345678\",\"active\":true,\"locked\":false}"))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(delete("/api/admin/users/1")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void anonymousCannotChangeAccounts() throws Exception {
+        mockMvc.perform(patch("/api/admin/users/1").contentType("application/json")
+                .content("{\"fullName\":\"Test User\",\"phone\":\"0912345678\",\"active\":true,\"locked\":false}"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(delete("/api/admin/users/1")).andExpect(status().isUnauthorized());
     }
 }

@@ -1,7 +1,7 @@
 package com.pawconnect.controller;
 
 import com.pawconnect.entity.ServiceType;
-import com.pawconnect.repository.ServiceTypeRepository;
+import com.pawconnect.service.shop.ServiceTypeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,10 +14,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ServiceTypeController {
 
-    private final ServiceTypeRepository serviceTypeRepository;
+    private final ServiceTypeService serviceTypeService;
 
     @GetMapping
     public List<ServiceType> getAllServiceTypes() {
-        return serviceTypeRepository.findAll();
+        return serviceTypeService.getAllServiceTypes();
     }
 }

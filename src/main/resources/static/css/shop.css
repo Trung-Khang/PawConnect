@@ -180,6 +180,10 @@ body {
 .hero {
     padding: 4rem 0 6rem;
     overflow: hidden;
+    position: relative;
+    background-color: var(--bg-color);
+    background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23e27b58' fill-opacity='0.085' transform='rotate(-12 40 40)'%3E%3Cellipse cx='40' cy='48' rx='13' ry='10'/%3E%3Cellipse cx='25' cy='32' rx='4.5' ry='6' transform='rotate(-18 25 32)'/%3E%3Cellipse cx='35' cy='23' rx='4.8' ry='6.5' transform='rotate(-6 35 23)'/%3E%3Cellipse cx='47' cy='23' rx='4.8' ry='6.5' transform='rotate(6 47 23)'/%3E%3Cellipse cx='57' cy='32' rx='4.5' ry='6' transform='rotate(18 57 32)'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 80px 80px;
 }
 
 .hero-content {
@@ -398,6 +402,43 @@ body {
     cursor: pointer;
 }
 
+.shop-filter-submit {
+    width: 100%;
+    min-height: 44px;
+    border: 0;
+    border-radius: 8px;
+    background: #237a57;
+    color: #fff;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.shop-filter-submit:hover:not(:disabled) {
+    background: #195b41;
+    transform: translateY(-1px);
+}
+
+.shop-filter-submit:disabled {
+    cursor: wait;
+    opacity: 0.72;
+}
+
+.shop-filter-submit .fas {
+    margin-right: 0.45rem;
+}
+
+.shop-deep-link-notice {
+    margin: 0 0 1rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid #f0b096;
+    border-radius: 8px;
+    background: #fff5ef;
+    color: #9b3e20;
+    font-weight: 600;
+}
+
 .product-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -412,6 +453,8 @@ body {
     position: relative;
     overflow: hidden;
     animation: fadeInUp 0.8s ease forwards;
+    display: flex;
+    flex-direction: column;
 }
 
 .product-card:hover {
@@ -442,6 +485,10 @@ body {
 .product-title {
     font-size: 1.1rem;
     margin-bottom: 0.5rem;
+    min-height: 2.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .product-price {
@@ -467,7 +514,8 @@ body {
 .product-card-actions {
     display: flex;
     gap: 0.5rem;
-    margin-top: 1rem;
+    margin-top: auto;
+    padding-top: 1rem;
 }
 
 .btn-icon-cart {
@@ -502,6 +550,15 @@ body {
 }
 
 /* ---------------- BOOKING MULTI-STEP ---------------- */
+.booking-section {
+    background-color: var(--bg-color);
+    background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23e27b58' fill-opacity='0.085' transform='rotate(-12 40 40)'%3E%3Cellipse cx='40' cy='48' rx='13' ry='10'/%3E%3Cellipse cx='25' cy='32' rx='4.5' ry='6' transform='rotate(-18 25 32)'/%3E%3Cellipse cx='35' cy='23' rx='4.8' ry='6.5' transform='rotate(-6 35 23)'/%3E%3Cellipse cx='47' cy='23' rx='4.8' ry='6.5' transform='rotate(6 47 23)'/%3E%3Cellipse cx='57' cy='32' rx='4.5' ry='6' transform='rotate(18 57 32)'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 80px 80px;
+    padding: 4.5rem 0 6.5rem;
+    min-height: calc(100vh - 420px);
+    position: relative;
+}
+
 .booking-form-wrapper {
     background: white;
     border-radius: var(--radius-card);
@@ -555,6 +612,26 @@ body {
 
 .step-content.active {
     display: block;
+}
+
+.booking-access-message {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin: 1rem 0;
+    padding: 1rem 1.2rem;
+    border-left: 4px solid var(--primary-color);
+    background: #fff3ec;
+    color: var(--text-main);
+    font-weight: 700;
+}
+
+.booking-access-message i {
+    color: var(--primary-color);
+}
+
+.booking-access-message p {
+    margin: 0;
 }
 
 @keyframes fadeIn {
@@ -651,6 +728,7 @@ body {
         opacity: 1;
         transform: translateY(0);
     }
+}
 
 /* ---------------- PRODUCT MODAL (GLASSMORPHISM) ---------------- */
 .modal-overlay {
@@ -777,10 +855,14 @@ body {
 
 .modal-actions {
     display: flex;
+    flex-wrap: wrap;
     gap: 1rem;
     margin-top: 2rem;
 }
 
+.modal-actions #modalConsultBtn {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
 }
 
 .blob-image {

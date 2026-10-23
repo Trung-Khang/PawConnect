@@ -11,12 +11,11 @@ public class ProductResponse {
     private BigDecimal price;
     private Integer stock;
     private String imageUrl;
+    private String imagePublicId;
     private String suitableSize;
-    private Boolean isBreedingDog;
-    private String breed;
-    private String age;
-    private String healthStatus;
-    private String careInstructions;
+
+    private String ingredients;
+    private String targetAudience;
     private Long categoryId;
     private String categoryName;
     private Long branchId;

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PawConnect - Tài khoản</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/shop.css"><link rel="stylesheet" href="/css/header.css?v=20261016-2"><link rel="stylesheet" href="/css/auth.css">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<main class="auth-page"><section class="auth-card">
+    <a class="auth-back" href="/shop"><i class="fas fa-arrow-left"></i> Về PawConnect</a>
+    <div id="auth-message" class="auth-message" hidden></div>
+
+    <form id="login-form" class="auth-form" hidden>
+        <h1>Đăng nhập</h1><p>Chào mừng bạn quay lại PawConnect.</p>
+        <label>Tên đăng nhập hoặc email<input name="usernameOrEmail" autocomplete="username" required></label>
+        <label>Mật khẩu<input name="password" type="password" autocomplete="current-password" required></label>
+        <button class="btn-pill" type="submit">Đăng nhập</button>
+        <p><a href="/auth/forgot-password">Quên mật khẩu?</a> · <a href="/auth/register">Tạo tài khoản</a></p>
+    </form>
+
+    <form id="register-form" class="auth-form" hidden>
+        <h1>Tạo tài khoản</h1><p>Đăng ký để mua sắm và gửi đơn nhận nuôi.</p>
+        <label>Tên đăng nhập<input name="username" pattern="[A-Za-z0-9._-]{3,50}" minlength="3" maxlength="50" required></label>
+        <label>Họ và tên<input name="fullName" maxlength="120" required></label>
+        <label>Email<input name="email" type="email" maxlength="254" autocomplete="email" required></label>
+        <label>Số điện thoại<input id="register-phone" name="phone" inputmode="tel" placeholder="0912345678 hoặc +84912345678" required></label>
+        <small id="phone-help">Dùng số Việt Nam 10 số, bắt đầu 03, 05, 07, 08 hoặc 09.</small>
+        <label>Mật khẩu<input id="register-password" name="password" type="password" autocomplete="new-password" required></label>
+        <ul id="password-checklist" class="password-checklist"></ul>
+        <label>Xác nhận mật khẩu<input id="register-confirm" name="confirmPassword" type="password" autocomplete="new-password" required></label>
+        <button class="btn-pill" type="submit">Đăng ký và gửi OTP</button>
+        <p>Đã có tài khoản? <a href="/auth/login">Đăng nhập</a></p>
+    </form>
+
+    <form id="verify-form" class="auth-form" hidden>
+        <h1>Xác minh email</h1><p>Mã OTP có hiệu lực 5 phút và chỉ dùng một lần.</p>
+        <label>Email hoặc tên đăng nhập<input id="verify-identity" name="identity" required></label>
+        <label>Mã OTP<input name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required></label>
+        <button class="btn-pill" type="submit">Xác minh tài khoản</button>
+        <button id="resend-verification" class="auth-link-button" type="button">Gửi lại OTP</button>
+    </form>
+
+    <form id="forgot-form" class="auth-form" hidden>
+        <h1>Quên mật khẩu</h1><p>Nhập email hoặc tên đăng nhập. PawConnect sẽ gửi OTP nếu tài khoản hợp lệ.</p>
+        <label>Email hoặc tên đăng nhập<input id="forgot-identity" name="identity" required></label>
+        <button class="btn-pill" type="submit">Gửi OTP</button>
+    </form>
+
+    <form id="reset-verify-form" class="auth-form" hidden>
+        <h1>Xác minh OTP</h1><p>Nhập mã gồm 6 chữ số đã nhận qua email.</p>
+        <label>Mã OTP<input name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required></label>
+        <button class="btn-pill" type="submit">Tiếp tục</button>
+        <button id="resend-reset-otp" class="auth-link-button" type="button">Gửi lại OTP</button>
+    </form>
+
+    <form id="reset-password-form" class="auth-form" hidden>
+        <h1>Đặt mật khẩu mới</h1><p>Mật khẩu mới phải khác mật khẩu hiện tại.</p>
+        <label>Mật khẩu mới<input id="reset-password" name="newPassword" type="password" autocomplete="new-password" required></label>
+        <ul id="reset-password-checklist" class="password-checklist"></ul>
+        <label>Xác nhận mật khẩu mới<input id="reset-confirm" name="confirmPassword" type="password" autocomplete="new-password" required></label>
+        <button class="btn-pill" type="submit">Lưu mật khẩu mới</button>
+    </form>
+</section></main>
+<script src="/js/auth.js"></script>
+</body></html>

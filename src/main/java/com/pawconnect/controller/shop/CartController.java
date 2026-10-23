@@ -1,10 +1,10 @@
 package com.pawconnect.controller.shop;
 
-import com.pawconnect.entity.Cart;
-import com.pawconnect.entity.CartItem;
+import com.pawconnect.dto.cart.CartResponse;
 import com.pawconnect.service.shop.CartService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/cart")
@@ -13,16 +13,22 @@ public class CartController {
 
     private final CartService cartService;
 
+    @PreAuthorize("hasRole('CUSTOMER')")
     @GetMapping
-    public Cart getMyCart() {
-        return cartService.getMyCart();
+    public CartResponse getMyCart() {
+        return cartService.getMyCartResponse();
     }
 
+    @PreAuthorize("hasRole('CUSTOMER')")
     @PostMapping("/items")
-    public CartItem addItemToCart(@RequestParam Long productId, @RequestParam Integer quantity) {
-        return cartService.addItem(productId, quantity);
+    public CartResponse.CartItemResponse addItemToCart(
+            @RequestParam(required = false) Long productId, 
+            @RequestParam(required = false) Long puppyListingId, 
+            @RequestParam Integer quantity) {
+        return cartService.addItem(productId, puppyListingId, quantity);
     }
 
+    @PreAuthorize("hasRole('CUSTOMER')")
     @DeleteMapping("/items/{id}")
     public void removeItemFromCart(@PathVariable Long id) {
         cartService.removeItem(id);

@@ -29,16 +29,18 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/refresh-token").permitAll()
+                        .requestMatchers("/api/auth/register", "/api/auth/verify-email", "/api/auth/resend-verification",
+                                "/api/auth/login", "/api/auth/refresh-token", "/api/auth/forgot-password",
+                                "/api/auth/verify-reset-otp", "/api/auth/reset-password",
+                                "/api/v1/auth/register", "/api/v1/auth/verify-email", "/api/v1/auth/resend-verification",
+                                "/api/v1/auth/login", "/api/v1/auth/refresh-token", "/api/v1/auth/forgot-password",
+                                "/api/v1/auth/verify-reset-otp", "/api/v1/auth/reset-password").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/adoptions", "/api/adoptions/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/adoptions", "/adoptions/*").permitAll()
                         .requestMatchers("/ws/**").permitAll()
-                        .requestMatchers("/", "/shop", "/service", "/admin/**", "/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/", "/shop", "/service", "/profile", "/admin/**", "/auth/**", "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/branches", "/api/categories", "/api/products", "/api/products/*", "/api/service-types").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/puppy-listings", "/api/puppy-listings/*").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/admin/branches").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/upload", "/api/products").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/api/products/*").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

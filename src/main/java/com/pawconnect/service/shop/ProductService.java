@@ -5,9 +5,10 @@ import com.pawconnect.dto.product.ProductResponse;
 import java.util.List;
 
 public interface ProductService {
-    List<ProductResponse> getProducts(Long branchId, Boolean isBreedingDog, String suitableSize);
+    List<ProductResponse> getProducts(Long branchId, String suitableSize);
     ProductResponse getProductById(Long id);
     ProductResponse createProduct(ProductRequest request);
     ProductResponse updateProduct(Long id, ProductRequest request);
     void deleteProduct(Long id);
+    void deleteProducts(List<Long> ids);
 }

@@ -48,7 +48,7 @@ public class CloudinaryMediaService {
                 throw new MediaStorageUnavailableException("Cloudinary did not return a secure image URL");
             }
             return new MediaAssetResponse(secureUrl, publicId);
-        } catch (IOException exception) {
+        } catch (IOException | RuntimeException exception) {
             throw new MediaStorageUnavailableException("Cloudinary upload failed", exception);
         }
     }
@@ -64,7 +64,7 @@ public class CloudinaryMediaService {
             if (!"ok".equals(status) && !"not found".equals(status)) {
                 throw new MediaStorageUnavailableException("Cloudinary could not delete the image");
             }
-        } catch (IOException exception) {
+        } catch (IOException | RuntimeException exception) {
             throw new MediaStorageUnavailableException("Cloudinary deletion failed", exception);
         }
     }

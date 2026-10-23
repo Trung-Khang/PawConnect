@@ -1,0 +1,33 @@
+spring:
+  config:
+    activate:
+      on-profile: production
+  jpa:
+    hibernate:
+      # Production schema is changed only by reviewed SQL migrations.
+      ddl-auto: validate
+  h2:
+    console:
+      enabled: false
+  mail:
+    host: ${SMTP_HOST}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME}
+    password: ${SMTP_PASSWORD}
+
+app:
+  jwt:
+    # No development fallback is allowed when the production profile is active.
+    secret: ${JWT_SECRET}
+  mail:
+    from: ${SMTP_FROM}
+  websocket:
+    allowed-origin-pattern: ${WEBSOCKET_ALLOWED_ORIGIN_PATTERN}
+  cloudinary:
+    enabled: true
+    cloud-name: ${CLOUDINARY_CLOUD_NAME}
+    api-key: ${CLOUDINARY_API_KEY}
+    api-secret: ${CLOUDINARY_API_SECRET}
+  seed:
+    users:
+      enabled: false

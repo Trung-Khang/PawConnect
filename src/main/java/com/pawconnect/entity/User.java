@@ -27,11 +27,24 @@ public class User {
     @Column(nullable = false, unique = true, length = 254)
     private String email;
 
+    /** Null only for legacy seed users; newly registered accounts must provide one. */
+    @Column(unique = true, length = 50)
+    private String username;
+
     @Column(nullable = false, length = 100)
     private String password;
 
-    @Column(length = 30)
+    @Column(unique = true, length = 30)
     private String phone;
+
+    @Column(nullable = false)
+    private boolean active = true;
+
+    @Column(nullable = false)
+    private boolean emailVerified = true;
+
+    @Column(nullable = false)
+    private boolean locked = false;
 
     @Column(length = 1_000)
     private String avatarUrl;
@@ -66,6 +79,12 @@ public class User {
         this.role = Objects.requireNonNull(role, "Role must not be null");
     }
 
+    public User(String username, String fullName, String email, String password, String phone, Role role) {
+        this(fullName, email, password, phone, role);
+        this.username = Objects.requireNonNull(username, "Username must not be null");
+        this.emailVerified = false;
+    }
+
     @PrePersist
     void setCreatedAt() {
         if (createdAt == null) createdAt = Instant.now();
@@ -74,6 +93,7 @@ public class User {
     public Long getId() { return id; }
     public String getFullName() { return fullName; }
     public String getEmail() { return email; }
+    public String getUsername() { return username; }
     public String getPassword() { return password; }
     public String getPhone() { return phone; }
     public String getAvatarUrl() { return avatarUrl; }
@@ -82,6 +102,9 @@ public class User {
     public String getSeedKey() { return seedKey; }
     public Branch getBranch() { return branch; }
     public Instant getCreatedAt() { return createdAt; }
+    public boolean isActive() { return active; }
+    public boolean isEmailVerified() { return emailVerified; }
+    public boolean isLocked() { return locked; }
 
     public void updateSeedProfile(String seedKey, Role role, Branch branch) {
         this.seedKey = seedKey;
@@ -92,5 +115,14 @@ public class User {
     public void updateAvatar(String avatarUrl, String avatarPublicId) {
         this.avatarUrl = avatarUrl;
         this.avatarPublicId = avatarPublicId;
+    }
+
+    public void setEmailVerified(boolean emailVerified) { this.emailVerified = emailVerified; }
+    public void setActive(boolean active) { this.active = active; }
+    public void setLocked(boolean locked) { this.locked = locked; }
+    public void setPassword(String password) { this.password = Objects.requireNonNull(password, "Password must not be null"); }
+    public void updateProfile(String fullName, String phone) {
+        this.fullName = Objects.requireNonNull(fullName, "Full name must not be null");
+        this.phone = Objects.requireNonNull(phone, "Phone must not be null");
     }
 }

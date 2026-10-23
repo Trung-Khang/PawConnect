@@ -21,9 +21,15 @@ public class DatabaseUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) {
         User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Account was not found"));
-        return org.springframework.security.core.userdetails.User.withUsername(user.getEmail())
-                .password(user.getPassword())
-                .authorities(new SimpleGrantedAuthority("ROLE_" + user.getRole().getName().name()))
-                .build();
+        if (!user.isActive() || user.isLocked()) {
+            throw new UsernameNotFoundException("Account is unavailable");
+        }
+        return new CustomUserDetails(
+                user.getId(),
+                user.getBranch() != null ? user.getBranch().getId() : null,
+                user.getEmail(),
+                user.getPassword(),
+                java.util.Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().getName().name()))
+        );
     }
 }
