@@ -29,7 +29,7 @@ public class ServiceBookingController {
         return bookingService.getMyBookings();
     }
 
-    @PreAuthorize("hasRole('BRANCH_MANAGER')")
+    @PreAuthorize("hasAnyRole('BRANCH_MANAGER', 'ADMIN')")
     @PutMapping("/{id}/status")
     public BookingResponse updateBookingStatus(@PathVariable Long id, @RequestParam String status) {
         return bookingService.updateBookingStatus(id, status);

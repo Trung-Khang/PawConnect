@@ -14,6 +14,8 @@
     transition: background-color .2s ease, color .2s ease;
 }
 
+.main-header [hidden], .management-sidebar [hidden] { display: none !important; }
+
 .icon-btn:hover,
 .icon-btn:focus-visible {
     background: rgba(226, 123, 88, .12);
@@ -325,7 +327,7 @@ body .main-header > .container {
 body.management-menu-open { overflow: hidden; }
 
 @media (max-width: 1180px) {
-    .main-header .container {
+    body .main-header > .container {
         grid-template-columns: max-content 1fr;
         row-gap: .5rem;
     }
@@ -343,9 +345,21 @@ body.management-menu-open { overflow: hidden; }
 }
 
 @media (max-width: 760px) {
-    .main-header .container { width: min(94vw, 38rem); }
-    .header-actions { gap: .35rem; }
+    body .main-header > .container {
+        width: min(94vw, 38rem);
+        grid-template-columns: minmax(0, 1fr);
+        row-gap: .45rem;
+    }
+    .main-header { padding: .65rem 0; }
+    .brand-cluster { min-width: 0; }
+    .logo { font-size: 1.45rem; }
+    .header-actions { grid-row: 2; justify-self: stretch; justify-content: space-between; gap: .35rem; min-width: 0; }
     .header-actions .btn-pill { padding-inline: .9rem; }
     .header-auth-action { min-width: auto; }
-    .user-pill { padding-inline: .7rem; }
+    .header-actions > [data-booking-access] { display: none; }
+    .user-pill { padding-inline: .5rem; min-width: 0; }
+    .account-status { max-width: 7ch; overflow: hidden; text-overflow: ellipsis; }
+    .nav-menu-wrapper { grid-row: 3; overflow-x: auto; justify-content: flex-start; scrollbar-width: thin; }
+    .nav-menu { gap: 1.2rem; padding-bottom: .3rem; }
+    .nav-menu li a { font-size: .88rem; }
 }

@@ -7,6 +7,7 @@ import com.pawconnect.entity.Product;
 import com.pawconnect.repository.BranchRepository;
 import com.pawconnect.repository.CategoryRepository;
 import com.pawconnect.repository.ProductRepository;
+import com.pawconnect.security.CustomUserDetails;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.math.BigDecimal;
+import java.util.List;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -42,6 +47,10 @@ public class CartAndOrderServiceTest {
 
     @BeforeEach
     public void setup() {
+        CustomUserDetails principal = new CustomUserDetails(1L, null, "customer@example.test", "unused",
+                List.of(new SimpleGrantedAuthority("ROLE_CUSTOMER")));
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()));
         Branch branch = Branch.builder().name("Test Branch").address("Address").build();
         branch = branchRepository.save(branch);
         branchId = branch.getId();
@@ -63,6 +72,7 @@ public class CartAndOrderServiceTest {
 
     @AfterEach
     public void cleanup() {
+        SecurityContextHolder.clearContext();
         // Tránh lỗi foreign key constraint, xóa từ con lên cha nhưng vì Test Transactional, có thể truncate
     }
 

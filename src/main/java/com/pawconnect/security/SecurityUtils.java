@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 
 public class SecurityUtils {
     public static Long getCurrentUserId() {
@@ -15,7 +16,7 @@ public class SecurityUtils {
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
             return userDetails.getId();
         }
-        return 1L; // Fallback default
+        throw new AuthenticationCredentialsNotFoundException("An authenticated account is required");
     }
 
     public static Long getCurrentUserBranchId() {

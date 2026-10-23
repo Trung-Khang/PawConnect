@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <th:block th:replace="~{fragments/bootstrap :: assets}"></th:block>
+    <title>Quản lý chi nhánh | PawConnect</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/shop.css">
+    <link rel="stylesheet" href="/css/header.css?v=20261016-2">
+    <link rel="stylesheet" href="/css/admin-users.css">
+    <link rel="stylesheet" href="/css/admin-branches.css">
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<main class="admin-users-page container">
+    <header class="admin-users-heading">
+        <div>
+            <p class="admin-eyebrow">Hệ thống PawConnect</p>
+            <h1>Quản lý chi nhánh</h1>
+            <p>Mã chi nhánh cố định sau khi tạo. Không thể xóa chi nhánh đã có dữ liệu nghiệp vụ.</p>
+        </div>
+        <div class="branch-heading-actions" id="branch-heading-actions" hidden>
+            <button id="reload-branches" class="admin-reload-button" type="button">Tải lại</button>
+            <button id="new-branch" class="btn-pill" type="button">Thêm chi nhánh</button>
+        </div>
+    </header>
+    <p id="branch-notice" class="admin-users-notice" role="status" hidden></p>
+    <section class="admin-users-table-wrap" id="branch-table" aria-labelledby="branches-title" hidden>
+        <div class="admin-users-table-title"><h2 id="branches-title">Danh sách chi nhánh</h2><span id="branch-total" class="account-total">0 chi nhánh</span></div>
+        <div class="admin-users-table-scroll table-responsive">
+            <table>
+                <thead><tr><th>Mã</th><th>Tên</th><th>Địa chỉ</th><th>Điện thoại</th><th>Thao tác</th></tr></thead>
+                <tbody id="branches-body"></tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<dialog id="branch-dialog" class="branch-dialog" aria-labelledby="branch-dialog-title">
+    <form id="branch-form">
+        <h2 id="branch-dialog-title">Thêm chi nhánh</h2>
+        <div class="row g-3">
+            <label class="col-12 col-md-6">Mã chi nhánh<input id="branch-code" class="form-control" pattern="[A-Z0-9_]{3,40}" maxlength="40" required placeholder="BR_HCM_01"></label>
+            <label class="col-12 col-md-6">Tên chi nhánh<input id="branch-name" class="form-control" maxlength="255" required></label>
+            <label class="col-12">Địa chỉ<input id="branch-address" class="form-control" maxlength="255" required></label>
+            <label class="col-12 col-md-6">Điện thoại<input id="branch-phone" class="form-control" maxlength="50" inputmode="tel"></label>
+            <label class="col-12 col-md-3">Vĩ độ<input id="branch-latitude" class="form-control" type="number" step="any" min="-90" max="90"></label>
+            <label class="col-12 col-md-3">Kinh độ<input id="branch-longitude" class="form-control" type="number" step="any" min="-180" max="180"></label>
+        </div>
+        <div class="branch-form-actions"><button class="btn-pill" type="submit">Lưu</button><button id="cancel-branch" class="admin-reload-button" type="button">Hủy</button></div>
+    </form>
+</dialog>
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script src="/js/admin-branches.js" defer></script>
+</body>
+</html>

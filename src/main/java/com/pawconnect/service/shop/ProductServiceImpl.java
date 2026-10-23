@@ -125,17 +125,12 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasAnyRole('ADMIN', 'BRANCH_MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteProduct(Long id) {
-        Product p = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product not found"));
-        if (SecurityUtils.hasRole("BRANCH_MANAGER")) {
-            Long currentUserBranchId = SecurityUtils.getCurrentUserBranchId();
-            if (!Objects.equals(currentUserBranchId, p.getBranch().getId())) {
-                throw new AccessDeniedException("Branch managers can only delete products for their own branch");
-            }
-        }
+        if (!productRepository.existsById(id)) throw new ResourceNotFoundException("Product not found");
         try {
             productRepository.deleteById(id);
+            productRepository.flush();
         } catch (DataIntegrityViolationException e) {
             throw new BusinessException("Cannot delete product because it is already used in an order or cart.");
         }
@@ -143,7 +138,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasAnyRole('ADMIN', 'BRANCH_MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteProducts(List<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             throw new BusinessException("Hãy chọn ít nhất một sản phẩm để xóa.");

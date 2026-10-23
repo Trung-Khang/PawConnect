@@ -31,6 +31,11 @@ public class ViewController {
         return "admin/users";
     }
 
+    @GetMapping("/admin/branches")
+    public String adminBranchesPage() {
+        return "admin/branches";
+    }
+
     @GetMapping("/profile")
     public String profilePage() {
         return "profile/index";

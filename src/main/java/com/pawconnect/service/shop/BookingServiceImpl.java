@@ -11,6 +11,7 @@ import com.pawconnect.repository.BranchRepository;
 import com.pawconnect.repository.ServiceBookingRepository;
 import com.pawconnect.repository.ServiceTypeRepository;
 import com.pawconnect.security.SecurityUtils;
+import org.springframework.security.access.AccessDeniedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -85,6 +86,10 @@ public class BookingServiceImpl implements BookingService {
         }
         ServiceBooking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
+        if (SecurityUtils.hasRole("BRANCH_MANAGER")
+                && !java.util.Objects.equals(SecurityUtils.getCurrentUserBranchId(), booking.getBranch().getId())) {
+            throw new AccessDeniedException("Branch managers can only update bookings in their own branch");
+        }
         
         // Optmistic locking will trigger here if concurrently updated
         booking.setStatus(status);

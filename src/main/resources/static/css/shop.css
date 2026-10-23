@@ -167,6 +167,8 @@ body {
 
 /* ---------------- LAYOUT UTILS ---------------- */
 .container {
+    box-sizing: border-box;
+    width: 100%;
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 1.5rem;
@@ -679,9 +681,6 @@ body {
 }
 
 .footer-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1.5fr;
-    gap: 3rem;
     margin-bottom: 3rem;
 }
 
@@ -867,6 +866,44 @@ body {
 
 .blob-image {
     transition: transform 0.3s ease;
+}
+
+@media (max-width: 1024px) {
+    .hero-content { gap: 2rem; }
+    .hero-title { font-size: clamp(2.1rem, 4.5vw, 3.5rem); }
+    .blob-image { height: min(42vw, 430px); }
+    .quick-features { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .shop-layout { grid-template-columns: minmax(180px, 230px) minmax(0, 1fr); gap: 1.5rem; }
+}
+
+@media (max-width: 768px) {
+    .section { padding: 3rem 0; }
+    .hero { padding: 2.5rem 0 4rem; }
+    .hero-content { grid-template-columns: 1fr; }
+    .hero-image-wrapper { max-width: 25rem; margin: 0 auto; }
+    .blob-image { height: auto; aspect-ratio: 1; }
+    .floating-card { padding: .65rem .85rem; }
+    .shop-layout { grid-template-columns: 1fr; }
+    .product-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); }
+    .service-grid { grid-template-columns: 1fr; }
+    .modal-overlay { padding: .75rem; overflow-y: auto; }
+    .modal-content { width: 100%; max-height: calc(100dvh - 1.5rem); overflow-y: auto; }
+    .modal-grid { grid-template-columns: 1fr; }
+    .modal-image-col { padding: 1rem; }
+    .modal-main-img { height: min(35vh, 220px); }
+    .modal-info-col { padding: 1.2rem; }
+}
+
+@media (max-width: 480px) {
+    .container { padding-inline: 1rem; }
+    .hero-title { font-size: 2rem; }
+    .hero-btns, .form-actions { flex-wrap: wrap; }
+    .hero-btns .btn-pill, .form-actions .btn-pill { text-align: center; flex: 1 1 100%; }
+    .quick-features { grid-template-columns: 1fr; gap: 1rem; padding: 1.25rem; margin-top: -1.5rem; }
+    .section-header h2 { font-size: 1.8rem; }
+    .booking-form-wrapper { padding: 1.25rem; }
+    .modal-title { font-size: 1.45rem; }
+    .modal-actions .btn-pill { flex: 1 1 100%; text-align: center; }
 }
 .blob-image:hover {
     transform: scale(1.05);

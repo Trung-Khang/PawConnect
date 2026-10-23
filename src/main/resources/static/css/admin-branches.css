@@ -1,0 +1,13 @@
+.branch-heading-actions, .branch-form-actions { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; }
+.branch-heading-actions[hidden], .admin-users-table-wrap[hidden] { display: none !important; }
+.branch-heading-actions .btn-pill, .branch-form-actions .btn-pill { min-height: 2.8rem; }
+.branch-dialog { box-sizing: border-box; width: min(94vw, 42rem); max-height: 90dvh; overflow-y: auto; border: 1px solid #f0ded3; border-radius: 12px; padding: 1.5rem; box-shadow: 0 20px 45px rgba(45,55,72,.2); }
+.branch-dialog::backdrop { background: rgba(45,55,72,.45); }
+.branch-dialog h2 { margin: 0 0 1.25rem; font-size: 1.35rem; }
+.branch-dialog label { display: block; font-weight: 700; }
+.branch-dialog input { box-sizing: border-box; margin-top: .35rem; width: 100%; }
+.branch-form-actions { margin-top: 1.5rem; }
+.branch-row-actions { display: flex; gap: .5rem; white-space: nowrap; }
+.branch-row-actions button { min-height: 2.5rem; padding: .4rem .7rem; border-radius: 8px; border: 1px solid #e27b58; background: #fff; color: #b45d40; font: inherit; font-weight: 700; cursor: pointer; }
+.branch-row-actions .delete-branch { border-color: #e53e3e; color: #b22b2b; }
+@media (max-width: 390px) { .branch-dialog { padding: 1rem; } }

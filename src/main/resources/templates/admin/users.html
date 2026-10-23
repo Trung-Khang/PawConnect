@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <th:block th:replace="~{fragments/bootstrap :: assets}"></th:block>
     <title>Quản lý tài khoản | PawConnect</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/shop.css">
@@ -19,12 +20,12 @@
             <h1>Quản lý tài khoản</h1>
             <p>Chỉnh sửa thông tin, kích hoạt, khóa hoặc xóa tài khoản khi không còn dữ liệu liên quan.</p>
         </div>
-        <button id="reload-users" class="admin-reload-button" type="button"><i class="fas fa-rotate-right"></i><span>Tải lại</span></button>
+        <button id="reload-users" class="admin-reload-button" type="button" hidden><i class="fas fa-rotate-right"></i><span>Tải lại</span></button>
     </header>
 
     <p id="admin-users-notice" class="admin-users-notice" hidden></p>
 
-    <section class="admin-users-table-wrap" aria-labelledby="accounts-title">
+    <section class="admin-users-table-wrap" id="admin-users-table" aria-labelledby="accounts-title" hidden>
         <div class="admin-users-table-title">
             <h2 id="accounts-title">Danh sách tài khoản</h2>
             <span id="account-total" class="account-total">0 tài khoản</span>
