@@ -301,3 +301,32 @@ Tuần 8    → Hoàn thiện UI + deploy + báo cáo + demo
 3. TV1 chạy checklist regression mục 5 của kế hoạch tổng hợp, gồm shop, adoption, auth và chat **một customer một inbox**. Chỉ đánh dấu hoàn tất mục 4 khi có evidence/ảnh desktop-mobile, nghiệm thu checkout, staging và xác nhận TV1, không có lỗi P0/P1.
 
 **Rollback code:** trên nhánh TV3, sau khi nhóm review có thể `git revert aca4e18`; không cần rollback database cho commit này vì không có migration. Khi đã deploy sau này, thực hiện quy trình backup/redeploy trong runbook, không tự sửa shared DB.
+
+## 13. Bàn giao checkout, thanh toán và biên lai (24/10/2026)
+
+**Trạng thái:** code đã được người phụ trách duyệt để commit/push: `bacd628` trên nhánh `TV3`, đã push `origin/TV3` ngày 24/10/2026; **chưa deploy hoặc áp migration trên staging/Railway**. Mục 4 của kế hoạch tổng hợp chưa được đánh dấu hoàn tất vì còn nghiệm thu môi trường và TV1 regression. Mục 12 phía trên là lịch sử của commit `aca4e18`; quyết định nghiệp vụ checkout dưới đây thay thế blocker chính sách cũ ở thời điểm đó.
+
+### Quyết định nghiệp vụ và phạm vi đã làm
+
+- Theo quyết định nghiệp vụ đã được người phụ trách xác nhận, bản này dùng **thanh toán mô phỏng thành công lúc xác nhận đơn**, không kết nối ngân hàng/cổng thanh toán. Khách chỉ được hủy khi đơn còn `PAID`, trước khi chi nhánh xác nhận; thao tác hủy chuyển đơn sang `CANCELLED`, thanh toán sang `REFUNDED` và hoàn tồn kho trong cùng transaction. Sau `CONFIRMED`, khách không tự hủy/hoàn tiền. Giao diện chỉ hiển thị phương thức/trạng thái cần thiết, không chèn ghi chú “giao dịch demo”; tài liệu này giữ rõ giới hạn kỹ thuật để không nhầm với tiền thật.
+- Nút **Mua ngay** ở `/shop` đưa vào `/checkout`; khách thấy item, số lượng, đơn giá, chi nhánh, tổng tiền, nhập người nhận/số điện thoại/địa chỉ và xác nhận. Backend lấy người mua từ JWT, tính lại giá/tổng từ catalog, kiểm tra một chi nhánh, kiểm tra tồn kho và dùng `idempotencyKey` để chặn tạo đơn trùng khi xác nhận lại.
+- Lưu snapshot tên, đơn giá và số lượng từng item; tên/địa chỉ/số điện thoại chi nhánh, tên người mua và thông tin nhận hàng. `/orders/{id}/receipt` hiển thị mã đơn, ngày giờ, khách/người nhận/liên hệ/địa chỉ, chi nhánh, từng mặt hàng, số lượng, đơn giá, thành tiền, tổng tiền, phương thức/trạng thái thanh toán và trạng thái đơn. Có nút in A4 bằng CSS print; gọi là **biên lai đơn hàng**, không nhận là hóa đơn VAT. Thông tin lịch sử không đổi khi sửa tên/giá catalog sau mua.
+- Một mục menu **Đơn của tôi** dẫn đến `/orders`, gồm tab mua hàng và tab nhận nuôi dùng API hiện có. Khách xem/hủy đơn còn hợp lệ; manager xử lý đúng chi nhánh; admin xem toàn hệ thống. Mỗi chuyển trạng thái hợp lệ được ghi audit actor, trước/sau, thời gian và lý do; chi nhánh có thể hủy trước xác nhận với lý do. Truy cập biên lai qua API kiểm tra chủ đơn/manager đúng chi nhánh/admin, không dựa vào việc giấu đường dẫn.
+- Chuẩn bị `data-pipeline/migrations/V4_7_0__checkout_receipt_mysql.sql` cho MySQL: cột snapshot/payment/idempotency, unique key và audit table; backfill dữ liệu lịch sử khi có thể. **Chưa áp dụng lên Railway/shared DB**; cần backup, review schema và owner phê duyệt theo runbook. H2 local dùng `ddl-auto=update` không chứng minh migration MySQL đã chạy được.
+
+### Kiểm thử và bằng chứng local
+
+| Mục tiêu | Role/dữ liệu, bước kiểm tra | Kết quả và bằng chứng | Giới hạn |
+| --- | --- | --- | --- |
+| API checkout/biên lai | Customer, customer khác, manager đúng/sai chi nhánh, admin; mua product/puppy, đọc biên lai, hủy, chuyển trạng thái, sửa catalog rồi đọc lại | `CheckoutReceiptIntegrationTest`: quyền `401/403`, snapshot, hoàn tồn, payment state và nhánh đúng; `CartAndOrderServiceTest`, `OrderServiceAuthorizationTest` được cập nhật | Chạy H2, không phải Railway/MySQL |
+| Đồng thời | Hai khách tranh item stock 1; hai lần xác nhận cùng cart/key; hai staff cùng xác nhận một đơn | `CheckoutConcurrencyTest`: chỉ một đơn/stock đúng; idempotent retry; một transition/audit thành công | Không có payment callback thực vì không tích hợp gateway |
+| Luồng trình duyệt | Customer local: bấm Mua ngay → checkout → xác nhận → biên lai → hard refresh → Đơn của tôi → tab nhận nuôi; đo 320/375/390/768/1024/1280 px | Headless Chrome: không tràn ngang; biên lai khớp tổng và item server; đã tạo `target/checkout-desktop.png`, `checkout-mobile.png`, `receipt-desktop.png`, `receipt-mobile.png`, `receipt-a4.pdf` (artifact local, không đưa vào Git) | Chưa xác nhận thiết bị thật, TV1 regression, console/network toàn site |
+| Build/tĩnh | `mvn test`, `mvn -q package -DskipTests`, `node --check` JS sửa/mới, `git diff --check` | Vòng test cuối: **93 tests, 0 failures, 0 errors, 1 skipped**; package và browser local đã qua | Không thay cho staging smoke |
+
+### Việc cần duyệt/nghiệm thu trước khi gọi là hoàn tất
+
+1. Đã commit/push đúng nhánh `TV3` theo duyệt của người phụ trách; không tạo nhánh khác hay merge vào `main`. Nhóm vẫn cần review/đối chiếu nghiệp vụ trên bản được triển khai trước khi nghiệm thu.
+2. Owner DB đối chiếu schema MySQL hiện tại, backup và duyệt migration V4.7; owner staging chạy/smoke checkout, auth, quyền, HTTPS/WSS, SMTP, Cloudinary và rollback. Không tự áp migration/reseed database dùng chung.
+3. TV1 chạy regression mục 5 kế hoạch tổng hợp, gồm shop/adoption/chat một khách một inbox, responsive trên thiết bị thật và lỗi console/network; cập nhật evidence/lỗi theo mẫu. Chỉ khi có xác nhận này cùng commit/evidence mới đánh dấu mục 4 hoàn tất.
+
+**Rollback dự kiến:** trước khi áp migration chỉ cần hoàn nguyên code bằng `git revert bacd628` trên nhánh được phép. Nếu đã triển khai, thực hiện backup/rollback DB và redeploy theo `docs/Project/release_runbook.md`; không tự xóa dữ liệu hoặc chạy downgrade trên shared DB.
