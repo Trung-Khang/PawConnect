@@ -29,6 +29,18 @@ public class OrderController {
         return orderService.getMyOrders();
     }
 
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'BRANCH_MANAGER', 'ADMIN')")
+    @GetMapping("/{id}")
+    public OrderResponse getOrder(@PathVariable Long id) {
+        return orderService.getOrder(id);
+    }
+
+    @PreAuthorize("hasRole('CUSTOMER')")
+    @PostMapping("/{id}/cancel")
+    public OrderResponse cancelMyOrder(@PathVariable Long id) {
+        return orderService.cancelMyOrder(id);
+    }
+
     @PreAuthorize("hasAnyRole('BRANCH_MANAGER', 'ADMIN')")
     @GetMapping("/manage")
     public List<OrderResponse> getManagedOrders() {
@@ -37,7 +49,8 @@ public class OrderController {
 
     @PreAuthorize("hasAnyRole('BRANCH_MANAGER', 'ADMIN')")
     @PutMapping("/{id}/status")
-    public OrderResponse updateOrderStatus(@PathVariable Long id, @RequestParam String status) {
-        return orderService.updateOrderStatus(id, status);
+    public OrderResponse updateOrderStatus(@PathVariable Long id, @RequestParam String status,
+                                           @RequestParam(required = false) String reason) {
+        return orderService.updateOrderStatus(id, status, reason);
     }
 }

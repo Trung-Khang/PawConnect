@@ -18,11 +18,15 @@
 .orders-notice { margin: 1rem 0; padding: .85rem 1rem; border-left: 3px solid var(--primary); background: #fff1ed; color: var(--text-main); }
 .orders-notice.error { border-left-color: var(--danger); background: #fff0ef; }
 .order-items { max-width: 20rem; color: var(--text-muted); font-size: .85rem; line-height: 1.45; }
-.order-status { min-width: 9.5rem; padding: .48rem .6rem; border: 1px solid var(--border); border-radius: 6px; background: #fff; color: var(--text-main); font: inherit; }
-.order-status:focus { outline: 2px solid rgba(255, 123, 84, .25); border-color: var(--primary); }
+.order-actions { min-width: 12rem; }
+.order-status-label { display: block; font-weight: 700; margin-bottom: .35rem; }
+.order-receipt-link { color: var(--primary); font-weight: 700; }
+.order-status-action { display: block; margin-top: .4rem; padding: .35rem .55rem; border: 1px solid var(--primary); border-radius: 6px; background: #fff; color: var(--primary); cursor: pointer; font: inherit; }
+.order-status-action:hover, .order-status-action:focus-visible { background: #fff1ed; }
+.order-cancel { border-color: var(--danger); color: var(--danger); }
 
 @media (max-width: 900px) {
     .admin-orders-page { width: min(94vw, 48rem); }
-    .admin-orders-page .data-table { min-width: 820px; }
+    .admin-orders-page .data-table { min-width: 980px; }
     .admin-orders-page .table-container { overflow-x: auto; }
 }

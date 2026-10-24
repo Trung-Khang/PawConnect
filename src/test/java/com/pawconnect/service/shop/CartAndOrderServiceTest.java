@@ -4,9 +4,13 @@ import com.pawconnect.dto.order.OrderResponse;
 import com.pawconnect.entity.Branch;
 import com.pawconnect.entity.Category;
 import com.pawconnect.entity.Product;
+import com.pawconnect.entity.RoleName;
+import com.pawconnect.entity.User;
 import com.pawconnect.repository.BranchRepository;
 import com.pawconnect.repository.CategoryRepository;
 import com.pawconnect.repository.ProductRepository;
+import com.pawconnect.repository.RoleRepository;
+import com.pawconnect.repository.UserRepository;
 import com.pawconnect.security.CustomUserDetails;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,12 +46,17 @@ public class CartAndOrderServiceTest {
     @Autowired
     private CategoryRepository categoryRepository;
 
+    @Autowired private RoleRepository roleRepository;
+    @Autowired private UserRepository userRepository;
+
     private Long productId;
     private Long branchId;
 
     @BeforeEach
     public void setup() {
-        CustomUserDetails principal = new CustomUserDetails(1L, null, "customer@example.test", "unused",
+        User buyer = userRepository.save(new User("Customer Test", "customer-order@example.test", "unused", null,
+                roleRepository.findByName(RoleName.CUSTOMER).orElseThrow()));
+        CustomUserDetails principal = new CustomUserDetails(buyer.getId(), null, buyer.getEmail(), "unused",
                 List.of(new SimpleGrantedAuthority("ROLE_CUSTOMER")));
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()));
@@ -84,16 +93,22 @@ public class CartAndOrderServiceTest {
         // 2. Checkout (OrderRequest)
         com.pawconnect.dto.order.OrderRequest orderRequest = new com.pawconnect.dto.order.OrderRequest();
         orderRequest.setBranchId(branchId);
+        orderRequest.setIdempotencyKey("test-order-confirmation-0001");
+        orderRequest.setRecipientName("Customer Test");
+        orderRequest.setRecipientPhone("0901234567");
+        orderRequest.setDeliveryAddress("123 Test Street");
 
         OrderResponse orderResponse = orderService.createOrder(orderRequest);
         
         // 3. Kiểm tra
         assertNotNull(orderResponse);
-        assertEquals("PENDING", orderResponse.getStatus());
+        assertEquals("PAID", orderResponse.getStatus());
+        assertEquals("SIMULATED", orderResponse.getPaymentMethod());
         
         // Giá 1 bịch là 200,000 => 2 bịch là 400,000
         assertEquals(0, new BigDecimal("400000").compareTo(orderResponse.getTotalAmount()));
         assertEquals(1, orderResponse.getItems().size());
         assertEquals(2, orderResponse.getItems().get(0).getQuantity());
+        assertEquals("Premium Dog Food", orderResponse.getItems().get(0).getProductName());
     }
 }

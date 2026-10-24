@@ -89,6 +89,7 @@
 .cart-empty { color: var(--text-muted); text-align: center; padding: 2rem 0; }
 .cart-drawer-footer { padding-top: 1rem; border-top: 1px solid var(--border-color); }
 .cart-drawer-footer strong { color: var(--primary-color); font-size: 1.1rem; }
+.cart-checkout-link { display: block; text-align: center; margin-top: 1rem; text-decoration: none; }
 
 /* Shared header layout: public navigation remains centered independent of account controls. */
 body .main-header > .container {

@@ -239,7 +239,8 @@
         drawer.innerHTML = `
             <div class="cart-drawer-header"><h2>Giỏ hàng</h2><button class="cart-drawer-close" type="button" aria-label="Đóng giỏ hàng"><i class="fas fa-times"></i></button></div>
             <div class="cart-drawer-items"></div>
-            <div class="cart-drawer-footer"><span>Tổng cộng</span><strong>${formatMoney(total)}</strong></div>`;
+            <div class="cart-drawer-footer"><span>Tổng cộng</span><strong>${formatMoney(total)}</strong></div>
+            ${items.length ? '<a class="cart-checkout-link btn-pill" href="/checkout">Tiến hành mua</a>' : ''}`;
         drawer.querySelector('.cart-drawer-close').addEventListener('click', closeCartDrawer);
         const container = drawer.querySelector('.cart-drawer-items');
         if (!items.length) container.innerHTML = '<p class="cart-empty">Giỏ hàng của bạn đang trống.</p>';
