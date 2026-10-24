@@ -105,8 +105,18 @@ public class OrderServiceImpl implements OrderService {
                 .orderItems(new ArrayList<>())
                 .build();
 
+        List<CartItem> itemsToOrder = cart.getItems();
+        if (request.getItemIds() != null && !request.getItemIds().isEmpty()) {
+            itemsToOrder = cart.getItems().stream()
+                    .filter(item -> request.getItemIds().contains(item.getId()))
+                    .toList();
+            if (itemsToOrder.isEmpty()) {
+                throw new BusinessException("Không tìm thấy sản phẩm đã chọn trong giỏ hàng.");
+            }
+        }
+
         BigDecimal total = BigDecimal.ZERO;
-        for (CartItem cartItem : cart.getItems()) {
+        for (CartItem cartItem : itemsToOrder) {
             if (cartItem.getQuantity() == null || cartItem.getQuantity() < 1
                     || (cartItem.getProduct() == null) == (cartItem.getPuppyListing() == null)) {
                 throw new BusinessException("Giỏ hàng chứa sản phẩm không hợp lệ.");
@@ -138,7 +148,11 @@ public class OrderServiceImpl implements OrderService {
         order.setTotalAmount(total);
         orderRepository.saveAndFlush(order);
         recordEvent(order, null, PAID, userId, "Xác nhận thanh toán mô phỏng");
-        cartService.clearCart(cart);
+        if (request.getItemIds() != null && !request.getItemIds().isEmpty()) {
+            cartService.removeItems(cart, itemsToOrder);
+        } else {
+            cartService.clearCart(cart);
+        }
         return mapToResponse(order);
     }
 

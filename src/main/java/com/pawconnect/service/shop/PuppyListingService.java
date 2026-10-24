@@ -11,4 +11,6 @@ public interface PuppyListingService {
     PuppyListingResponse getPuppyListing(Long id);
     List<PuppyListingResponse> getAllPuppyListings(Long branchId, String breedCode, String suitableSize);
     void deletePuppyListing(Long id);
+
+    void deletePuppyListings(List<Long> ids);
 }

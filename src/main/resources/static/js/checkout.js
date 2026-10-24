@@ -22,7 +22,17 @@
         const response = await fetch('/api/cart', { headers: authHeaders() });
         if (!response.ok) throw new Error(await responseMessage(response, 'Không thể tải giỏ hàng.'));
         const cart = await response.json();
-        const items = cart.items || [];
+        let items = cart.items || [];
+        const savedSelectedIds = sessionStorage.getItem('pawconnect.selectedCartItemIds');
+        if (savedSelectedIds) {
+            try {
+                const selectedList = JSON.parse(savedSelectedIds);
+                if (Array.isArray(selectedList) && selectedList.length > 0) {
+                    const filtered = items.filter(it => selectedList.includes(it.id));
+                    if (filtered.length > 0) items = filtered;
+                }
+            } catch (_) {}
+        }
         const container = document.getElementById('checkout-items');
         container.replaceChildren();
         document.getElementById('confirm-order').disabled = true;
@@ -86,13 +96,15 @@
                     idempotencyKey: confirmationKey,
                     recipientName: document.getElementById('recipient-name').value.trim(),
                     recipientPhone: document.getElementById('recipient-phone').value.trim(),
-                    deliveryAddress: document.getElementById('delivery-address').value.trim()
+                    deliveryAddress: document.getElementById('delivery-address').value.trim(),
+                    itemIds: items.map(it => it.id)
                 })
             });
             if (!response.ok) throw new Error(await responseMessage(response, 'Không thể xác nhận đơn.'));
             const order = await response.json();
             sessionStorage.removeItem('pawconnect.checkoutSignature');
             sessionStorage.removeItem('pawconnect.checkoutKey');
+            sessionStorage.removeItem('pawconnect.selectedCartItemIds');
             window.location.assign(`/orders/${order.id}/receipt`);
         } catch (error) {
             showNotice(error.message, true);

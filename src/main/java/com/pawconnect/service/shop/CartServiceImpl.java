@@ -135,6 +135,44 @@ public class CartServiceImpl implements CartService {
         cartItemRepository.deleteAll(cart.getItems());
         cart.getItems().clear();
     }
+
+    @Override
+    @Transactional
+    public CartResponse.CartItemResponse updateItemQuantity(Long itemId, Integer quantity) {
+        if (quantity == null || quantity < 1) {
+            throw new BusinessException("Số lượng phải lớn hơn 0.");
+        }
+        Cart cart = getMyCart();
+        CartItem item = cartItemRepository.findById(itemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cart item not found"));
+
+        if (!item.getCart().getId().equals(cart.getId())) {
+            throw new BusinessException("You don't own this cart item");
+        }
+
+        Integer stock = 0;
+        if (item.getProduct() != null) {
+            stock = item.getProduct().getStock();
+        } else if (item.getPuppyListing() != null) {
+            stock = item.getPuppyListing().getStock();
+        }
+
+        if (stock != null && quantity > stock) {
+            throw new BusinessException("Số lượng vượt quá tồn kho khả dụng (" + stock + ").");
+        }
+
+        item.setQuantity(quantity);
+        CartItem saved = cartItemRepository.save(item);
+        return mapToCartItemResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public void removeItems(Cart cart, java.util.List<CartItem> items) {
+        if (items == null || items.isEmpty()) return;
+        cartItemRepository.deleteAll(items);
+        cart.getItems().removeAll(items);
+    }
     
     private CartResponse mapToCartResponse(Cart cart) {
         CartResponse res = new CartResponse();
@@ -157,12 +195,14 @@ public class CartServiceImpl implements CartService {
             res.setPrice(item.getProduct().getPrice());
             res.setBranchId(item.getProduct().getBranch().getId());
             res.setBranchName(item.getProduct().getBranch().getName());
+            res.setStock(item.getProduct().getStock());
         } else if (item.getPuppyListing() != null) {
             res.setPuppyListingId(item.getPuppyListing().getId());
             res.setProductName(item.getPuppyListing().getListingTitle());
             res.setPrice(item.getPuppyListing().getPricePerPuppyVnd());
             res.setBranchId(item.getPuppyListing().getBranch().getId());
             res.setBranchName(item.getPuppyListing().getBranch().getName());
+            res.setStock(item.getPuppyListing().getStock());
         }
         res.setQuantity(item.getQuantity());
         return res;

@@ -22,4 +22,6 @@ public class OrderRequest {
 
     @NotBlank @Size(max = 500)
     private String deliveryAddress;
+
+    private java.util.List<Long> itemIds;
 }

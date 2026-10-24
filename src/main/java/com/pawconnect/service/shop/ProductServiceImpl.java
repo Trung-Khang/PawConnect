@@ -1,173 +1,346 @@
 package com.pawconnect.service.shop;
 
+
+
 import com.pawconnect.dto.product.ProductRequest;
+
 import com.pawconnect.dto.product.ProductResponse;
+
 import com.pawconnect.entity.Branch;
+
 import com.pawconnect.entity.Category;
+
 import com.pawconnect.entity.Product;
+
 import com.pawconnect.repository.BranchRepository;
+
 import com.pawconnect.repository.CategoryRepository;
+
 import com.pawconnect.repository.ProductRepository;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
+
 import org.springframework.transaction.annotation.Transactional;
 
+
+
 import com.pawconnect.exception.ResourceNotFoundException;
+
 import com.pawconnect.exception.BusinessException;
+
 import org.springframework.dao.DataIntegrityViolationException;
+
 import com.pawconnect.security.SecurityUtils;
+
 import org.springframework.security.access.AccessDeniedException;
+
 import org.springframework.security.access.prepost.PreAuthorize;
+
 import java.util.Objects;
 
+
+
 import java.util.List;
+
 import java.util.stream.Collectors;
 
+
+
 @Service
+
 @RequiredArgsConstructor
+
 public class ProductServiceImpl implements ProductService {
 
+
+
     private final ProductRepository productRepository;
+
     private final BranchRepository branchRepository;
+
     private final CategoryRepository categoryRepository;
 
+
+
     @Override
+
     @Transactional(readOnly = true)
+
     public List<ProductResponse> getProducts(Long branchId, String suitableSize) {
+
         return productRepository.findByBranchIdAndFilters(branchId, suitableSize)
+
                 .stream().map(this::mapToResponse).collect(Collectors.toList());
+
     }
 
+
+
     @Override
+
     @Transactional(readOnly = true)
+
     public ProductResponse getProductById(Long id) {
+
         Product p = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+
         return mapToResponse(p);
+
     }
 
+
+
     @Override
+
     @Transactional
+
     @PreAuthorize("hasAnyRole('ADMIN', 'BRANCH_MANAGER')")
+
     public ProductResponse createProduct(ProductRequest request) {
+
         Branch branch = branchRepository.findById(request.getBranchId())
+
                 .orElseThrow(() -> new ResourceNotFoundException("Branch not found"));
+
         Category category = categoryRepository.findById(request.getCategoryId())
+
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
+
+
         if (SecurityUtils.hasRole("BRANCH_MANAGER")) {
+
             Long currentUserBranchId = SecurityUtils.getCurrentUserBranchId();
+
             if (!Objects.equals(currentUserBranchId, branch.getId())) {
+
                 throw new AccessDeniedException("Branch managers can only create products for their own branch");
+
             }
+
         }
+
+
 
         Product p = Product.builder()
+
                 .name(request.getName())
+
                 .description(request.getDescription())
+
                 .price(request.getPrice())
+
                 .stock(request.getStock())
+
                 .imageUrl(request.getImageUrl())
+
                 .imagePublicId(request.getImagePublicId())
+
                 .suitableSize(request.getSuitableSize())
 
+
+
                 .ingredients(request.getIngredients())
+
                 .targetAudience(request.getTargetAudience())
+
                 .branch(branch)
+
                 .category(category)
+
                 .build();
 
+
+
         productRepository.save(p);
+
         return mapToResponse(p);
+
     }
 
+
+
     @Override
+
     @Transactional
+
     @PreAuthorize("hasAnyRole('ADMIN', 'BRANCH_MANAGER')")
+
     public ProductResponse updateProduct(Long id, ProductRequest request) {
+
         Product p = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+
         
+
         if (SecurityUtils.hasRole("BRANCH_MANAGER")) {
+
             Long currentUserBranchId = SecurityUtils.getCurrentUserBranchId();
+
             if (!Objects.equals(currentUserBranchId, p.getBranch().getId())) {
+
                 throw new AccessDeniedException("Branch managers can only update products for their own branch");
+
             }
+
             if (request.getBranchId() != null && !Objects.equals(currentUserBranchId, request.getBranchId())) {
+
                 throw new AccessDeniedException("Branch managers cannot move products to another branch");
+
             }
+
         }
+
         
+
         p.setName(request.getName());
+
         p.setDescription(request.getDescription());
+
         p.setPrice(request.getPrice());
+
         p.setStock(request.getStock());
+
         p.setImageUrl(request.getImageUrl());
+
         p.setImagePublicId(request.getImagePublicId());
+
         p.setSuitableSize(request.getSuitableSize());
 
+
+
         p.setIngredients(request.getIngredients());
+
         p.setTargetAudience(request.getTargetAudience());
+
         
+
         if (request.getCategoryId() != null) {
+
             Category category = categoryRepository.findById(request.getCategoryId())
+
                     .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+
             p.setCategory(category);
+
         }
+
         
+
         if (request.getBranchId() != null) {
+
             Branch branch = branchRepository.findById(request.getBranchId())
+
                     .orElseThrow(() -> new ResourceNotFoundException("Branch not found"));
+
             p.setBranch(branch);
+
         }
+
         
+
         productRepository.save(p);
+
         return mapToResponse(p);
+
     }
 
+
+
     @Override
+
     @Transactional
+
     @PreAuthorize("hasRole('ADMIN')")
+
     public void deleteProduct(Long id) {
+
         if (!productRepository.existsById(id)) throw new ResourceNotFoundException("Product not found");
+
         try {
+
             productRepository.deleteById(id);
+
             productRepository.flush();
+
         } catch (DataIntegrityViolationException e) {
+
             throw new BusinessException("Cannot delete product because it is already used in an order or cart.");
+
         }
+
     }
 
+
+
     @Override
+
     @Transactional
+
     @PreAuthorize("hasRole('ADMIN')")
+
     public void deleteProducts(List<Long> ids) {
+
         if (ids == null || ids.isEmpty()) {
+
             throw new BusinessException("Hãy chọn ít nhất một sản phẩm để xóa.");
+
         }
+
         for (Long id : ids.stream().filter(Objects::nonNull).distinct().toList()) {
+
             deleteProduct(id);
+
         }
+
     }
+
+
 
     private ProductResponse mapToResponse(Product p) {
+
         ProductResponse res = new ProductResponse();
+
         res.setId(p.getId());
+
         res.setName(p.getName());
+
         res.setDescription(p.getDescription());
+
         res.setPrice(p.getPrice());
+
         res.setStock(p.getStock());
+
         res.setImageUrl(p.getImageUrl());
+
         res.setImagePublicId(p.getImagePublicId());
+
         res.setSuitableSize(p.getSuitableSize());
 
+
+
         res.setIngredients(p.getIngredients());
+
         res.setTargetAudience(p.getTargetAudience());
+
         if (p.getBranch() != null) {
+
             res.setBranchId(p.getBranch().getId());
+
         }
+
         if (p.getCategory() != null) {
+
             res.setCategoryId(p.getCategory().getId());
+
             res.setCategoryName(p.getCategory().getName());
+
         }
+
         return res;
+
     }
+
 }
+
