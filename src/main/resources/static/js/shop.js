@@ -354,7 +354,7 @@ function showLinkedItemNotice(message) {
 
 async function buyNow(itemType, id) {
     const added = await addToCart(itemType, id);
-    if (added) window.PawConnectCart.open();
+    if (added) window.location.assign('/checkout');
 }
 
 function escapeHtml(value) {

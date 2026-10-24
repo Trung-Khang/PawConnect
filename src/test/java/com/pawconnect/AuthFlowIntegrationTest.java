@@ -17,10 +17,15 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import com.pawconnect.repository.AuthOtpRepository;
 import com.pawconnect.service.auth.OtpService;
+import com.pawconnect.service.auth.OtpMailService;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 class AuthFlowIntegrationTest {
+
+    @MockBean
+    private OtpMailService otpMailService;
 
     @Autowired
     private MockMvc mockMvc;

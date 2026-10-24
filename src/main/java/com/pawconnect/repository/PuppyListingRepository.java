@@ -14,8 +14,13 @@ public interface PuppyListingRepository extends JpaRepository<PuppyListing, Long
     
     @Transactional
     @Modifying
-    @Query("UPDATE PuppyListing p SET p.stock = p.stock - :quantity, p.status = CASE WHEN (p.stock - :quantity) = 0 THEN com.pawconnect.entity.ListingStatus.SOLD_OUT ELSE p.status END WHERE p.id = :id AND p.stock >= :quantity")
+    @Query("UPDATE PuppyListing p SET p.stock = p.stock - :quantity, p.status = CASE WHEN (p.stock - :quantity) = 0 THEN com.pawconnect.entity.ListingStatus.SOLD_OUT ELSE p.status END WHERE p.id = :id AND p.stock >= :quantity AND p.status = com.pawconnect.entity.ListingStatus.AVAILABLE")
     int decrementStock(@Param("id") Long id, @Param("quantity") int quantity);
+
+    @Transactional
+    @Modifying
+    @Query("UPDATE PuppyListing p SET p.stock = p.stock + :quantity, p.status = com.pawconnect.entity.ListingStatus.AVAILABLE WHERE p.id = :id")
+    int restoreStock(@Param("id") Long id, @Param("quantity") int quantity);
 
     @Query("SELECT p FROM PuppyListing p WHERE (:branchId IS NULL OR p.branch.id = :branchId) " +
            "AND (:breedCode IS NULL OR p.breedCode = :breedCode) " +

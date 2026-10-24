@@ -1,8 +1,12 @@
 package com.pawconnect.controller.admin;
 
+import com.pawconnect.dto.admin.AdminBranchResponse;
+import com.pawconnect.dto.admin.AdminBranchCreateRequest;
+import com.pawconnect.dto.admin.AdminBranchUpdateRequest;
 import com.pawconnect.dto.admin.AdminUserResponse;
 import com.pawconnect.dto.admin.AdminUserUpdateRequest;
 import com.pawconnect.dto.auth.SeedUserMappingResponse;
+import com.pawconnect.service.admin.AdminBranchService;
 import com.pawconnect.service.admin.AdminUserService;
 import com.pawconnect.service.seed.SeedUserImportService;
 import java.util.List;
@@ -11,10 +15,13 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -22,16 +29,41 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminUserController {
 
     private final AdminUserService adminUserService;
+    private final AdminBranchService adminBranchService;
     private final SeedUserImportService seedUserImportService;
 
-    public AdminUserController(AdminUserService adminUserService, SeedUserImportService seedUserImportService) {
+    public AdminUserController(AdminUserService adminUserService, AdminBranchService adminBranchService,
+                               SeedUserImportService seedUserImportService) {
         this.adminUserService = adminUserService;
+        this.adminBranchService = adminBranchService;
         this.seedUserImportService = seedUserImportService;
     }
 
     @GetMapping("/users")
     public List<AdminUserResponse> users() {
         return adminUserService.getAllUsers();
+    }
+
+    @GetMapping("/branches")
+    public List<AdminBranchResponse> branches() {
+        return adminBranchService.getAllBranches();
+    }
+
+    @PostMapping("/branches")
+    @ResponseStatus(HttpStatus.CREATED)
+    public AdminBranchResponse createBranch(@Valid @RequestBody AdminBranchCreateRequest request) {
+        return adminBranchService.create(request);
+    }
+
+    @PatchMapping("/branches/{branchId}")
+    public AdminBranchResponse updateBranch(@PathVariable Long branchId, @Valid @RequestBody AdminBranchUpdateRequest request) {
+        return adminBranchService.update(branchId, request);
+    }
+
+    @DeleteMapping("/branches/{branchId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteBranch(@PathVariable Long branchId) {
+        adminBranchService.delete(branchId);
     }
 
     @PatchMapping("/users/{userId}")

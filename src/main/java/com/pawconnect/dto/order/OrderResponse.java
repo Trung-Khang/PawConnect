@@ -11,6 +11,15 @@ public class OrderResponse {
     private Long userId;
     private Long branchId;
     private String status;
+    private String paymentMethod;
+    private String paymentStatus;
+    private String customerName;
+    private String branchName;
+    private String branchAddress;
+    private String branchPhone;
+    private String recipientName;
+    private String recipientPhone;
+    private String deliveryAddress;
     private BigDecimal totalAmount;
     private LocalDateTime createdAt;
     private List<OrderItemResponse> items;

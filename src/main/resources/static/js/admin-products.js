@@ -2,11 +2,27 @@
     const tokenKey = 'pawconnect.accessToken';
     const selectedIds = new Set();
     let products = [];
+    let canDeleteProducts = false;
+    let canManageProducts = false;
 
     document.addEventListener('DOMContentLoaded', initialise);
 
-    function initialise() {
+    async function initialise() {
         bindEvents();
+        try {
+            const response = await fetch('/api/auth/me', { headers: authHeaders() });
+            if (response.ok) {
+                const role = (await response.json()).role;
+                canDeleteProducts = role === 'ADMIN';
+                canManageProducts = canDeleteProducts || role === 'BRANCH_MANAGER';
+            }
+        } catch (_) {
+            canDeleteProducts = false;
+            canManageProducts = false;
+        }
+        document.getElementById('addProductBtn').hidden = !canManageProducts;
+        document.getElementById('selectAllProducts').hidden = !canDeleteProducts;
+        document.getElementById('deleteSelectedBtn').hidden = !canDeleteProducts;
         loadProducts();
         loadCategories();
         loadBranches();
@@ -55,9 +71,15 @@
                 <td class="row-actions"><button class="btn btn-secondary edit-product" type="button">Sửa</button><button class="btn btn-danger delete-product" type="button">Xóa</button></td>`;
             row.querySelector('strong').textContent = product.name;
             row.children[3].textContent = product.categoryName || 'Chưa phân loại';
-            row.querySelector('.product-selector').addEventListener('change', (event) => toggleProductSelection(product.id, event.target.checked));
+            if (canDeleteProducts) {
+                row.querySelector('.product-selector').addEventListener('change', (event) => toggleProductSelection(product.id, event.target.checked));
+                row.querySelector('.delete-product').addEventListener('click', () => deleteProducts([product.id]));
+            } else {
+                row.querySelector('.selection-cell').hidden = true;
+                row.querySelector('.delete-product').hidden = true;
+            }
+            row.querySelector('.edit-product').hidden = !canManageProducts;
             row.querySelector('.edit-product').addEventListener('click', () => editProduct(product.id));
-            row.querySelector('.delete-product').addEventListener('click', () => deleteProducts([product.id]));
             body.append(row);
         });
         updateSelectionControls();

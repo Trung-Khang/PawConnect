@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <th:block th:replace="~{fragments/bootstrap :: assets}"></th:block>
+    <title>Đặt mua | PawConnect</title>
+    <link rel="stylesheet" href="/css/shop.css">
+    <link rel="stylesheet" href="/css/header.css?v=20261016-2">
+    <link rel="stylesheet" href="/css/commerce.css">
+</head>
+<body class="commerce-screen">
+<div th:replace="~{fragments/header :: header}"></div>
+<main class="commerce-page container py-4 py-md-5">
+    <a href="/shop#shop-section" class="commerce-back">← Tiếp tục mua sắm</a>
+    <h1>Thông tin đặt mua</h1>
+    <p id="checkout-notice" class="commerce-notice" role="status" hidden></p>
+    <div class="row g-4">
+        <section class="col-12 col-lg-7" aria-labelledby="checkout-items-heading">
+            <div class="commerce-panel">
+                <h2 id="checkout-items-heading">Sản phẩm trong đơn</h2>
+                <div id="checkout-items" class="commerce-items" aria-live="polite">Đang tải giỏ hàng…</div>
+                <p class="commerce-total"><span>Tổng thanh toán</span><strong id="checkout-total">—</strong></p>
+            </div>
+        </section>
+        <section class="col-12 col-lg-5" aria-labelledby="checkout-details-heading">
+            <form id="checkout-form" class="commerce-panel">
+                <h2 id="checkout-details-heading">Thông tin nhận hàng</h2>
+                <label class="form-label" for="checkout-branch">Chi nhánh bán</label>
+                <input id="checkout-branch" class="form-control mb-3" readonly>
+                <label class="form-label" for="recipient-name">Tên người nhận</label>
+                <input id="recipient-name" name="recipientName" class="form-control mb-3" maxlength="120" required autocomplete="name">
+                <label class="form-label" for="recipient-phone">Số điện thoại</label>
+                <input id="recipient-phone" name="recipientPhone" class="form-control mb-3" type="tel" pattern="0[35789][0-9]{8}" maxlength="10" required autocomplete="tel">
+                <label class="form-label" for="delivery-address">Địa chỉ nhận hàng</label>
+                <textarea id="delivery-address" name="deliveryAddress" class="form-control mb-3" maxlength="500" rows="3" required autocomplete="street-address"></textarea>
+                <label class="form-label" for="payment-method">Phương thức thanh toán</label>
+                <input id="payment-method" class="form-control mb-4" value="Thanh toán trực tuyến" readonly>
+                <button id="confirm-order" class="btn-pill commerce-submit" type="submit" disabled>Xác nhận thanh toán</button>
+            </form>
+        </section>
+    </div>
+</main>
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script src="/js/checkout.js" defer></script>
+</body>
+</html>

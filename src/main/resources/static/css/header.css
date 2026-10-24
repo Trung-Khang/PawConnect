@@ -14,6 +14,8 @@
     transition: background-color .2s ease, color .2s ease;
 }
 
+.main-header [hidden], .management-sidebar [hidden] { display: none !important; }
+
 .icon-btn:hover,
 .icon-btn:focus-visible {
     background: rgba(226, 123, 88, .12);
@@ -87,6 +89,7 @@
 .cart-empty { color: var(--text-muted); text-align: center; padding: 2rem 0; }
 .cart-drawer-footer { padding-top: 1rem; border-top: 1px solid var(--border-color); }
 .cart-drawer-footer strong { color: var(--primary-color); font-size: 1.1rem; }
+.cart-checkout-link { display: block; text-align: center; margin-top: 1rem; text-decoration: none; }
 
 /* Shared header layout: clean 3-column alignment without rigid fixed columns or transform hacks */
 body .main-header > .container {
@@ -336,6 +339,8 @@ body .main-header > .container {
 
 body.management-menu-open { overflow: hidden; }
 
+@media (max-width: 1180px) {
+    body .main-header > .container {
 @media (max-width: 1240px) {
     .main-header .container {
         grid-template-columns: max-content 1fr;
@@ -355,9 +360,21 @@ body.management-menu-open { overflow: hidden; }
 }
 
 @media (max-width: 760px) {
-    .main-header .container { width: min(94vw, 38rem); }
-    .header-actions { gap: .35rem; }
+    body .main-header > .container {
+        width: min(94vw, 38rem);
+        grid-template-columns: minmax(0, 1fr);
+        row-gap: .45rem;
+    }
+    .main-header { padding: .65rem 0; }
+    .brand-cluster { min-width: 0; }
+    .logo { font-size: 1.45rem; }
+    .header-actions { grid-row: 2; justify-self: stretch; justify-content: space-between; gap: .35rem; min-width: 0; }
     .header-actions .btn-pill { padding-inline: .9rem; }
     .header-auth-action { min-width: auto; }
-    .user-pill { padding-inline: .7rem; }
+    .header-actions > [data-booking-access] { display: none; }
+    .user-pill { padding-inline: .5rem; min-width: 0; }
+    .account-status { max-width: 7ch; overflow: hidden; text-overflow: ellipsis; }
+    .nav-menu-wrapper { grid-row: 3; overflow-x: auto; justify-content: flex-start; scrollbar-width: thin; }
+    .nav-menu { gap: 1.2rem; padding-bottom: .3rem; }
+    .nav-menu li a { font-size: .88rem; }
 }

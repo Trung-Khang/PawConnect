@@ -125,6 +125,7 @@ h1, h2, h3 {
 }
 
 /* Buttons */
+.admin-store-page [hidden] { display: none !important; }
 .btn {
     padding: 0.75rem 1.5rem;
     border-radius: 8px;

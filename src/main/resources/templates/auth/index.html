@@ -2,6 +2,7 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <th:block th:replace="~{fragments/bootstrap :: assets}"></th:block>
     <title>PawConnect - Tài khoản</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/shop.css"><link rel="stylesheet" href="/css/header.css?v=20261021-1"><link rel="stylesheet" href="/css/auth.css">
@@ -14,8 +15,8 @@
 
     <form id="login-form" class="auth-form" hidden>
         <h1>Đăng nhập</h1><p>Chào mừng bạn quay lại PawConnect.</p>
-        <label>Tên đăng nhập hoặc email<input name="usernameOrEmail" autocomplete="username" required></label>
-        <label>Mật khẩu<input name="password" type="password" autocomplete="current-password" required></label>
+        <label>Tên đăng nhập hoặc email<input class="form-control" name="usernameOrEmail" autocomplete="username" required></label>
+        <label>Mật khẩu<input class="form-control" name="password" type="password" autocomplete="current-password" required></label>
         <button class="btn-pill" type="submit">Đăng nhập</button>
         <p><a href="/auth/forgot-password">Quên mật khẩu?</a> · <a href="/auth/register">Tạo tài khoản</a></p>
     </form>

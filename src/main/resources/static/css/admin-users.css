@@ -1,5 +1,6 @@
 .admin-users-page { padding-block: 3rem 5rem; }
 .admin-users-heading { display: flex; align-items: end; justify-content: space-between; gap: 2rem; margin-bottom: 2rem; }
+.admin-reload-button[hidden], .admin-users-table-wrap[hidden] { display: none !important; }
 .admin-eyebrow { margin: 0 0 .4rem; color: var(--primary-color); font-weight: 800; }
 .admin-users-heading h1 { margin: 0; font-size: 2rem; }
 .admin-users-heading p:not(.admin-eyebrow) { margin: .5rem 0 0; color: var(--text-muted); }
@@ -8,11 +9,11 @@
 .admin-reload-button:active { transform: translateY(0); }
 .admin-users-notice { margin: 0 0 1.25rem; padding: 1rem 1.2rem; border-left: 4px solid #48bb78; background: #effbf4; color: #22543d; font-weight: 700; }
 .admin-users-notice.error { border-color: #e53e3e; background: #fff0ef; color: #9b2c2c; }
-.admin-users-table-wrap { border: 1px solid var(--border-color); background: var(--surface-color); box-shadow: var(--shadow-soft); }
+.admin-users-table-wrap { box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; overflow: hidden; border: 1px solid var(--border-color); background: var(--surface-color); box-shadow: var(--shadow-soft); }
 .admin-users-table-title { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.2rem 1.4rem; border-bottom: 1px solid var(--border-color); }
 .admin-users-table-title h2 { margin: 0; font-size: 1.2rem; }
 .account-total { color: var(--text-muted); font-weight: 700; }
-.admin-users-table-scroll { overflow-x: auto; }
+.admin-users-table-scroll { position: relative; max-width: 100%; overflow-x: auto; }
 .admin-users-table-wrap table { width: 100%; min-width: 860px; border-collapse: collapse; }
 .admin-users-table-wrap th, .admin-users-table-wrap td { padding: 1rem 1.2rem; border-bottom: 1px solid var(--border-color); text-align: left; vertical-align: middle; }
 .admin-users-table-wrap th { color: var(--text-muted); font-size: .78rem; letter-spacing: .04em; text-transform: uppercase; }

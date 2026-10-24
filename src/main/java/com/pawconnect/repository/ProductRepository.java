@@ -18,6 +18,16 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query("UPDATE Product p SET p.stock = p.stock - 1 WHERE p.id = :id AND p.stock >= 1")
     int decreaseStock(@Param("id") Long id);
 
+    @Transactional
+    @Modifying
+    @Query("UPDATE Product p SET p.stock = p.stock - :quantity WHERE p.id = :id AND p.stock >= :quantity")
+    int decreaseStockBy(@Param("id") Long id, @Param("quantity") int quantity);
+
+    @Transactional
+    @Modifying
+    @Query("UPDATE Product p SET p.stock = p.stock + :quantity WHERE p.id = :id")
+    int restoreStock(@Param("id") Long id, @Param("quantity") int quantity);
+
     @Query("SELECT p FROM Product p WHERE (:branchId IS NULL OR p.branch.id = :branchId) " +
            "AND (:suitableSize IS NULL OR p.suitableSize = :suitableSize)")
     List<Product> findByBranchIdAndFilters(

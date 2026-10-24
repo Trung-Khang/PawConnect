@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <th:block th:replace="~{fragments/bootstrap :: assets}"></th:block>
     <title>Hồ sơ tài khoản | PawConnect</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/shop.css">
@@ -30,8 +31,8 @@
             <section class="profile-form-panel" aria-labelledby="details-title">
                 <h2 id="details-title">Thông tin cá nhân</h2>
                 <form id="profile-form" class="profile-form" novalidate>
-                    <label>Họ và tên<input id="profile-full-name" name="fullName" maxlength="120" required autocomplete="name"></label>
-                    <label>Số điện thoại<input id="profile-phone" name="phone" maxlength="30" required inputmode="tel" autocomplete="tel" placeholder="0912345678 hoặc +84912345678"></label>
+                    <label>Họ và tên<input class="form-control" id="profile-full-name" name="fullName" maxlength="120" required autocomplete="name"></label>
+                    <label>Số điện thoại<input class="form-control" id="profile-phone" name="phone" maxlength="30" required inputmode="tel" autocomplete="tel" placeholder="0912345678 hoặc +84912345678"></label>
                     <p class="phone-help">Số Việt Nam gồm 10 số, bắt đầu bằng 03, 05, 07, 08 hoặc 09.</p>
                     <div class="profile-readonly"><span>Email</span><strong id="profile-email">-</strong><span>Tên đăng nhập</span><strong id="profile-username">-</strong></div>
                     <button class="btn-pill" type="submit"><i class="fas fa-floppy-disk"></i> Lưu thay đổi</button>

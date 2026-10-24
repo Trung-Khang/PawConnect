@@ -41,13 +41,13 @@ public class ProductController {
         return productService.updateProduct(id, request);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'BRANCH_MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public void deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'BRANCH_MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping
     public void deleteProducts(@RequestBody List<Long> ids) {
         productService.deleteProducts(ids);

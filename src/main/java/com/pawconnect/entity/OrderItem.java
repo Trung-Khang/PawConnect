@@ -36,4 +36,7 @@ public class OrderItem {
 
     @Column(nullable = false)
     private BigDecimal price;
+
+    @Column(name = "item_name_snapshot", length = 255)
+    private String itemNameSnapshot;
 }
