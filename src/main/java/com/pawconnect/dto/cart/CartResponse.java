@@ -20,5 +20,6 @@ public class CartResponse {
         private String branchName;
         private Integer quantity;
         private BigDecimal price;
+        private Integer stock;
     }
 }

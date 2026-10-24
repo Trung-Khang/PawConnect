@@ -35,4 +35,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             @Param("suitableSize") String suitableSize);
             
     java.util.Optional<Product> findByName(String name);
+
+    java.util.Optional<Product> findByNameAndBranch(String name, com.pawconnect.entity.Branch branch);
 }
