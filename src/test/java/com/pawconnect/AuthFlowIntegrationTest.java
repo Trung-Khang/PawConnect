@@ -15,7 +15,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import com.pawconnect.repository.UserRepository;
 import com.pawconnect.repository.AuthOtpRepository;
 import com.pawconnect.service.auth.OtpService;
 import com.pawconnect.service.auth.OtpMailService;
@@ -35,9 +34,6 @@ class AuthFlowIntegrationTest {
     private ObjectMapper objectMapper;
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
     private AuthOtpRepository authOtpRepository;
 
     @Test
@@ -45,11 +41,10 @@ class AuthFlowIntegrationTest {
         String registration = """
                 {"username":"customer.a","fullName":"Nguyen Van A","email":"customer@example.com","password":"Password123!","confirmPassword":"Password123!","phone":"+84901234567"}
                 """;
-        MvcResult registrationResult = mockMvc.perform(post("/api/auth/register")
+        mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON).content(registration))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.emailSent").value(false))
-                .andReturn();
+                .andExpect(jsonPath("$.emailSent").value(false));
 
         mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"usernameOrEmail\":\"customer.a\",\"password\":\"Password123!\"}"))
@@ -149,10 +144,9 @@ class AuthFlowIntegrationTest {
                         .content("{\"identity\":\"missing-account@example.com\"}"))
                 .andExpect(status().isOk())
                 .andReturn();
-        MvcResult existingButUnverified = mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"forgot.user\",\"fullName\":\"Forgot User\",\"email\":\"forgot@example.com\",\"password\":\"Password123!\",\"confirmPassword\":\"Password123!\",\"phone\":\"0912345689\"}"))
-                .andExpect(status().isCreated())
-                .andReturn();
+                .andExpect(status().isCreated());
 
         MvcResult known = mockMvc.perform(post("/api/auth/forgot-password").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"identity\":\"forgot.user\"}"))

@@ -13,9 +13,12 @@ public class SeedUserInitializer {
 
     @Bean
     @Order(20)
-    @Profile({"dev", "test", "demo"})
+    @Profile({"default", "dev", "test", "demo"})
     @ConditionalOnProperty(prefix = "app.seed.users", name = "enabled", havingValue = "true")
     CommandLineRunner initializeSeedUsers(SeedUserImportService seedUserImportService) {
-        return arguments -> seedUserImportService.importConfiguredSeed();
+        return arguments -> {
+            seedUserImportService.importConfiguredSeed();
+            System.out.println("SEED USERS INITIALIZED SUCCESSFULLY!");
+        };
     }
 }

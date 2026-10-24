@@ -9,7 +9,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import jakarta.persistence.LockModeType;
-import java.util.Optional;
 
 @Repository
 public interface BranchRepository extends JpaRepository<Branch, Long> {
