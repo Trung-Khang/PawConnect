@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <th:block th:replace="~{fragments/bootstrap :: assets}"></th:block>
     <title>Quản lý đơn hàng | PawConnect</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/admin.css">
     <link rel="stylesheet" href="/css/shop.css">
     <link rel="stylesheet" href="/css/header.css?v=20261021-1">
@@ -23,9 +25,9 @@
         <button id="reload-orders" class="btn btn-secondary" type="button">Tải lại</button>
     </header>
     <p id="orders-notice" class="orders-notice" hidden></p>
-    <section class="table-container">
+    <section class="table-container table-responsive">
         <table class="data-table">
-            <thead><tr><th>Mã đơn</th><th>Thời gian</th><th>Chi nhánh</th><th>Sản phẩm</th><th>Tổng tiền</th><th>Trạng thái</th></tr></thead>
+            <thead><tr><th>Mã đơn</th><th>Thời gian</th><th>Chi nhánh</th><th>Sản phẩm</th><th>Tổng tiền</th><th>Thanh toán</th><th>Trạng thái / thao tác</th></tr></thead>
             <tbody id="orders-table-body"></tbody>
         </table>
     </section>

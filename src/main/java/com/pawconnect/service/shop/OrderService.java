@@ -8,5 +8,7 @@ public interface OrderService {
     OrderResponse createOrder(OrderRequest request);
     List<OrderResponse> getMyOrders();
     List<OrderResponse> getManagedOrders();
-    OrderResponse updateOrderStatus(Long orderId, String status);
+    OrderResponse getOrder(Long orderId);
+    OrderResponse cancelMyOrder(Long orderId);
+    OrderResponse updateOrderStatus(Long orderId, String status, String reason);
 }

@@ -31,6 +31,26 @@ public class ViewController {
         return "admin/users";
     }
 
+    @GetMapping("/admin/branches")
+    public String adminBranchesPage() {
+        return "admin/branches";
+    }
+
+    @GetMapping("/checkout")
+    public String checkoutPage() {
+        return "shop/checkout";
+    }
+
+    @GetMapping("/orders")
+    public String myOrdersPage() {
+        return "shop/my-orders";
+    }
+
+    @GetMapping("/orders/{orderId:\\d+}/receipt")
+    public String receiptPage() {
+        return "shop/receipt";
+    }
+
     @GetMapping("/profile")
     public String profilePage() {
         return "profile/index";

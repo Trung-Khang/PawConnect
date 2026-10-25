@@ -38,7 +38,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/adoptions", "/api/adoptions/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/adoptions", "/adoptions/*").permitAll()
                         .requestMatchers("/ws/**").permitAll()
-                        .requestMatchers("/", "/shop", "/service", "/profile", "/admin/**", "/auth/**", "/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/", "/shop", "/service", "/profile", "/checkout", "/orders", "/orders/**", "/admin/**", "/auth/**", "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/branches", "/api/categories", "/api/products", "/api/products/*", "/api/service-types").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/puppy-listings", "/api/puppy-listings/*").permitAll()
                         .anyRequest().authenticated())

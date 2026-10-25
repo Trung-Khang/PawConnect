@@ -16,7 +16,10 @@ public class CartResponse {
         private Long productId;
         private Long puppyListingId;
         private String productName; // or listingTitle
+        private Long branchId;
+        private String branchName;
         private Integer quantity;
         private BigDecimal price;
+        private Integer stock;
     }
 }

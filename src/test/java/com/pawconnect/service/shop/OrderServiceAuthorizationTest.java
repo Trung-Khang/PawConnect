@@ -11,6 +11,7 @@ import com.pawconnect.entity.Branch;
 import com.pawconnect.entity.Order;
 import com.pawconnect.repository.BranchRepository;
 import com.pawconnect.repository.OrderRepository;
+import com.pawconnect.repository.OrderStatusEventRepository;
 import com.pawconnect.repository.ProductRepository;
 import com.pawconnect.repository.PuppyListingRepository;
 import com.pawconnect.security.CustomUserDetails;
@@ -35,6 +36,7 @@ class OrderServiceAuthorizationTest {
     @Mock private PuppyListingRepository puppyListingRepository;
     @Mock private BranchRepository branchRepository;
     @Mock private CartService cartService;
+    @Mock private OrderStatusEventRepository statusEventRepository;
     @InjectMocks private OrderServiceImpl service;
 
     @AfterEach
@@ -55,9 +57,9 @@ class OrderServiceAuthorizationTest {
     @Test
     void branchManagerCannotUpdateAnotherBranchOrder() {
         authenticateManager(10L);
-        when(orderRepository.findById(42L)).thenReturn(Optional.of(orderForBranch(11L)));
+        when(orderRepository.findByIdForUpdate(42L)).thenReturn(Optional.of(orderForBranch(11L)));
 
-        assertThrows(AccessDeniedException.class, () -> service.updateOrderStatus(42L, "SHIPPED"));
+        assertThrows(AccessDeniedException.class, () -> service.updateOrderStatus(42L, "CONFIRMED", null));
 
         verify(orderRepository, never()).save(any(Order.class));
     }
@@ -66,9 +68,9 @@ class OrderServiceAuthorizationTest {
     void branchManagerCanUpdateOwnBranchOrder() {
         authenticateManager(10L);
         Order order = orderForBranch(10L);
-        when(orderRepository.findById(42L)).thenReturn(Optional.of(order));
+        when(orderRepository.findByIdForUpdate(42L)).thenReturn(Optional.of(order));
 
-        assertDoesNotThrow(() -> service.updateOrderStatus(42L, "SHIPPED"));
+        assertDoesNotThrow(() -> service.updateOrderStatus(42L, "CONFIRMED", null));
         verify(orderRepository).save(order);
     }
 
@@ -84,7 +86,8 @@ class OrderServiceAuthorizationTest {
         branch.setId(branchId);
         Order order = new Order();
         order.setBranch(branch);
-        order.setStatus("PENDING");
+        order.setStatus("PAID");
+        order.setPaymentStatus("PAID");
         return order;
     }
 }

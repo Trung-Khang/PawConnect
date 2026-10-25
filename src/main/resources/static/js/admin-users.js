@@ -12,6 +12,8 @@
             return;
         }
         state.currentUserId = currentUser.id;
+        document.getElementById('reload-users').hidden = false;
+        document.getElementById('admin-users-table').hidden = false;
         await loadUsers();
     }
 

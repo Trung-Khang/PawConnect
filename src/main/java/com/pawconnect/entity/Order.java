@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "orders")
+@Table(name = "orders", uniqueConstraints = @UniqueConstraint(name = "uk_orders_user_idempotency", columnNames = {"user_id", "idempotency_key"}))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -27,6 +27,36 @@ public class Order {
 
     @Column(nullable = false)
     private String status;
+
+    @Column(name = "idempotency_key", length = 64)
+    private String idempotencyKey;
+
+    @Column(name = "payment_method", length = 30)
+    private String paymentMethod;
+
+    @Column(name = "payment_status", length = 30)
+    private String paymentStatus;
+
+    @Column(name = "customer_name", length = 120)
+    private String customerName;
+
+    @Column(name = "branch_name_snapshot", length = 255)
+    private String branchNameSnapshot;
+
+    @Column(name = "branch_address_snapshot", length = 255)
+    private String branchAddressSnapshot;
+
+    @Column(name = "branch_phone_snapshot", length = 50)
+    private String branchPhoneSnapshot;
+
+    @Column(name = "recipient_name", length = 120)
+    private String recipientName;
+
+    @Column(name = "recipient_phone", length = 20)
+    private String recipientPhone;
+
+    @Column(name = "delivery_address", length = 500)
+    private String deliveryAddress;
 
     private BigDecimal totalAmount;
 

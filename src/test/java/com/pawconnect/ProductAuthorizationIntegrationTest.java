@@ -85,6 +85,19 @@ class ProductAuthorizationIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+    @Test
+    void onlyAdminCanDeleteProductEvenInOwnBranch() throws Exception {
+        Product ownProduct = productRepository.save(Product.builder().name("Own product").price(BigDecimal.TEN)
+                .stock(2).branch(branchA).category(category).build());
+
+        mockMvc.perform(delete("/api/products/{id}", ownProduct.getId())
+                        .with(authentication(managerAuthentication("BRANCH_MANAGER", branchA.getId()))))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(delete("/api/products/{id}", ownProduct.getId())
+                        .with(authentication(managerAuthentication("ADMIN", null))))
+                .andExpect(status().isOk());
+    }
+
     private UsernamePasswordAuthenticationToken managerAuthentication(String role, Long branchId) {
         CustomUserDetails principal = new CustomUserDetails(99L, branchId, "test@example.com", "unused",
                 List.of(new SimpleGrantedAuthority("ROLE_" + role)));

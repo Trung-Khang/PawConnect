@@ -12,6 +12,7 @@ import com.pawconnect.dto.cart.CartResponse;
 import com.pawconnect.exception.BusinessException;
 import com.pawconnect.exception.ResourceNotFoundException;
 import com.pawconnect.entity.PuppyListing;
+import com.pawconnect.entity.ListingStatus;
 import com.pawconnect.repository.PuppyListingRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,10 +47,10 @@ public class CartServiceImpl implements CartService {
     @Override
     @Transactional
     public CartResponse.CartItemResponse addItem(Long productId, Long puppyListingId, Integer quantity) {
-        if (productId == null && puppyListingId == null) {
-            throw new BusinessException("Must specify product or puppy");
+        if ((productId == null) == (puppyListingId == null) || quantity == null || quantity < 1) {
+            throw new BusinessException("Chọn đúng một sản phẩm và số lượng lớn hơn 0.");
         }
-        Cart cart = getMyCart();
+        Cart cart = cartRepository.findByUserIdForUpdate(SecurityUtils.getCurrentUserId()).orElseGet(this::getMyCart);
         
         Product product = null;
         PuppyListing puppyListing = null;
@@ -63,6 +64,20 @@ public class CartServiceImpl implements CartService {
             puppyListing = puppyListingRepository.findById(puppyListingId)
                     .orElseThrow(() -> new ResourceNotFoundException("Puppy listing not found"));
             stock = puppyListing.getStock();
+            if (puppyListing.getStatus() != ListingStatus.AVAILABLE) {
+                throw new BusinessException("Chó con này hiện không còn được bán.");
+            }
+        }
+
+        if (stock == null || stock < 1) throw new BusinessException("Sản phẩm hiện đã hết hàng.");
+
+        Long itemBranchId = product != null ? product.getBranch().getId() : puppyListing.getBranch().getId();
+        if (cart.getItems().stream().anyMatch(item -> {
+            Long branchId = item.getProduct() != null ? item.getProduct().getBranch().getId()
+                    : item.getPuppyListing().getBranch().getId();
+            return !branchId.equals(itemBranchId);
+        })) {
+            throw new BusinessException("Mỗi đơn chỉ gồm sản phẩm của một chi nhánh. Vui lòng thanh toán hoặc bỏ sản phẩm trong giỏ trước.");
         }
 
         // Check if item already in cart
@@ -79,7 +94,7 @@ public class CartServiceImpl implements CartService {
                 .findFirst()
                 .orElse(null);
 
-        int totalQuantity = quantity + (existingItem != null ? existingItem.getQuantity() : 0);
+        long totalQuantity = (long) quantity + (existingItem != null ? existingItem.getQuantity() : 0);
         if (stock < totalQuantity) {
             throw new BusinessException("Not enough stock available");
         }
@@ -120,6 +135,44 @@ public class CartServiceImpl implements CartService {
         cartItemRepository.deleteAll(cart.getItems());
         cart.getItems().clear();
     }
+
+    @Override
+    @Transactional
+    public CartResponse.CartItemResponse updateItemQuantity(Long itemId, Integer quantity) {
+        if (quantity == null || quantity < 1) {
+            throw new BusinessException("Số lượng phải lớn hơn 0.");
+        }
+        Cart cart = getMyCart();
+        CartItem item = cartItemRepository.findById(itemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cart item not found"));
+
+        if (!item.getCart().getId().equals(cart.getId())) {
+            throw new BusinessException("You don't own this cart item");
+        }
+
+        Integer stock = 0;
+        if (item.getProduct() != null) {
+            stock = item.getProduct().getStock();
+        } else if (item.getPuppyListing() != null) {
+            stock = item.getPuppyListing().getStock();
+        }
+
+        if (stock != null && quantity > stock) {
+            throw new BusinessException("Số lượng vượt quá tồn kho khả dụng (" + stock + ").");
+        }
+
+        item.setQuantity(quantity);
+        CartItem saved = cartItemRepository.save(item);
+        return mapToCartItemResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public void removeItems(Cart cart, java.util.List<CartItem> items) {
+        if (items == null || items.isEmpty()) return;
+        cartItemRepository.deleteAll(items);
+        cart.getItems().removeAll(items);
+    }
     
     private CartResponse mapToCartResponse(Cart cart) {
         CartResponse res = new CartResponse();
@@ -140,10 +193,16 @@ public class CartServiceImpl implements CartService {
             res.setProductId(item.getProduct().getId());
             res.setProductName(item.getProduct().getName());
             res.setPrice(item.getProduct().getPrice());
+            res.setBranchId(item.getProduct().getBranch().getId());
+            res.setBranchName(item.getProduct().getBranch().getName());
+            res.setStock(item.getProduct().getStock());
         } else if (item.getPuppyListing() != null) {
             res.setPuppyListingId(item.getPuppyListing().getId());
             res.setProductName(item.getPuppyListing().getListingTitle());
             res.setPrice(item.getPuppyListing().getPricePerPuppyVnd());
+            res.setBranchId(item.getPuppyListing().getBranch().getId());
+            res.setBranchName(item.getPuppyListing().getBranch().getName());
+            res.setStock(item.getPuppyListing().getStock());
         }
         res.setQuantity(item.getQuantity());
         return res;

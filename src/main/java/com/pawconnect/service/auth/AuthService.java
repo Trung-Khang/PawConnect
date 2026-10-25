@@ -186,7 +186,11 @@ public class AuthService {
                 : new AuthMessageResponse("Chưa thể gửi email. Vui lòng thử lại sau.", false, result.retryAfterSeconds());
     }
     private AuthResponse tokensFor(User user) { return new AuthResponse(jwtService.generateAccessToken(user), jwtService.generateRefreshToken(user), "Bearer", toResponse(user)); }
-    private UserResponse toResponse(User user) { return new UserResponse(user.getId(), user.getUsername(), UserDisplayName.of(user), user.getEmail(), user.getPhone(), user.getAvatarUrl(), user.getRole().getName().name(), user.getCreatedAt()); }
+    private UserResponse toResponse(User user) {
+        Long branchId = user.getBranch() != null ? user.getBranch().getId() : null;
+        String branchName = user.getBranch() != null ? user.getBranch().getName() : null;
+        return new UserResponse(user.getId(), user.getUsername(), UserDisplayName.of(user), user.getEmail(), user.getPhone(), user.getAvatarUrl(), user.getRole().getName().name(), user.getCreatedAt(), branchId, branchName);
+    }
     private User findByEmail(String email) { return users.findByEmailIgnoreCase(email).orElseThrow(() -> new ResourceNotFoundException("Account was not found")); }
     private User findByIdentity(String identity) { User user = findByIdentityOrNull(identity); if (user == null) throw new AuthException(HttpStatus.BAD_REQUEST, "Thông tin xác minh không hợp lệ."); return user; }
     private User findByIdentityOrNull(String identity) {

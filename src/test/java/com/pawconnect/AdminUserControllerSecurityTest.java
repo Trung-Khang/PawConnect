@@ -23,6 +23,7 @@ class AdminUserControllerSecurityTest {
     void adminCanListAccounts() throws Exception {
         mockMvc.perform(get("/api/admin/users")).andExpect(status().isOk());
         mockMvc.perform(get("/api/admin/users/seed-mapping")).andExpect(status().isOk());
+        mockMvc.perform(get("/api/admin/branches")).andExpect(status().isOk());
     }
 
     @Test
@@ -30,6 +31,7 @@ class AdminUserControllerSecurityTest {
     void customerCannotListAccounts() throws Exception {
         mockMvc.perform(get("/api/admin/users")).andExpect(status().isForbidden());
         mockMvc.perform(get("/api/admin/users/seed-mapping")).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/admin/branches")).andExpect(status().isForbidden());
         mockMvc.perform(patch("/api/admin/users/1").contentType("application/json")
                 .content("{\"fullName\":\"Test User\",\"phone\":\"0912345678\",\"active\":true,\"locked\":false}"))
                 .andExpect(status().isForbidden());

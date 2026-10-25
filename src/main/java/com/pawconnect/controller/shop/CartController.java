@@ -33,4 +33,12 @@ public class CartController {
     public void removeItemFromCart(@PathVariable Long id) {
         cartService.removeItem(id);
     }
+
+    @PreAuthorize("hasRole('CUSTOMER')")
+    @PutMapping("/items/{id}")
+    public CartResponse.CartItemResponse updateItemQuantity(
+            @PathVariable Long id,
+            @RequestParam Integer quantity) {
+        return cartService.updateItemQuantity(id, quantity);
+    }
 }

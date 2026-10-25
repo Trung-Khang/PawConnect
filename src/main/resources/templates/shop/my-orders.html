@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <th:block th:replace="~{fragments/bootstrap :: assets}"></th:block>
+    <title>Đơn của tôi | PawConnect</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/shop.css">
+    <link rel="stylesheet" href="/css/header.css?v=20261021-1">
+    <link rel="stylesheet" href="/css/commerce.css">
+</head>
+<body class="commerce-screen">
+<div th:replace="~{fragments/header :: header}"></div>
+<main class="commerce-page container py-4 py-md-5">
+    <h1>Đơn của tôi</h1>
+    <p id="orders-notice" class="commerce-notice" role="status" hidden></p>
+    <div class="nav nav-tabs mb-4" role="tablist" aria-label="Loại đơn">
+        <button id="purchase-tab" class="nav-link active" type="button" role="tab" aria-selected="true" aria-controls="purchase-orders">Đơn mua hàng</button>
+        <button id="adoption-tab" class="nav-link" type="button" role="tab" aria-selected="false" aria-controls="adoption-orders">Đơn nhận nuôi</button>
+    </div>
+    <section id="purchase-orders" role="tabpanel" aria-labelledby="purchase-tab" class="commerce-list" aria-live="polite">Đang tải đơn hàng…</section>
+    <section id="adoption-orders" role="tabpanel" aria-labelledby="adoption-tab" class="commerce-list" aria-live="polite" hidden></section>
+</main>
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script src="/js/my-orders.js" defer></script>
+</body>
+</html>
