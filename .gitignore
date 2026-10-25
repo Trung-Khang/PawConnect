@@ -53,6 +53,8 @@ desktop.ini
 # ==============================
 application-local.properties
 application-local.yml
+run-railway.ps1
+*.local.ps1
 
 # ==============================
 # Database local files
