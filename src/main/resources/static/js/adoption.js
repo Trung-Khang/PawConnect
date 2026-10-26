@@ -39,7 +39,7 @@
         document.getElementById('adoption-list-view')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
-const state = { posts: [], branches: [], user: null, currentPost: null, managedApplicationsPoll: null };
+const state = { posts: [], branches: [], user: null, currentPost: null, managedApplicationsPoll: null, managedApplications: [], applicationFilter: 'ALL', rejectionTargetApp: null };
     const path = window.location.pathname;
     const ACCESS_TOKEN_KEY = 'pawconnect.accessToken';
     const REFRESH_TOKEN_KEY = 'pawconnect.refreshToken';
@@ -97,6 +97,28 @@ const state = { posts: [], branches: [], user: null, currentPost: null, managedA
         document.getElementById('delete-dog-image').addEventListener('click', deleteDogImage);
         document.getElementById('delete-adoption-post').addEventListener('click', deleteAdoptionPost);
         document.getElementById('open-adoption-chat').addEventListener('click', openAdoptionChat);
+        document.querySelectorAll('[data-app-filter]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('[data-app-filter]').forEach((b) => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.applicationFilter = btn.dataset.appFilter;
+                renderManagedApplicationsList();
+            });
+        });
+        document.getElementById('closeRejectionModalBtn')?.addEventListener('click', closeRejectionModal);
+        document.getElementById('cancelRejectionBtn')?.addEventListener('click', closeRejectionModal);
+        document.getElementById('rejectionModal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'rejectionModal') closeRejectionModal();
+        });
+        document.querySelectorAll('.reason-chip').forEach((chip) => {
+            chip.addEventListener('click', () => {
+                document.querySelectorAll('.reason-chip').forEach((c) => c.classList.remove('selected'));
+                chip.classList.add('selected');
+                const textarea = document.getElementById('rejectionReasonInput');
+                if (textarea) textarea.value = chip.dataset.reason;
+            });
+        });
+        document.getElementById('confirmRejectionBtn')?.addEventListener('click', handleConfirmRejection);
     }
 
     async function loadCurrentUser() {
@@ -304,10 +326,97 @@ const state = { posts: [], branches: [], user: null, currentPost: null, managedA
     }
 
     async function loadManagedApplications() {
-        const container = document.getElementById('managed-applications');
         try {
-            const applications = await request('/api/adoptions/applications/manage');
-            renderApplications(container, applications, true);
+            state.managedApplications = await request('/api/adoptions/applications/manage');
+            updateApplicationFilterCounts();
+            renderManagedApplicationsList();
+        } catch (error) {
+            showError(error.message);
+        }
+    }
+
+    function updateApplicationFilterCounts() {
+        const apps = state.managedApplications || [];
+        const total = apps.length;
+        const pending = apps.filter(a => a.status === 'PENDING').length;
+        const approved = apps.filter(a => a.status === 'APPROVED').length;
+        const rejected = apps.filter(a => a.status === 'REJECTED').length;
+
+        const totalEl = document.getElementById('totalAppsCount');
+        if (totalEl) totalEl.textContent = String(total);
+        const pendingEl = document.getElementById('pendingAppsCount');
+        if (pendingEl) pendingEl.textContent = String(pending);
+        const approvedEl = document.getElementById('approvedAppsCount');
+        if (approvedEl) approvedEl.textContent = String(approved);
+        const rejectedEl = document.getElementById('rejectedAppsCount');
+        if (rejectedEl) rejectedEl.textContent = String(rejected);
+    }
+
+    function renderManagedApplicationsList() {
+        const container = document.getElementById('managed-applications');
+        if (!container) return;
+        const filter = state.applicationFilter || 'ALL';
+        const all = state.managedApplications || [];
+        const filtered = filter === 'ALL' ? all : all.filter(a => a.status === filter);
+        renderApplications(container, filtered, true);
+    }
+
+    function openRejectionModal(application) {
+        state.rejectionTargetApp = application;
+        const modal = document.getElementById('rejectionModal');
+        const info = document.getElementById('rejectionModalInfo');
+        const textarea = document.getElementById('rejectionReasonInput');
+        if (info) {
+            info.textContent = `Đơn của khách: ${application.applicantName || 'Khách hàng'} · Bé cún: ${application.dogName || `#${application.adoptionPostId}`}`;
+        }
+        if (textarea) textarea.value = '';
+        document.querySelectorAll('.reason-chip').forEach(c => c.classList.remove('selected'));
+        if (modal) modal.hidden = false;
+    }
+
+    function closeRejectionModal() {
+        const modal = document.getElementById('rejectionModal');
+        if (modal) modal.hidden = true;
+        state.rejectionTargetApp = null;
+    }
+
+    async function handleConfirmRejection() {
+        const textarea = document.getElementById('rejectionReasonInput');
+        const reason = textarea ? textarea.value.trim() : '';
+        if (!reason) {
+            window.alert('Vui lòng nhập hoặc chọn lý do từ chối để gửi thông báo cho khách hàng.');
+            textarea?.focus();
+            return;
+        }
+        if (!state.rejectionTargetApp) return;
+        const appId = state.rejectionTargetApp.id;
+        const confirmBtn = document.getElementById('confirmRejectionBtn');
+        if (confirmBtn) confirmBtn.disabled = true;
+        try {
+            await request(`/api/adoptions/applications/${appId}/reject`, {
+                method: 'PUT',
+                body: { reason }
+            });
+            closeRejectionModal();
+            showNotice('Đơn nhận nuôi đã được từ chối và lý do đã được thông báo về cho khách hàng.');
+            await loadManagedApplications();
+        } catch (error) {
+            showError(error.message);
+        } finally {
+            if (confirmBtn) confirmBtn.disabled = false;
+        }
+    }
+
+    async function handleApproveApplication(application) {
+        if (!window.confirm(`Xác nhận duyệt đơn nhận nuôi bé "${application.dogName || 'này'}" cho khách hàng "${application.applicantName || 'này'}"?
+
+Sau khi duyệt, thông tin khách hàng sẽ được lưu tại mục "Đã duyệt" để bạn liên hệ nhận bé, và thông báo sẽ được gửi cho khách.`)) {
+            return;
+        }
+        try {
+            await request(`/api/adoptions/applications/${application.id}/approve`, { method: 'PUT' });
+            showNotice('Đơn nhận nuôi đã được duyệt thành công! Thông báo đã gửi cho khách hàng và thông tin liên hệ đã được lưu lại.');
+            await loadManagedApplications();
         } catch (error) {
             showError(error.message);
         }
@@ -346,43 +455,178 @@ const state = { posts: [], branches: [], user: null, currentPost: null, managedA
     function renderApplications(container, applications, manageable) {
         container.replaceChildren();
         if (applications.length === 0) return renderEmpty(container);
+
         applications.forEach((application) => {
-            const row = document.createElement('article');
-            row.className = 'application-row';
+            const card = document.createElement('article');
+            card.className = 'application-row';
 
-            const header = document.createElement('div');
-            header.className = 'application-status-header';
-            header.append(statusElement(application.status));
+            // Top Header: Dog info & Status badge
+            const headerRow = document.createElement('div');
+            headerRow.className = 'app-header-row';
 
-            if (application.status === 'REJECTED') {
-                const reasonTag = document.createElement('div');
-                reasonTag.className = 'application-rejection-pill';
-                reasonTag.innerHTML = `<i class="fas fa-circle-xmark"></i> <strong>Lý do từ chối:</strong> <span>${escapeHtml(application.rejectionReason || 'Hồ sơ chưa phù hợp vào thời điểm này')}</span>`;
-                header.append(reasonTag);
-            } else if (application.status === 'APPROVED' && !manageable) {
-                const approvedTag = document.createElement('div');
-                approvedTag.className = 'application-approved-pill';
-                approvedTag.innerHTML = `<i class="fas fa-check-circle"></i> <span>Chi nhánh sẽ chủ động liên hệ bạn trong vài giờ tới để sắp xếp đón bé.</span>`;
-                header.append(approvedTag);
+            const dogInfo = document.createElement('div');
+            dogInfo.className = 'app-dog-info';
+            dogInfo.innerHTML = `<i class="fas fa-paw"></i> <span>${escapeHtml(application.dogName || 'Chó nhận nuôi')}</span>`;
+            if (application.branchName) {
+                const branchBadge = document.createElement('span');
+                branchBadge.className = 'app-branch-badge';
+                branchBadge.textContent = application.branchName;
+                dogInfo.appendChild(branchBadge);
             }
-            row.append(header);
+            headerRow.appendChild(dogInfo);
+            headerRow.appendChild(statusElement(application.status));
+            card.appendChild(headerRow);
 
-            if (manageable) row.append(textElement('strong', application.applicantName || 'Khách hàng'));
-            row.append(textElement('p', application.message));
-            const details = document.createElement('div');
-            details.className = 'application-actions';
-            const postLink = document.createElement('a');
-            postLink.className = 'secondary-button';
-            postLink.href = `/adoptions/${application.adoptionPostId}`;
-            postLink.innerHTML = `<i class="fas fa-file-lines"></i> <span>Xem bài nhận nuôi #${application.adoptionPostId}</span>`;
-            details.append(postLink);
-            row.append(textElement('small', `${application.status === 'PENDING' ? 'Gửi lúc' : 'Cập nhật lúc'}: ${formatDate(application.status === 'PENDING' ? application.createdAt : application.updatedAt)}`));
-            if (manageable && application.status === 'PENDING') {
-                details.append(actionButton('Duyệt đơn', () => updateApplication(application.id, 'approve'), 'approve-button', 'fas fa-check'));
-                details.append(actionButton('Từ chối', () => updateApplication(application.id, 'reject'), 'secondary-button', 'fas fa-xmark'));
+            if (manageable) {
+                // STAFF VIEW: Show Customer Contact Info
+                const contactCard = document.createElement('div');
+                contactCard.className = 'applicant-info-card';
+                contactCard.innerHTML = `
+                    <div class="applicant-field">
+                        <i class="fas fa-user"></i>
+                        <span>Khách: <strong>${escapeHtml(application.applicantName || 'Khách hàng')}</strong></span>
+                    </div>
+                    <div class="applicant-field">
+                        <i class="fas fa-phone-alt"></i>
+                        <span>SĐT: ${application.applicantPhone ? `<a href="tel:${escapeHtml(application.applicantPhone)}">${escapeHtml(application.applicantPhone)}</a>` : '<em class="text-muted">Chưa cung cấp</em>'}</span>
+                    </div>
+                    <div class="applicant-field">
+                        <i class="fas fa-envelope"></i>
+                        <span>Email: ${application.applicantEmail ? `<a href="mailto:${escapeHtml(application.applicantEmail)}">${escapeHtml(application.applicantEmail)}</a>` : '<em class="text-muted">Chưa cung cấp</em>'}</span>
+                    </div>
+                `;
+                card.appendChild(contactCard);
+
+                // Customer's Message
+                const msgBox = document.createElement('blockquote');
+                msgBox.className = 'app-message-box';
+                msgBox.innerHTML = `<strong>Lời nhắn:</strong> ${escapeHtml(application.message || 'Không có lời nhắn.')}`;
+                card.appendChild(msgBox);
+
+                // If APPROVED: Show prominent contact & pickup instructions box
+                if (application.status === 'APPROVED') {
+                    const approvedBox = document.createElement('div');
+                    approvedBox.className = 'approved-contact-box';
+                    approvedBox.innerHTML = `
+                        <div class="approved-contact-title">
+                            <i class="fas fa-check-circle"></i>
+                            <span>ĐƠN ĐÃ DUYỆT - LIÊN HỆ KHÁCH HÀNG ĐÓN BÉ</span>
+                        </div>
+                        <div class="approved-contact-details">
+                            ${application.applicantPhone ? `<a href="tel:${escapeHtml(application.applicantPhone)}"><i class="fas fa-phone-alt"></i> Gọi ${escapeHtml(application.applicantPhone)}</a>` : ''}
+                            ${application.applicantEmail ? `<a href="mailto:${escapeHtml(application.applicantEmail)}"><i class="fas fa-envelope"></i> Gửi email</a>` : ''}
+                            <button type="button" class="secondary-button copy-phone-btn" style="padding: 0.35rem 0.8rem; font-size: 0.88rem; border-radius: 8px;">
+                                <i class="fas fa-copy"></i> Sao chép SĐT
+                            </button>
+                        </div>
+                        <p class="approved-contact-hint">
+                            <i class="fas fa-info-circle"></i> Thông tin khách hàng đã được lưu lại tại đây. Vui lòng liên hệ khách để hẹn thời gian qua chi nhánh hoàn tất thủ tục và đón bé cún.
+                        </p>
+                    `;
+                    approvedBox.querySelector('.copy-phone-btn')?.addEventListener('click', () => {
+                        if (application.applicantPhone) {
+                            navigator.clipboard.writeText(application.applicantPhone);
+                            window.alert(`Đã sao chép số điện thoại: ${application.applicantPhone}`);
+                        }
+                    });
+                    card.appendChild(approvedBox);
+                }
+
+                // If REJECTED: Show rejection reason
+                if (application.status === 'REJECTED') {
+                    const rejectBox = document.createElement('div');
+                    rejectBox.className = 'rejection-reason-box';
+                    rejectBox.innerHTML = `<strong><i class="fas fa-times-circle"></i> Lý do từ chối:</strong> <span>${escapeHtml(application.rejectionReason || 'Chưa ghi nhận lý do cụ thể')}</span>`;
+                    card.appendChild(rejectBox);
+                }
+
+                // Date and Action links
+                const details = document.createElement('div');
+                details.className = 'application-actions';
+                const postLink = document.createElement('a');
+                postLink.className = 'secondary-button';
+                postLink.href = `/adoptions/${application.adoptionPostId}`;
+                postLink.textContent = `Xem bài nhận nuôi #${application.adoptionPostId}`;
+                details.appendChild(postLink);
+
+                const dateText = document.createElement('small');
+                dateText.textContent = `${application.status === 'PENDING' ? 'Gửi lúc' : 'Cập nhật lúc'}: ${formatDate(application.status === 'PENDING' ? application.createdAt : application.updatedAt)}`;
+                card.appendChild(dateText);
+
+                if (application.status === 'PENDING') {
+                    const approveBtn = document.createElement('button');
+                    approveBtn.type = 'button';
+                    approveBtn.className = 'btn-approve';
+                    approveBtn.innerHTML = '<i class="fas fa-check"></i> Duyệt đơn';
+                    approveBtn.addEventListener('click', () => handleApproveApplication(application));
+
+                    const rejectBtn = document.createElement('button');
+                    rejectBtn.type = 'button';
+                    rejectBtn.className = 'btn-reject';
+                    rejectBtn.innerHTML = '<i class="fas fa-times"></i> Từ chối';
+                    rejectBtn.addEventListener('click', () => openRejectionModal(application));
+
+                    details.appendChild(approveBtn);
+                    details.appendChild(rejectBtn);
+                }
+
+                card.appendChild(details);
+
+            } else {
+                // CUSTOMER VIEW:
+                const msgBox = document.createElement('blockquote');
+                msgBox.className = 'app-message-box';
+                msgBox.innerHTML = `<strong>Lời nhắn của bạn:</strong> ${escapeHtml(application.message || 'Không có lời nhắn.')}`;
+                card.appendChild(msgBox);
+
+                // Status Banner
+                const banner = document.createElement('div');
+                if (application.status === 'APPROVED') {
+                    banner.className = 'customer-adoption-banner approved';
+                    banner.innerHTML = `
+                        <i class="fas fa-check-circle"></i>
+                        <div>
+                            <strong>🎉 Đơn nhận nuôi của bạn đã được duyệt!</strong>
+                            <p style="margin: 4px 0 0; font-size: 0.9rem;">Vui lòng kiểm tra inbox (tin nhắn) hoặc đợi nhân viên chi nhánh liên hệ qua số điện thoại để trao đổi thêm và hẹn lịch đón bé cún về nhà nhé.</p>
+                        </div>
+                    `;
+                } else if (application.status === 'REJECTED') {
+                    banner.className = 'customer-adoption-banner rejected';
+                    banner.innerHTML = `
+                        <i class="fas fa-times-circle"></i>
+                        <div>
+                            <strong>❌ Đơn nhận nuôi đã bị từ chối</strong>
+                            <p style="margin: 4px 0 0; font-size: 0.9rem;"><strong>Lý do từ chối:</strong> ${escapeHtml(application.rejectionReason || 'Chưa đáp ứng điều kiện nhận nuôi của chi nhánh.')}</p>
+                        </div>
+                    `;
+                } else {
+                    banner.className = 'customer-adoption-banner pending';
+                    banner.innerHTML = `
+                        <i class="fas fa-hourglass-half"></i>
+                        <div>
+                            <strong>⏳ Đang chờ chi nhánh xét duyệt</strong>
+                            <p style="margin: 4px 0 0; font-size: 0.9rem;">Đơn đăng ký của bạn đã được gửi tới nhân viên chi nhánh. Bạn sẽ nhận được thông báo khi đơn được xử lý.</p>
+                        </div>
+                    `;
+                }
+                card.appendChild(banner);
+
+                const details = document.createElement('div');
+                details.className = 'application-actions';
+                const postLink = document.createElement('a');
+                postLink.className = 'secondary-button';
+                postLink.href = `/adoptions/${application.adoptionPostId}`;
+                postLink.textContent = `Xem bài nhận nuôi #${application.adoptionPostId}`;
+                details.appendChild(postLink);
+
+                const dateText = document.createElement('small');
+                dateText.textContent = `Gửi lúc: ${formatDate(application.createdAt)}`;
+                card.appendChild(dateText);
+
+                card.appendChild(details);
             }
-            row.append(details);
-            container.append(row);
+
+            container.appendChild(card);
         });
     }
 
@@ -418,11 +662,16 @@ const state = { posts: [], branches: [], user: null, currentPost: null, managedA
             if (!existing) return;
             form.hidden = true;
             hint.hidden = false;
-            hint.textContent = existing.status === 'PENDING'
-                ? 'Bạn đã gửi đơn đăng ký cho bài này. Đơn đang chờ nhân viên chi nhánh xử lý.'
-                : existing.status === 'APPROVED'
-                    ? 'Đơn đăng ký của bạn đã được duyệt! Nhân viên sẽ chủ động liên hệ với bạn trong vài giờ sắp tới để sắp xếp thời gian rước bé.'
-                    : `Đơn đăng ký trước đó đã được từ chối${existing.rejectionReason ? ': ' + existing.rejectionReason : '.'}`;
+            if (existing.status === 'PENDING') {
+                hint.className = 'customer-adoption-banner pending';
+                hint.innerHTML = '<i class="fas fa-hourglass-half"></i> <div><strong>Đơn đang chờ xét duyệt</strong><p style="margin: 2px 0 0; font-size: 0.9rem;">Bạn đã gửi đơn đăng ký cho bài này. Đơn đang chờ nhân viên chi nhánh xử lý.</p></div>';
+            } else if (existing.status === 'APPROVED') {
+                hint.className = 'customer-adoption-banner approved';
+                hint.innerHTML = '<i class="fas fa-check-circle"></i> <div><strong>🎉 Đơn đăng ký đã được duyệt!</strong><p style="margin: 2px 0 0; font-size: 0.9rem;">Vui lòng kiểm tra inbox (tin nhắn) hoặc đợi nhân viên chi nhánh liên hệ để trao đổi thêm về việc đón bé.</p></div>';
+            } else {
+                hint.className = 'customer-adoption-banner rejected';
+                hint.innerHTML = `<i class="fas fa-times-circle"></i> <div><strong>Đơn đăng ký đã bị từ chối</strong><p style="margin: 2px 0 0; font-size: 0.9rem;"><strong>Lý do:</strong> ${escapeHtml(existing.rejectionReason || 'Chưa đáp ứng điều kiện nhận nuôi.')}</p></div>`;
+            }
         } catch (_) {
             // Keep the form available if the status lookup temporarily fails.
         }
@@ -492,108 +741,9 @@ const state = { posts: [], branches: [], user: null, currentPost: null, managedA
         } catch (error) { showError(error.message); }
     }
 
-    function promptRejectModal({ title, subtitle, defaultReason, quickTags }) {
-        return new Promise((resolve) => {
-            const overlay = document.createElement('div');
-            overlay.className = 'frosted-modal-overlay';
-
-            const card = document.createElement('div');
-            card.className = 'frosted-glass-card';
-
-            const tagsHtml = (quickTags || []).map(tag =>
-                `<button type="button" class="frosted-tag-btn">${escapeHtml(tag)}</button>`
-            ).join('');
-
-            card.innerHTML = `
-                <button type="button" class="frosted-modal-close" aria-label="Đóng"><i class="fas fa-xmark"></i></button>
-                <div class="frosted-modal-header">
-                    <div class="frosted-modal-icon">
-                        <i class="fas fa-file-circle-xmark"></i>
-                    </div>
-                    <div>
-                        <h3 class="frosted-modal-title">${escapeHtml(title || 'Từ chối đơn')}</h3>
-                        <p class="frosted-modal-desc">${escapeHtml(subtitle || 'Nhập lý do gửi đến khách hàng')}</p>
-                    </div>
-                </div>
-                ${tagsHtml ? `<div class="frosted-quick-tags">${tagsHtml}</div>` : ''}
-                <textarea class="frosted-textarea" maxlength="255" placeholder="Nhập lý do gửi đến khách hàng (ngắn gọn, tối đa 255 ký tự)...">${escapeHtml(defaultReason || '')}</textarea>
-                <div style="font-size: 0.78rem; color: #64748b; margin-top: -0.4rem; margin-bottom: 0.8rem; text-align: right;"><i class="fas fa-keyboard"></i> Tối đa 255 ký tự</div>
-                <div class="frosted-modal-actions">
-                    <button type="button" class="frosted-btn-cancel">Hủy bỏ</button>
-                    <button type="button" class="frosted-btn-confirm">Xác nhận từ chối</button>
-                </div>
-            `;
-
-            overlay.appendChild(card);
-            document.body.appendChild(overlay);
-
-            requestAnimationFrame(() => overlay.classList.add('active'));
-
-            const textarea = card.querySelector('.frosted-textarea');
-            textarea.focus();
-            textarea.select();
-
-            card.querySelectorAll('.frosted-tag-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    textarea.value = btn.textContent;
-                    textarea.focus();
-                });
-            });
-
-            function cleanup(result) {
-                overlay.classList.remove('active');
-                setTimeout(() => {
-                    overlay.remove();
-                    resolve(result);
-                }, 250);
-            }
-
-            card.querySelector('.frosted-modal-close').addEventListener('click', () => cleanup(null));
-            card.querySelector('.frosted-btn-cancel').addEventListener('click', () => cleanup(null));
-            overlay.addEventListener('click', (e) => {
-                if (e.target === overlay) cleanup(null);
-            });
-
-            card.querySelector('.frosted-btn-confirm').addEventListener('click', () => {
-                const val = textarea.value.trim();
-                if (!val) {
-                    alert('Vui lòng nhập lý do từ chối.');
-                    textarea.focus();
-                    return;
-                }
-                cleanup(val);
-            });
-        });
-    }
-
-    function escapeHtml(text) {
-        if (!text) return '';
-        const d = document.createElement('div');
-        d.textContent = text;
-        return d.innerHTML;
-    }
-
     async function updateApplication(id, action) {
         try {
-            let reason = null;
-            if (action === 'reject') {
-                reason = await promptRejectModal({
-                    title: 'Từ chối đơn nhận nuôi',
-                    subtitle: 'Nhập lý do từ chối để hệ thống phản hồi và thông báo tới người đăng ký.',
-                    defaultReason: 'Hồ sơ chưa phù hợp vào thời điểm này',
-                    quickTags: [
-                        'Hồ sơ chưa phù hợp vào thời điểm này',
-                        'Chi nhánh đã duyệt cho gia đình khác',
-                        'Chưa đủ điều kiện không gian chăm sóc bé',
-                        'Khách hàng đổi ý không muốn nhận nuôi nữa'
-                    ]
-                });
-                if (reason === null) return;
-            }
-            await request(`/api/adoptions/applications/${id}/${action}`, {
-                method: 'PUT',
-                body: action === 'reject' ? { reason } : undefined
-            });
+            await request(`/api/adoptions/applications/${id}/${action}`, { method: 'PUT' });
             showNotice(action === 'approve' ? 'Đơn đã được duyệt và bài đã đóng.' : 'Đơn đã được từ chối.');
             await loadManagedApplications();
         } catch (error) { showError(error.message); }
@@ -817,15 +967,10 @@ const state = { posts: [], branches: [], user: null, currentPost: null, managedA
     function sizeLabel(size) { return ({ SMALL: 'Nhỏ', MEDIUM: 'Vừa', LARGE: 'Lớn' })[size] || 'Chưa cập nhật'; }
     function vaccinationLabel(status) { return ({ NOT_VACCINATED: 'Chưa tiêm', PARTIALLY_VACCINATED: 'Tiêm một phần', FULLY_VACCINATED: 'Tiêm đầy đủ' })[status] || 'Chưa cập nhật'; }
 
-    function actionButton(label, listener, className, iconClass) {
+    function actionButton(label, listener, secondary) {
         const button = document.createElement('button');
-        button.type = 'button';
-        button.className = className || '';
-        if (iconClass) {
-            button.innerHTML = `<i class="${iconClass}"></i> <span>${escapeHtml(label)}</span>`;
-        } else {
-            button.textContent = label;
-        }
+        button.type = 'button'; button.textContent = label;
+        if (secondary) button.className = 'secondary-button';
         button.addEventListener('click', listener);
         return button;
     }
@@ -836,6 +981,5 @@ const state = { posts: [], branches: [], user: null, currentPost: null, managedA
     function renderEmpty(container) { container.append(document.getElementById('empty-state-template').content.cloneNode(true)); }
     function showNotice(message) { const notice = document.getElementById('notice'); notice.hidden = false; notice.classList.remove('error'); notice.textContent = message; }
     function showError(message) { const notice = document.getElementById('notice'); notice.hidden = false; notice.classList.add('error'); notice.textContent = message; }
+    function escapeHtml(value) { if (!value) return ''; const div = document.createElement('div'); div.textContent = value; return div.innerHTML; }
 })();
-
-

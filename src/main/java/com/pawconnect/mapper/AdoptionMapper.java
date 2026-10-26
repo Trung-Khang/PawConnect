@@ -26,10 +26,31 @@ public final class AdoptionMapper {
     }
 
     public static AdoptionApplicationResponse toResponse(AdoptionApplication application) {
-        return new AdoptionApplicationResponse(application.getId(), application.getSeedKey(),
-                application.getAdoptionPost().getId(), application.getApplicant().getId(), application.getApplicant().getFullName(),
-                application.getApplicant().getPhone(), application.getApplicant().getEmail(),
-                application.getMessage(), application.getStatus(), application.getRejectionReason(),
-                application.getCreatedAt(), application.getUpdatedAt());
+        String applicantEmail = application.getApplicant() != null ? application.getApplicant().getEmail() : null;
+        String applicantPhone = application.getApplicant() != null ? application.getApplicant().getPhone() : null;
+        String applicantName = application.getApplicant() != null ? application.getApplicant().getFullName() : null;
+        String dogName = null;
+        String branchName = null;
+        if (application.getAdoptionPost() != null && application.getAdoptionPost().getDogProfile() != null) {
+            dogName = application.getAdoptionPost().getDogProfile().getName();
+            if (application.getAdoptionPost().getDogProfile().getBranch() != null) {
+                branchName = application.getAdoptionPost().getDogProfile().getBranch().getName();
+            }
+        }
+        return new AdoptionApplicationResponse(
+                application.getId(),
+                application.getSeedKey(),
+                application.getAdoptionPost() != null ? application.getAdoptionPost().getId() : null,
+                application.getApplicant() != null ? application.getApplicant().getId() : null,
+                applicantName,
+                applicantEmail,
+                applicantPhone,
+                dogName,
+                branchName,
+                application.getMessage(),
+                application.getRejectionReason(),
+                application.getStatus(),
+                application.getCreatedAt(),
+                application.getUpdatedAt());
     }
 }

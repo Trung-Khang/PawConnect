@@ -10,3 +10,16 @@ spring:
       # Shared/production MySQL must be migrated explicitly; do not let Hibernate mutate it on startup.
       ddl-auto: ${JPA_DDL_AUTO:validate}
     show-sql: false
+
+# Shared MySQL contains persistent shared data; never re-seed on startup.
+pawconnect:
+  seed:
+    enabled: false
+    adoption:
+      enabled: false
+
+app:
+  seed:
+    users:
+      enabled: false
+

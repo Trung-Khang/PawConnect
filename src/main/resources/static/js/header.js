@@ -5,6 +5,9 @@
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('headerSearchBtn')?.addEventListener('click', openSearch);
         document.getElementById('cartBtn')?.addEventListener('click', openCart);
+        document.getElementById('notificationBtn')?.addEventListener('click', toggleNotificationDropdown);
+        document.getElementById('markAllReadBtn')?.addEventListener('click', markAllNotificationsAsRead);
+        document.addEventListener('click', handleOutsideNotificationClick);
         document.getElementById('auth-action')?.addEventListener('click', handleAuthAction);
         document.getElementById('management-menu-toggle')?.addEventListener('click', openManagementMenu);
         document.getElementById('management-menu-close')?.addEventListener('click', closeManagementMenu);
@@ -72,8 +75,20 @@
         window.location.assign('/auth/login?returnTo=%2Fservice');
     }
 
+    let notificationPollInterval = null;
+
     function setLoggedOutAccountState() {
         signedIn = false;
+        if (notificationPollInterval) {
+            clearInterval(notificationPollInterval);
+            notificationPollInterval = null;
+        }
+        closeNotificationDropdown();
+        const badge = document.getElementById('notificationBadge');
+        if (badge) {
+            badge.textContent = '0';
+            badge.style.display = 'none';
+        }
         document.querySelector('.main-header')?.classList.remove('main-header-signed-in');
         document.getElementById('account-summary')?.setAttribute('hidden', '');
         updateAccountAvatar(null);
@@ -94,6 +109,18 @@
         const menuToggle = document.getElementById('management-menu-toggle');
         if (menuToggle) menuToggle.hidden = !isStaff;
         if (!isStaff) closeManagementMenu();
+
+        if (isCustomer) {
+            fetchUnreadNotificationCount();
+            if (!notificationPollInterval) {
+                notificationPollInterval = setInterval(fetchUnreadNotificationCount, 20000);
+            }
+        } else {
+            if (notificationPollInterval) {
+                clearInterval(notificationPollInterval);
+                notificationPollInterval = null;
+            }
+        }
     }
 
     function openManagementMenu() {
@@ -551,6 +578,182 @@
         const div = document.createElement('div');
         div.textContent = value;
         return div.innerHTML;
+    }
+
+    function handleOutsideNotificationClick(event) {
+        const wrapper = document.querySelector('.notification-wrapper');
+        if (wrapper && !wrapper.contains(event.target)) {
+            closeNotificationDropdown();
+        }
+    }
+
+    function toggleNotificationDropdown(event) {
+        event.stopPropagation();
+        const dropdown = document.getElementById('notificationDropdown');
+        const btn = document.getElementById('notificationBtn');
+        if (!dropdown || !btn) return;
+        const wrapper = btn.closest('.notification-wrapper');
+        if (wrapper) {
+            wrapper.style.position = 'relative';
+            wrapper.style.display = 'inline-flex';
+            wrapper.style.alignItems = 'center';
+        }
+        const isHidden = dropdown.hidden || dropdown.style.display === 'none';
+        if (isHidden) {
+            dropdown.hidden = false;
+            dropdown.style.cssText = 'position: absolute !important; top: calc(100% + 10px) !important; right: 0 !important; width: 380px !important; max-width: min(380px, 92vw) !important; background: #ffffff !important; border: 1px solid #e2e8f0 !important; border-radius: 16px !important; box-shadow: 0 16px 45px rgba(0, 0, 0, 0.18) !important; z-index: 999999 !important; overflow-x: hidden !important; overflow-y: hidden !important; text-align: left !important; display: block !important; box-sizing: border-box !important; white-space: normal !important;';
+            btn.setAttribute('aria-expanded', 'true');
+            loadNotifications();
+        } else {
+            closeNotificationDropdown();
+        }
+    }
+
+    function closeNotificationDropdown() {
+        const dropdown = document.getElementById('notificationDropdown');
+        const btn = document.getElementById('notificationBtn');
+        if (dropdown) {
+            dropdown.hidden = true;
+            dropdown.style.display = 'none';
+        }
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+    }
+
+    async function fetchUnreadNotificationCount() {
+        const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+        if (!token) return;
+        try {
+            const response = await fetch('/api/notifications/unread-count', { headers: authHeaders() });
+            if (!response.ok) return;
+            const data = await response.json();
+            const badge = document.getElementById('notificationBadge');
+            if (badge) {
+                const count = Number(data.count != null ? data.count : (data.unreadCount || 0));
+                if (count > 0) {
+                    badge.textContent = count > 99 ? '99+' : String(count);
+                    badge.style.display = 'inline-flex';
+                } else {
+                    badge.textContent = '0';
+                    badge.style.display = 'none';
+                }
+            }
+        } catch (_) {
+            // ignore network glitch
+        }
+    }
+
+    async function loadNotifications() {
+        const listContainer = document.getElementById('notificationList');
+        if (!listContainer) return;
+        listContainer.style.overflowX = "hidden"; listContainer.style.whiteSpace = "normal"; listContainer.innerHTML = '<div class="notification-loading" style="padding: 1rem; text-align: center; color: var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Đang tải thông báo...</div>';
+        try {
+            const response = await fetch('/api/notifications', { headers: authHeaders() });
+            if (!response.ok) {
+                listContainer.innerHTML = '<div class="notification-empty" style="padding: 1rem; text-align: center; color: var(--text-muted);">Không thể tải thông báo.</div>';
+                return;
+            }
+            const notifications = await response.json();
+            renderNotifications(notifications);
+        } catch (_) {
+            listContainer.innerHTML = '<div class="notification-empty" style="padding: 1rem; text-align: center; color: var(--text-muted);">Lỗi kết nối khi tải thông báo.</div>';
+        }
+    }
+
+    function renderNotifications(notifications) {
+        const listContainer = document.getElementById('notificationList');
+        if (!listContainer) return;
+        listContainer.replaceChildren();
+        if (!notifications || notifications.length === 0) {
+            listContainer.innerHTML = `
+                <div class="notification-empty" style="padding: 2.5rem 1.5rem !important; text-align: center !important; color: #718096 !important;">
+                    <i class="far fa-bell" style="font-size: 2rem !important; margin-bottom: 8px !important; opacity: 0.4 !important; display: block !important;"></i>
+                    <p style="margin: 0 !important; font-size: 0.9rem !important;">Bạn chưa có thông báo nào</p>
+                </div>`;
+            return;
+        }
+
+        notifications.forEach((item) => {
+            const el = document.createElement('div');
+            el.className = `notification-item ${item.read ? 'read' : 'unread'}`;
+            el.style.cssText = 'display: flex !important; align-items: flex-start !important; gap: 0.85rem !important; padding: 0.85rem 1.15rem !important; border-bottom: 1px solid #f1f5f9 !important; cursor: pointer !important; position: relative !important; text-align: left !important; background: ' + (item.read ? '#ffffff' : '#fff8f5') + ' !important; transition: background 0.15s ease !important; width: 100% !important; white-space: normal !important; box-sizing: border-box !important;';
+
+            let iconHtml = '<i class="fas fa-bell"></i>';
+            let iconBg = 'rgba(226, 123, 88, 0.12)';
+            let iconColor = '#e27b58';
+            if (item.type === 'ADOPTION_APPROVED') {
+                iconHtml = '<i class="fas fa-check"></i>';
+                iconBg = 'rgba(16, 185, 129, 0.12)';
+                iconColor = '#10b981';
+            } else if (item.type === 'ADOPTION_REJECTED') {
+                iconHtml = '<i class="fas fa-times"></i>';
+                iconBg = 'rgba(239, 68, 68, 0.12)';
+                iconColor = '#ef4444';
+            }
+
+            const timeStr = item.createdAt ? formatRelativeTime(item.createdAt) : '';
+
+            el.innerHTML = `
+                <div class="notification-item-icon" style="flex: 0 0 34px !important; width: 34px !important; height: 34px !important; border-radius: 50% !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; font-size: 0.95rem !important; margin-top: 2px !important; background: ${iconBg} !important; color: ${iconColor} !important;">
+                    ${iconHtml}
+                </div>
+                <div class="notification-item-content" style="flex: 1 1 0% !important; min-width: 0 !important; max-width: 100% !important; text-align: left !important; white-space: normal !important; overflow-wrap: break-word !important; word-break: break-word !important;">
+                    <h4 class="notification-item-title" style="font-size: 0.88rem !important; font-weight: 700 !important; color: #2d3748 !important; margin: 0 0 0.25rem 0 !important; line-height: 1.35 !important; white-space: normal !important; overflow-wrap: break-word !important; word-break: break-word !important;">${escapeHtml(item.title)}</h4>
+                    <p class="notification-item-desc" style="font-size: 0.82rem !important; color: #64748b !important; margin: 0 0 0.35rem 0 !important; line-height: 1.45 !important; white-space: normal !important; overflow-wrap: break-word !important; word-break: break-word !important;">${escapeHtml(item.content)}</p>
+                    <span class="notification-item-time" style="font-size: 0.75rem !important; color: #94a3b8 !important; font-weight: 600 !important; display: block !important; white-space: normal !important;">${timeStr}</span>
+                </div>
+                ${!item.read ? '<span class="notification-unread-dot" style="width: 8px !important; height: 8px !important; border-radius: 50% !important; background: #e53e3e !important; flex-shrink: 0 !important; margin-top: 6px !important;" title="Chưa đọc"></span>' : ''}
+            `;
+
+            el.addEventListener('click', async () => {
+                if (!item.read) {
+                    try {
+                        await fetch(`/api/notifications/${item.id}/read`, { method: 'PUT', headers: authHeaders() });
+                        item.read = true;
+                        el.classList.remove('unread');
+                        el.classList.add('read');
+                        el.style.background = '#ffffff';
+                        el.querySelector('.notification-unread-dot')?.remove();
+                        fetchUnreadNotificationCount();
+                    } catch (_) {}
+                }
+                closeNotificationDropdown();
+                if (item.link) {
+                    window.location.assign(item.link);
+                }
+            });
+
+            listContainer.appendChild(el);
+        });
+    }
+
+    async function markAllNotificationsAsRead() {
+        try {
+            await fetch('/api/notifications/read-all', { method: 'PUT', headers: authHeaders() });
+            const badge = document.getElementById('notificationBadge');
+            if (badge) {
+                badge.textContent = '0';
+                badge.style.display = 'none';
+            }
+            loadNotifications();
+        } catch (_) {}
+    }
+
+    function formatRelativeTime(dateStr) {
+        try {
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMin = Math.floor(diffMs / 60000);
+            if (diffMin < 1) return 'Vừa xong';
+            if (diffMin < 60) return `${diffMin} phút trước`;
+            const diffHour = Math.floor(diffMin / 60);
+            if (diffHour < 24) return `${diffHour} giờ trước`;
+            const diffDay = Math.floor(diffHour / 24);
+            if (diffDay < 7) return `${diffDay} ngày trước`;
+            return date.toLocaleDateString('vi-VN');
+        } catch (_) {
+            return '';
+        }
     }
 
     window.PawConnectCart = { add, open: openCart, refreshCount: refreshCartCount };

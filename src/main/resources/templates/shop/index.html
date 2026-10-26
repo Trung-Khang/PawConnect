@@ -1,163 +1,326 @@
-<!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <th:block th:replace="~{fragments/bootstrap :: assets}"></th:block>
-    <title>PawConnect - E-Commerce & Pet Care</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/shop.css?v=20261024-1">
-    <link rel="stylesheet" href="/css/header.css?v=20261021-1">
-</head>
-<body>
-
-    <div th:replace="~{fragments/header :: header}"></div>
-
-    <!-- HERO SECTION -->
-    <section class="hero">
-        <div class="container hero-content">
-            <div class="hero-text">
-                <div class="hero-badge">🏆 Cửa hàng & Phòng khám Thú y Hàng đầu</div>
-                <h1 class="hero-title">Tận tâm vì Hạnh phúc của Thú cưng</h1>
-                <p class="hero-desc">Trải nghiệm dịch vụ chăm sóc y tế đẳng cấp và các sản phẩm cao cấp. Chúng tôi chăm sóc thú cưng của bạn như người thân trong gia đình, mang đến tình yêu thương và dinh dưỡng tốt nhất.</p>
-                <div class="hero-btns">
-                    <a href="/service" class="btn-pill" data-booking-access>Đặt lịch ngay</a>
-                    <a href="#shop-section" class="btn-pill btn-outline">Khám phá Cửa hàng</a>
-                </div>
-            </div>
-            
-            <div class="hero-image-wrapper">
-                <img src="https://images.unsplash.com/photo-1576201836106-db1758fd1c97?q=80&w=800&auto=format&fit=crop" alt="Happy Dog and Vet" class="blob-image">
-                
-                <div class="floating-card fc-1">
-                    <i class="fas fa-star"></i>
-                    <div>
-                        <div style="font-size:1.2rem;">10k+</div>
-                        <div style="font-size:0.8rem; color:var(--text-muted); font-weight:400;">Happy Pets</div>
-                    </div>
-                </div>
-                
-                <div class="floating-card fc-2">
-                    <i class="fas fa-ambulance"></i>
-                    <div>
-                        <div style="font-size:1.1rem;">24/7</div>
-                        <div style="font-size:0.8rem; color:var(--text-muted); font-weight:400;">Emergency</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- QUICK FEATURES -->
-    <div class="container">
-        <div class="quick-features">
-            <div class="feature-box">
-                <div class="feature-icon"><i class="fas fa-user-md"></i></div>
-                <div>
-                    <h4>Bác sĩ Chuyên gia</h4>
-                    <p>Chuyên môn cao</p>
-                </div>
-            </div>
-            <div class="feature-box">
-                <div class="feature-icon"><i class="fas fa-heartbeat"></i></div>
-                <div>
-                    <h4>Cấp cứu 24/7</h4>
-                    <p>Luôn sẵn sàng</p>
-                </div>
-            </div>
-            <div class="feature-box">
-                <div class="feature-icon"><i class="fas fa-microscope"></i></div>
-                <div>
-                    <h4>Công nghệ Hiện đại</h4>
-                    <p>Trang thiết bị tiên tiến</p>
-                </div>
-            </div>
-            <div class="feature-box">
-                <div class="feature-icon"><i class="fas fa-tag"></i></div>
-                <div>
-                    <h4>Giá cả Hợp lý</h4>
-                    <p>Chi phí minh bạch</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- SHOP SECTION -->
-    <section id="shop-section" class="section container">
-        <div class="section-header">
-            <h2>Cửa hàng Cao cấp</h2>
-            <p style="color:var(--text-muted)">Dinh dưỡng và phụ kiện tốt nhất cho thú cưng của bạn.</p>
-        </div>
-        
-        <div class="shop-layout">
-            <aside class="sidebar">
-                <h3>Bộ lọc</h3>
-                
-                <div class="filter-group">
-                    <label for="shopSearch"><strong>Tìm kiếm</strong></label>
-                    <input id="shopSearch" class="form-control" type="search" placeholder="Tên sản phẩm hoặc giống chó" autocomplete="off">
-                </div>
-
-                <div class="filter-group">
-                    <label><strong>Chi nhánh</strong></label>
-                    <select id="branchFilter" class="form-control" style="width:100%; border-radius:8px;">
-                        <option value="">Tất cả Chi nhánh</option>
-                    </select>
-                </div>
-                
-                <div class="filter-group">
-                    <label><strong>Danh mục</strong></label>
-                    <select id="typeFilter" class="form-control" style="width:100%; border-radius:8px;">
-                        <option value="">Tất cả Sản phẩm</option>
-                        <option value="puppy">Chó con</option>
-                        <option value="product">Thức ăn và phụ kiện</option>
-                    </select>
-                </div>
-                <button id="applyShopFilters" class="shop-filter-submit" type="button">
-                    <i class="fas fa-search" aria-hidden="true"></i>
-                    Tìm kiếm
-                </button>
-            </aside>
-            
-            <main>
-                <div class="product-grid" id="productGrid">
-                    <!-- Loaded via JS -->
-                </div>
-                <div id="shopPagination" class="paw-pagination"></div>
-            </main>
-        </div>
-    </section>
-
-    <div th:replace="~{fragments/footer :: footer}"></div>
-
-    <!-- PRODUCT DETAIL MODAL (GLASSMORPHISM) -->
-    <div id="productModal" class="modal-overlay">
-        <div class="modal-content glass-effect">
-            <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
-            <div class="modal-grid">
-                <div class="modal-image-col">
-                    <img id="modalImage" src="" alt="Dog Image" class="modal-main-img">
-                </div>
-                <div class="modal-info-col">
-                    <h2 id="modalName" class="modal-title">Dog Name</h2>
-                    <p id="modalPrice" class="modal-price">0 VND</p>
-                    <div class="modal-details">
-                        <p><strong><i class="fas fa-location-dot"></i> Chi nhánh:</strong> <span id="modalBranch"></span></p>
-                        <p><strong><i class="fas fa-paw"></i> Giống:</strong> <span id="modalBreed"></span></p>
-                        <p><strong><i class="fas fa-calendar-alt"></i> Tuổi:</strong> <span id="modalAge"></span></p>
-                        <p><strong><i class="fas fa-heartbeat"></i> Sức khoẻ:</strong> <span id="modalHealth"></span></p>
-                        <p><strong><i class="fas fa-info-circle"></i> Chăm sóc:</strong> <span id="modalCare"></span></p>
-                    </div>
-                    <div class="modal-actions">
-                        <button class="btn-icon-cart" id="modalCartBtn"><i class="fas fa-cart-plus"></i></button>
-                        <button class="btn-pill btn-outline" id="modalConsultBtn" type="button">Tư vấn</button>
-                        <button class="btn-pill" id="modalBuyBtn" style="flex: 1;">Mua ngay</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="/js/shop.js?v=20261017-8"></script>
-</body>
-</html>
+<!DOCTYPE html>
+
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <th:block th:replace="~{fragments/bootstrap :: assets}"></th:block>
+
+    <title>PawConnect - E-Commerce & Pet Care</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="/css/shop.css?v=20261024-1">
+
+    <link rel="stylesheet" href="/css/header.css?v=20261026-5">
+
+</head>
+
+<body>
+
+
+
+    <div th:replace="~{fragments/header :: header}"></div>
+
+
+
+    <!-- HERO SECTION -->
+
+    <section class="hero">
+
+        <div class="container hero-content">
+
+            <div class="hero-text">
+
+                <div class="hero-badge">🏆 Cửa hàng & Phòng khám Thú y Hàng đầu</div>
+
+                <h1 class="hero-title">Tận tâm vì Hạnh phúc của Thú cưng</h1>
+
+                <p class="hero-desc">Trải nghiệm dịch vụ chăm sóc y tế đẳng cấp và các sản phẩm cao cấp. Chúng tôi chăm sóc thú cưng của bạn như người thân trong gia đình, mang đến tình yêu thương và dinh dưỡng tốt nhất.</p>
+
+                <div class="hero-btns">
+
+                    <a href="/service" class="btn-pill" data-booking-access>Đặt lịch ngay</a>
+
+                    <a href="#shop-section" class="btn-pill btn-outline">Khám phá Cửa hàng</a>
+
+                </div>
+
+            </div>
+
+            
+
+            <div class="hero-image-wrapper">
+
+                <img src="https://images.unsplash.com/photo-1576201836106-db1758fd1c97?q=80&w=800&auto=format&fit=crop" alt="Happy Dog and Vet" class="blob-image">
+
+                
+
+                <div class="floating-card fc-1">
+
+                    <i class="fas fa-star"></i>
+
+                    <div>
+
+                        <div style="font-size:1.2rem;">10k+</div>
+
+                        <div style="font-size:0.8rem; color:var(--text-muted); font-weight:400;">Happy Pets</div>
+
+                    </div>
+
+                </div>
+
+                
+
+                <div class="floating-card fc-2">
+
+                    <i class="fas fa-ambulance"></i>
+
+                    <div>
+
+                        <div style="font-size:1.1rem;">24/7</div>
+
+                        <div style="font-size:0.8rem; color:var(--text-muted); font-weight:400;">Emergency</div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- QUICK FEATURES -->
+
+    <div class="container">
+
+        <div class="quick-features">
+
+            <div class="feature-box">
+
+                <div class="feature-icon"><i class="fas fa-user-md"></i></div>
+
+                <div>
+
+                    <h4>Bác sĩ Chuyên gia</h4>
+
+                    <p>Chuyên môn cao</p>
+
+                </div>
+
+            </div>
+
+            <div class="feature-box">
+
+                <div class="feature-icon"><i class="fas fa-heartbeat"></i></div>
+
+                <div>
+
+                    <h4>Cấp cứu 24/7</h4>
+
+                    <p>Luôn sẵn sàng</p>
+
+                </div>
+
+            </div>
+
+            <div class="feature-box">
+
+                <div class="feature-icon"><i class="fas fa-microscope"></i></div>
+
+                <div>
+
+                    <h4>Công nghệ Hiện đại</h4>
+
+                    <p>Trang thiết bị tiên tiến</p>
+
+                </div>
+
+            </div>
+
+            <div class="feature-box">
+
+                <div class="feature-icon"><i class="fas fa-tag"></i></div>
+
+                <div>
+
+                    <h4>Giá cả Hợp lý</h4>
+
+                    <p>Chi phí minh bạch</p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- SHOP SECTION -->
+
+    <section id="shop-section" class="section container">
+
+        <div class="section-header">
+
+            <h2>Cửa hàng Cao cấp</h2>
+
+            <p style="color:var(--text-muted)">Dinh dưỡng và phụ kiện tốt nhất cho thú cưng của bạn.</p>
+
+        </div>
+
+        
+
+        <div class="shop-layout">
+
+            <aside class="sidebar">
+
+                <h3>Bộ lọc</h3>
+
+                
+
+                <div class="filter-group">
+
+                    <label for="shopSearch"><strong>Tìm kiếm</strong></label>
+
+                    <input id="shopSearch" class="form-control" type="search" placeholder="Tên sản phẩm hoặc giống chó" autocomplete="off">
+
+                </div>
+
+
+
+                <div class="filter-group">
+
+                    <label><strong>Chi nhánh</strong></label>
+
+                    <select id="branchFilter" class="form-control" style="width:100%; border-radius:8px;">
+
+                        <option value="">Tất cả Chi nhánh</option>
+
+                    </select>
+
+                </div>
+
+                
+
+                <div class="filter-group">
+
+                    <label><strong>Danh mục</strong></label>
+
+                    <select id="typeFilter" class="form-control" style="width:100%; border-radius:8px;">
+
+                        <option value="">Tất cả Sản phẩm</option>
+
+                        <option value="puppy">Chó con</option>
+
+                        <option value="product">Thức ăn và phụ kiện</option>
+
+                    </select>
+
+                </div>
+
+                <button id="applyShopFilters" class="shop-filter-submit" type="button">
+
+                    <i class="fas fa-search" aria-hidden="true"></i>
+
+                    Tìm kiếm
+
+                </button>
+
+            </aside>
+
+            
+
+            <main>
+
+                <div class="product-grid" id="productGrid">
+
+                    <!-- Loaded via JS -->
+
+                </div>
+
+                <div id="shopPagination" class="paw-pagination"></div>
+
+            </main>
+
+        </div>
+
+    </section>
+
+
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+
+
+
+    <!-- PRODUCT DETAIL MODAL (GLASSMORPHISM) -->
+
+    <div id="productModal" class="modal-overlay">
+
+        <div class="modal-content glass-effect">
+
+            <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+
+            <div class="modal-grid">
+
+                <div class="modal-image-col">
+
+                    <img id="modalImage" src="" alt="Dog Image" class="modal-main-img">
+
+                </div>
+
+                <div class="modal-info-col">
+
+                    <h2 id="modalName" class="modal-title">Dog Name</h2>
+
+                    <p id="modalPrice" class="modal-price">0 VND</p>
+
+                    <div class="modal-details">
+
+                        <p><strong><i class="fas fa-location-dot"></i> Chi nhánh:</strong> <span id="modalBranch"></span></p>
+
+                        <p><strong><i class="fas fa-paw"></i> Giống:</strong> <span id="modalBreed"></span></p>
+
+                        <p><strong><i class="fas fa-calendar-alt"></i> Tuổi:</strong> <span id="modalAge"></span></p>
+
+                        <p><strong><i class="fas fa-heartbeat"></i> Sức khoẻ:</strong> <span id="modalHealth"></span></p>
+
+                        <p><strong><i class="fas fa-info-circle"></i> Chăm sóc:</strong> <span id="modalCare"></span></p>
+
+                    </div>
+
+                    <div class="modal-actions">
+
+                        <button class="btn-icon-cart" id="modalCartBtn"><i class="fas fa-cart-plus"></i></button>
+
+                        <button class="btn-pill btn-outline" id="modalConsultBtn" type="button">Tư vấn</button>
+
+                        <button class="btn-pill" id="modalBuyBtn" style="flex: 1;">Mua ngay</button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <script src="/js/shop.js?v=20261017-8"></script>
+
+</body>
+
+</html>
+
