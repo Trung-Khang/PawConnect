@@ -1,136 +1,269 @@
-<!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <th:block th:replace="~{fragments/bootstrap :: assets}"></th:block>
-    <title>PawConnect - Quản lý Cửa hàng</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/admin.css">
-    <link rel="stylesheet" href="/css/shop.css">
-    <link rel="stylesheet" href="/css/header.css?v=20261021-1">
-</head>
-<body>
-    <div th:replace="~{fragments/header :: header}"></div>
-        <main class="main-content admin-store-page">
-            <header class="top-header">
-                <h1>Sản phẩm & Chó giống</h1>
-                <div class="top-header-actions">
+<!DOCTYPE html>
+
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <th:block th:replace="~{fragments/bootstrap :: assets}"></th:block>
+
+    <title>PawConnect - Quản lý Cửa hàng</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="/css/admin.css">
+
+    <link rel="stylesheet" href="/css/shop.css">
+
+    <link rel="stylesheet" href="/css/header.css?v=20261026-4">
+
+</head>
+
+<body>
+
+    <div th:replace="~{fragments/header :: header}"></div>
+
+        <main class="main-content admin-store-page">
+
+            <header class="top-header">
+
+                <h1>Sản phẩm & Chó giống</h1>
+
+                <div class="top-header-actions">
+
                     <select id="adminBranchFilter" class="form-control" style="display:none; width:auto; font-size:0.9rem; padding:0.4rem 0.8rem; border-radius:8px;">
                         <option value="">Tất cả Chi nhánh</option>
                     </select>
-                    <button id="deleteSelectedBtn" class="btn btn-danger" type="button" disabled><i class="fas fa-trash"></i> Xóa đã chọn</button>
-                    <button id="addProductBtn" class="btn btn-primary" type="button"><i class="fas fa-plus"></i> Thêm mới</button>
-                </div>
-            </header>
-
-            <section class="content-section">
-                <div class="table-container table-responsive">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th class="selection-cell"><input id="selectAllProducts" type="checkbox" aria-label="Chọn tất cả mặt hàng"></th>
-                                <th>Hình ảnh</th>
-                                <th>Tên mặt hàng</th>
-                                <th>Phân loại</th>
-                                <th>Chi nhánh</th>
-                                <th>Giá</th>
-                                <th>Tồn kho</th>
-                                <th>Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody id="productsTableBody">
-                            <!-- Products will be injected here via JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-        </main>
-
-    <!-- Add Product Modal -->
-    <div id="addProductModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Thêm Sản phẩm / Chó giống</h2>
-                <button class="close-btn">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="addProductForm">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Tên mặt hàng</label>
-                            <input type="text" id="p_name" placeholder="VD: Thức ăn hạt / Chó Poodle thuần chủng..." required>
-                        </div>
-                        <div class="form-group">
-                            <label>Chi nhánh</label>
-                            <select id="p_branchId" required></select>
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Danh mục</label>
-                            <select id="p_categoryGroup" required>
-                                <option value="product">Thức ăn, phụ kiện</option>
-                                <option value="puppy">Chó con</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label id="lbl_breed">Giống chó</label>
-                            <input type="text" id="p_breed" placeholder="Chỉ áp dụng cho Chó con" disabled>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Giá (VNĐ)</label>
-                            <input type="number" id="p_price" required min="0" placeholder="VD: 250000">
-                        </div>
-                        <div class="form-group">
-                            <label>Số lượng tồn kho</label>
-                            <input type="number" id="p_stock" required min="0" placeholder="VD: 10">
-                        </div>
-                    </div>
-
-                    <!-- Dog Fields (only shown when Danh mục is Chó con) -->
-                    <div class="form-row dog-fields dynamic-fields" style="display: none;">
-                        <div class="form-group">
-                            <label>Tuổi (tháng)</label>
-                            <input type="number" id="p_age" min="1" max="120" placeholder="VD: 3">
-                        </div>
-                        <div class="form-group">
-                            <label>Tình trạng sức khỏe</label>
-                            <input type="text" id="p_healthStatus" placeholder="VD: Khỏe mạnh, đã tiêm phòng cơ bản">
-                        </div>
-                    </div>
-                    <div class="form-row dog-fields dynamic-fields" style="display: none;">
-                        <div class="form-group" style="width: 100%;">
-                            <label>Hướng dẫn chăm sóc</label>
-                            <input type="text" id="p_careInstructions" placeholder="VD: Theo dõi dinh dưỡng và lịch tiêm phòng">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label id="lbl_description">Mô tả / Lưu ý đặc biệt</label>
-                        <textarea id="p_description" rows="3" placeholder="Nhập mô tả chi tiết..."></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Tải ảnh lên</label>
-                        <input type="file" id="p_imageFile" accept="image/*" required>
-                        <div id="uploadStatus" class="upload-status" style="margin-top:0.5rem;font-size:0.9rem;color:#e27b58;font-weight:600;"></div>
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="button" class="btn btn-secondary close-btn">Hủy</button>
-                        <button type="submit" class="btn btn-primary" id="saveProductBtn">Lưu mặt hàng</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <script src="/js/admin-products.js"></script>
-</body>
-</html>
+                    <button id="deleteSelectedBtn" class="btn btn-danger" type="button" disabled><i class="fas fa-trash"></i> Xóa đã chọn</button>
+
+                    <button id="addProductBtn" class="btn btn-primary" type="button"><i class="fas fa-plus"></i> Thêm mới</button>
+
+                </div>
+
+            </header>
+
+
+
+            <section class="content-section">
+
+                <div class="table-container table-responsive">
+
+                    <table class="data-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th class="selection-cell"><input id="selectAllProducts" type="checkbox" aria-label="Chọn tất cả mặt hàng"></th>
+
+                                <th>Hình ảnh</th>
+
+                                <th>Tên mặt hàng</th>
+
+                                <th>Phân loại</th>
+
+                                <th>Chi nhánh</th>
+
+                                <th>Giá</th>
+
+                                <th>Tồn kho</th>
+
+                                <th>Thao tác</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="productsTableBody">
+
+                            <!-- Products will be injected here via JS -->
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+        </main>
+
+
+
+    <!-- Add Product Modal -->
+
+    <div id="addProductModal" class="modal">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h2>Thêm Sản phẩm / Chó giống</h2>
+
+                <button class="close-btn">&times;</button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <form id="addProductForm">
+
+                    <div class="form-row">
+
+                        <div class="form-group">
+
+                            <label>Tên mặt hàng</label>
+
+                            <input type="text" id="p_name" placeholder="VD: Thức ăn hạt / Chó Poodle thuần chủng..." required>
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label>Chi nhánh</label>
+
+                            <select id="p_branchId" required></select>
+
+                        </div>
+
+                    </div>
+
+                    
+
+                    <div class="form-row">
+
+                        <div class="form-group">
+
+                            <label>Danh mục</label>
+
+                            <select id="p_categoryGroup" required>
+
+                                <option value="product">Thức ăn, phụ kiện</option>
+
+                                <option value="puppy">Chó con</option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label id="lbl_breed">Giống chó</label>
+
+                            <input type="text" id="p_breed" placeholder="Chỉ áp dụng cho Chó con" disabled>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="form-row">
+
+                        <div class="form-group">
+
+                            <label>Giá (VNĐ)</label>
+
+                            <input type="number" id="p_price" required min="0" placeholder="VD: 250000">
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label>Số lượng tồn kho</label>
+
+                            <input type="number" id="p_stock" required min="0" placeholder="VD: 10">
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- Dog Fields (only shown when Danh mục is Chó con) -->
+
+                    <div class="form-row dog-fields dynamic-fields" style="display: none;">
+
+                        <div class="form-group">
+
+                            <label>Tuổi (tháng)</label>
+
+                            <input type="number" id="p_age" min="1" max="120" placeholder="VD: 3">
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label>Tình trạng sức khỏe</label>
+
+                            <input type="text" id="p_healthStatus" placeholder="VD: Khỏe mạnh, đã tiêm phòng cơ bản">
+
+                        </div>
+
+                    </div>
+
+                    <div class="form-row dog-fields dynamic-fields" style="display: none;">
+
+                        <div class="form-group" style="width: 100%;">
+
+                            <label>Hướng dẫn chăm sóc</label>
+
+                            <input type="text" id="p_careInstructions" placeholder="VD: Theo dõi dinh dưỡng và lịch tiêm phòng">
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="form-group">
+
+                        <label id="lbl_description">Mô tả / Lưu ý đặc biệt</label>
+
+                        <textarea id="p_description" rows="3" placeholder="Nhập mô tả chi tiết..."></textarea>
+
+                    </div>
+
+
+
+                    <div class="form-group">
+
+                        <label>Tải ảnh lên</label>
+
+                        <input type="file" id="p_imageFile" accept="image/*" required>
+
+                        <div id="uploadStatus" class="upload-status" style="margin-top:0.5rem;font-size:0.9rem;color:#e27b58;font-weight:600;"></div>
+
+                    </div>
+
+
+
+                    <div class="form-actions">
+
+                        <button type="button" class="btn btn-secondary close-btn">Hủy</button>
+
+                        <button type="submit" class="btn btn-primary" id="saveProductBtn">Lưu mặt hàng</button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <script src="/js/admin-products.js"></script>
+
+</body>
+
+</html>
+

@@ -6,16 +6,70 @@
 <body>
     <!-- Shared Footer Fragment -->
     <footer th:fragment="footer" class="footer">
+        <style>
+            .footer {
+                background-color: #ffffff;
+                padding: 4rem 0 2rem;
+                border-top: 1px solid var(--border-color, #e2e8f0);
+            }
+            .footer-grid {
+                display: flex !important;
+                flex-wrap: wrap !important;
+                justify-content: space-between !important;
+                gap: 2.5rem !important;
+                margin-bottom: 3rem !important;
+            }
+            .footer-col-about {
+                flex: 1 1 340px !important;
+                max-width: 480px !important;
+            }
+            .footer-col-links {
+                flex: 0 1 200px !important;
+                min-width: 160px !important;
+            }
+            .footer h4 {
+                font-size: 1.15rem;
+                font-weight: 800;
+                margin: 0 0 1.25rem 0;
+                color: var(--text-main, #2d3748);
+                white-space: nowrap;
+            }
+            .footer ul {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+            }
+            .footer ul li {
+                margin-bottom: 0.75rem;
+            }
+            .footer ul li a {
+                color: var(--text-muted, #718096);
+                text-decoration: none;
+                font-weight: 600;
+                white-space: nowrap;
+                transition: color 0.25s ease;
+            }
+            .footer ul li a:hover {
+                color: var(--primary-color, #e27b58);
+            }
+            .footer-bottom {
+                text-align: center;
+                padding-top: 2rem;
+                border-top: 1px solid var(--border-color, #e2e8f0);
+                color: var(--text-muted, #718096);
+                font-size: 0.9rem;
+            }
+        </style>
         <div class="container">
-            <div class="footer-grid row g-4">
-                <div class="col-12 col-sm-6 col-lg-6">
+            <div class="footer-grid">
+                <div class="footer-col-about">
                     <a href="/shop" class="logo" style="margin-bottom:1rem; display:inline-block;">
                         <i class="fas fa-paw"></i> PawConnect
                     </a>
-                    <p style="color:var(--text-muted)">Hệ thống chăm sóc thú cưng toàn diện. Nơi cung cấp sản phẩm cao cấp, dịch vụ y tế chuyên nghiệp và hỗ trợ nhận nuôi thú cưng.</p>
+                    <p style="color:var(--text-muted); line-height: 1.6;">Hệ thống chăm sóc thú cưng toàn diện. Nơi cung cấp sản phẩm cao cấp, dịch vụ y tế chuyên nghiệp và hỗ trợ nhận nuôi thú cưng.</p>
                 </div>
                 
-                <div class="col-12 col-sm-6 col-lg-3">
+                <div class="footer-col-links">
                     <h4>Đường dẫn nhanh</h4>
                     <ul>
                         <li><a href="/shop">Cửa hàng</a></li>
@@ -24,7 +78,7 @@
                     </ul>
                 </div>
                 
-                <div class="col-12 col-sm-6 col-lg-3">
+                <div class="footer-col-links">
                     <h4>Dịch vụ</h4>
                     <ul>
                         <li><a href="/service">Spa thú cưng</a></li>

@@ -46,6 +46,7 @@ public class AdoptionService {
     private final UserRepository userRepository;
     private final ConversationService conversationService;
     private final AdoptionMediaService adoptionMediaService;
+    private final com.pawconnect.service.notification.NotificationService notificationService;
 
     public AdoptionService(DogProfileRepository dogProfileRepository,
                            AdoptionPostRepository adoptionPostRepository,
@@ -53,7 +54,8 @@ public class AdoptionService {
                            BranchRepository branchRepository,
                            UserRepository userRepository,
                            ConversationService conversationService,
-                           AdoptionMediaService adoptionMediaService) {
+                           AdoptionMediaService adoptionMediaService,
+                           com.pawconnect.service.notification.NotificationService notificationService) {
         this.dogProfileRepository = dogProfileRepository;
         this.adoptionPostRepository = adoptionPostRepository;
         this.adoptionApplicationRepository = adoptionApplicationRepository;
@@ -61,6 +63,7 @@ public class AdoptionService {
         this.userRepository = userRepository;
         this.conversationService = conversationService;
         this.adoptionMediaService = adoptionMediaService;
+        this.notificationService = notificationService;
     }
 
     public List<AdoptionPostResponse> listAvailablePosts() {
@@ -326,13 +329,24 @@ public class AdoptionService {
         }
         application.setStatus(AdoptionApplicationStatus.APPROVED);
         post.setStatus(AdoptionPostStatus.CLOSED);
-        rejectPendingApplicationsExcept(post.getId(), applicationId);
+        String dogName = post.getDogProfile() != null ? post.getDogProfile().getName() : "cún";
+        rejectPendingApplicationsExcept(post.getId(), applicationId, dogName);
         conversationService.openForAdoption(application.getApplicant().getId(), post.getDogProfile().getBranch().getId(), post.getId());
+
+        String approveTitle = "Đơn nhận nuôi bé " + dogName + " đã được duyệt 🎉";
+        String approveContent = "Chúc mừng bạn! Đơn nhận nuôi bé " + dogName + " đã được duyệt. Vui lòng kiểm tra mục tin nhắn (inbox) để trao đổi thêm với nhân viên về thời gian và thủ tục qua nhận bé.";
+        notificationService.createNotification(application.getApplicant(), approveTitle, approveContent, "ADOPTION_APPROVED", "/my-orders", application.getId());
+
         return AdoptionMapper.toResponse(application);
     }
 
     @Transactional
     public AdoptionApplicationResponse reject(Long applicationId, String actorEmail) {
+        return reject(applicationId, null, actorEmail);
+    }
+
+    @Transactional
+    public AdoptionApplicationResponse reject(Long applicationId, String reason, String actorEmail) {
         User actor = currentUser(actorEmail);
         requireStaff(actor);
         AdoptionApplication application = findApplication(applicationId);
@@ -342,20 +356,39 @@ public class AdoptionService {
             throw new ResourceConflictException("Only a pending application can be rejected");
         }
         application.setStatus(AdoptionApplicationStatus.REJECTED);
+        String effectiveReason = reason != null && !reason.isBlank() ? reason.trim() : "Chưa đáp ứng điều kiện nhận nuôi hiện tại của chi nhánh.";
+        application.setRejectionReason(effectiveReason);
+
+        String dogName = post.getDogProfile() != null ? post.getDogProfile().getName() : "cún";
+        String rejectTitle = "Đơn nhận nuôi bé " + dogName + " chưa được duyệt";
+        String rejectContent = "Rất tiếc, đơn nhận nuôi bé " + dogName + " của bạn chưa được duyệt. Lý do: " + effectiveReason;
+        notificationService.createNotification(application.getApplicant(), rejectTitle, rejectContent, "ADOPTION_REJECTED", "/my-orders", application.getId());
+
         return AdoptionMapper.toResponse(application);
     }
 
     private void rejectPendingApplications(Long postId) {
         adoptionApplicationRepository.findByAdoptionPostId(postId).stream()
                 .filter(application -> application.getStatus() == AdoptionApplicationStatus.PENDING)
-                .forEach(application -> application.setStatus(AdoptionApplicationStatus.REJECTED));
+                .forEach(application -> {
+                    application.setStatus(AdoptionApplicationStatus.REJECTED);
+                    application.setRejectionReason("Bài nhận nuôi đã đóng.");
+                });
     }
 
-    private void rejectPendingApplicationsExcept(Long postId, Long approvedApplicationId) {
+    private void rejectPendingApplicationsExcept(Long postId, Long approvedApplicationId, String dogName) {
         adoptionApplicationRepository.findByAdoptionPostId(postId).stream()
                 .filter(application -> !application.getId().equals(approvedApplicationId))
                 .filter(application -> application.getStatus() == AdoptionApplicationStatus.PENDING)
-                .forEach(application -> application.setStatus(AdoptionApplicationStatus.REJECTED));
+                .forEach(application -> {
+                    application.setStatus(AdoptionApplicationStatus.REJECTED);
+                    String reason = "Bé " + dogName + " đã tìm được chủ nhân phù hợp.";
+                    application.setRejectionReason(reason);
+                    notificationService.createNotification(application.getApplicant(),
+                            "Đơn nhận nuôi bé " + dogName + " đã đóng",
+                            "Đơn nhận nuôi bé " + dogName + " đã đóng do bé đã tìm được chủ nhân phù hợp. Bạn hãy tham khảo thêm các bé khác nhé!",
+                            "ADOPTION_REJECTED", "/adoptions", application.getId());
+                });
     }
 
     private DogProfile findDog(Long dogId) {

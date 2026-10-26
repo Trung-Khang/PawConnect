@@ -139,7 +139,10 @@ public class AdoptionController {
 
     @PutMapping("/applications/{id}/reject")
     @PreAuthorize("hasAnyRole('ADMIN', 'BRANCH_MANAGER')")
-    public AdoptionApplicationResponse reject(@PathVariable Long id, @AuthenticationPrincipal UserDetails principal) {
-        return adoptionService.reject(id, principal.getUsername());
+    public AdoptionApplicationResponse reject(@PathVariable Long id,
+                                              @org.springframework.web.bind.annotation.RequestBody(required = false) com.pawconnect.dto.adoption.RejectApplicationRequest request,
+                                              @AuthenticationPrincipal UserDetails principal) {
+        String reason = request != null ? request.reason() : null;
+        return adoptionService.reject(id, reason, principal.getUsername());
     }
 }

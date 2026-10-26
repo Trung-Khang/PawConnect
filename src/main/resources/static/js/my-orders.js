@@ -58,10 +58,45 @@
             applications.forEach(application => {
                 const card = document.createElement('article');
                 card.className = 'commerce-panel commerce-order';
-                card.innerHTML = '<div><h2 class="order-title"></h2><p class="order-meta"></p></div><a class="btn-pill" href="#">Xem bài nhận nuôi</a>';
-                card.querySelector('.order-title').textContent = `Đơn nhận nuôi #${application.id} · ${adoptionLabels[application.status] || application.status}`;
-                card.querySelector('.order-meta').textContent = `Gửi lúc ${formatDate(application.createdAt)}`;
-                card.querySelector('a').href = `/adoptions/${application.adoptionPostId}`;
+
+                let statusBadgeClass = 'text-warning';
+                if (application.status === 'APPROVED') statusBadgeClass = 'text-success';
+                else if (application.status === 'REJECTED') statusBadgeClass = 'text-danger';
+
+                let statusBannerHtml = '';
+                if (application.status === 'APPROVED') {
+                    statusBannerHtml = `
+                        <div style="background: #ecfdf5; border: 1.5px solid #a7f3d0; border-radius: 10px; padding: 0.75rem 1rem; margin-top: 0.75rem; color: #065f46; font-size: 0.92rem;">
+                            <strong><i class="fas fa-check-circle"></i> Đơn đã được duyệt!</strong>
+                            <p style="margin: 4px 0 0; font-size: 0.88rem;">Vui lòng kiểm tra inbox (hộp thư) để trao đổi thêm với nhân viên về thời gian và thủ tục qua nhận bé nhé.</p>
+                        </div>
+                    `;
+                } else if (application.status === 'REJECTED') {
+                    statusBannerHtml = `
+                        <div style="background: #fff1f2; border: 1.5px solid #fecdd3; border-radius: 10px; padding: 0.75rem 1rem; margin-top: 0.75rem; color: #9f1239; font-size: 0.92rem;">
+                            <strong><i class="fas fa-times-circle"></i> Đơn đã bị từ chối</strong>
+                            <p style="margin: 4px 0 0; font-size: 0.88rem;"><strong>Lý do từ chối:</strong> ${escapeHtml(application.rejectionReason || 'Chưa đáp ứng điều kiện nhận nuôi của chi nhánh.')}</p>
+                        </div>
+                    `;
+                } else {
+                    statusBannerHtml = `
+                        <div style="background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 10px; padding: 0.75rem 1rem; margin-top: 0.75rem; color: #92400e; font-size: 0.92rem;">
+                            <i class="fas fa-hourglass-half"></i> Đơn đang chờ nhân viên chi nhánh xem xét và phản hồi.
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div style="flex: 1;">
+                        <h2 class="order-title">🐾 Đơn nhận nuôi: ${escapeHtml(application.dogName || `#${application.id}`)} · <span class="${statusBadgeClass}">${adoptionLabels[application.status] || application.status}</span></h2>
+                        <p class="order-meta">${application.branchName ? `Chi nhánh: ${escapeHtml(application.branchName)} · ` : ''}Gửi lúc ${formatDate(application.createdAt)}</p>
+                        ${application.message ? `<p class="order-items" style="font-style: italic; color: var(--text-muted); margin: 0.35rem 0;">"${escapeHtml(application.message)}"</p>` : ''}
+                        ${statusBannerHtml}
+                    </div>
+                    <div class="order-side" style="align-self: flex-start;">
+                        <a class="btn-pill" href="/adoptions/${application.adoptionPostId}">Xem bài nhận nuôi</a>
+                    </div>
+                `;
                 list.append(card);
             });
         } catch (error) { list.textContent = error.message; }
@@ -88,4 +123,5 @@
     function formatMoney(value) { return `${new Intl.NumberFormat('vi-VN').format(value || 0)} VND`; }
     function formatDate(value) { return value ? new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)) : '—'; }
     function showNotice(message, error = false) { const notice = document.getElementById('orders-notice'); notice.textContent = message; notice.classList.toggle('error', error); notice.hidden = false; }
+    function escapeHtml(value) { if (!value) return ''; const div = document.createElement('div'); div.textContent = value; return div.innerHTML; }
 })();
