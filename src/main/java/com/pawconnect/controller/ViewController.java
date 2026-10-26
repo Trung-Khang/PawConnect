@@ -26,6 +26,11 @@ public class ViewController {
         return "admin/orders";
     }
 
+    @GetMapping("/admin/services")
+    public String adminServicesPage() {
+        return "admin/services";
+    }
+
     @GetMapping("/admin/users")
     public String adminUsersPage() {
         return "admin/users";

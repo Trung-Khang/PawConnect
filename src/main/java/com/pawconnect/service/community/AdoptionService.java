@@ -363,7 +363,6 @@ public class AdoptionService {
         String rejectTitle = "Đơn nhận nuôi bé " + dogName + " chưa được duyệt";
         String rejectContent = "Rất tiếc, đơn nhận nuôi bé " + dogName + " của bạn chưa được duyệt. Lý do: " + effectiveReason;
         notificationService.createNotification(application.getApplicant(), rejectTitle, rejectContent, "ADOPTION_REJECTED", "/my-orders", application.getId());
-
         return AdoptionMapper.toResponse(application);
     }
 

@@ -33,7 +33,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
         await loadBranches('branchSelect');
-        await loadServices();
+        await loadServices();
+        initBookingTimeMin();
     }
 });
 
@@ -219,102 +220,331 @@ async function addToCart(itemType, id) {
     }
 }
 
-// --- BOOKING PAGE LOGIC (MULTI-STEP) ---
-async function loadServices() {
-    try {
-        const res = await fetch('/api/service-types');
-        const services = await res.json();
-        const select = document.getElementById('serviceSelect');
-        services.forEach(s => {
-            const opt = document.createElement('option');
-            opt.value = s.id;
-            opt.textContent = `${s.name} - ${s.price.toLocaleString()} VND`;
-            select.appendChild(opt);
-        });
-    } catch(e) { console.error(e) }
-}
-
-function nextStep(step) {
-    if (step === 3) {
-        // Populate confirmation step
-        const bSel = document.getElementById('branchSelect');
-        const sSel = document.getElementById('serviceSelect');
-        const time = document.getElementById('bookingTime').value;
-        
-        if (!time) return alert("Please select a valid time");
-
-        document.getElementById('confirmBranch').textContent = bSel.options[bSel.selectedIndex].text;
-        document.getElementById('confirmService').textContent = sSel.options[sSel.selectedIndex].text;
-        document.getElementById('confirmTime').textContent = time.replace('T', ' ');
-    }
-    
-    // Update classes
-    document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
-    document.getElementById(`step-${step}`).classList.add('active');
-    
-    document.querySelectorAll('.step').forEach((el, index) => {
-        if (index < step) el.classList.add('active');
-        else el.classList.remove('active');
-    });
-}
-
-function prevStep(step) {
-    document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
-    document.getElementById(`step-${step}`).classList.add('active');
-    
-    document.querySelectorAll('.step').forEach((el, index) => {
-        if (index < step) el.classList.add('active');
-        else el.classList.remove('active');
-    });
-}
-
-async function submitBooking() {
-    const branchId = document.getElementById('branchSelect').value;
-    const serviceTypeId = document.getElementById('serviceSelect').value;
-    const time = document.getElementById('bookingTime').value;
-
-    const request = {
-        branchId: parseInt(branchId),
-        serviceTypeId: parseInt(serviceTypeId),
-        bookingTime: time
-    };
-
-    const resultDiv = document.getElementById('bookingResult');
-    const submitBtn = document.getElementById('submitBtn');
-    resultDiv.textContent = 'Processing...';
-    resultDiv.style.color = 'var(--text-main)';
-    submitBtn.disabled = true;
-
-    try {
-        const accessToken = localStorage.getItem('pawconnect.accessToken');
-        if (!accessToken) {
-            window.location.assign('/auth/login?returnTo=%2Fservice');
-            return;
-        }
-        const res = await fetch('/api/bookings', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${accessToken}`
-            },
-            body: JSON.stringify(request)
-        });
-        
-        if (res.ok) {
-            resultDiv.textContent = 'Booking successful! We will see you soon.';
-            resultDiv.style.color = 'var(--success-color)';
-            submitBtn.style.display = 'none';
-        } else {
-            resultDiv.textContent = 'Time conflict or error occurred.';
-            resultDiv.style.color = 'var(--primary-color)';
-            submitBtn.disabled = false;
-        }
-    } catch (e) {
-        resultDiv.textContent = 'Network error.';
-        submitBtn.disabled = false;
-    }
-}
-
+// --- BOOKING PAGE LOGIC (MULTI-STEP & MANAGEMENT) ---
+
+function switchServiceTab(tab) {
+    const bookPanel = document.getElementById('service-book-panel');
+    const historyPanel = document.getElementById('service-history-panel');
+    const btnBook = document.getElementById('tab-book-view-btn');
+    const btnHistory = document.getElementById('tab-history-view-btn');
+
+    if (!bookPanel || !historyPanel) return;
+
+    if (tab === 'history') {
+        bookPanel.style.display = 'none';
+        historyPanel.style.display = 'block';
+        if (btnBook) btnBook.classList.remove('active');
+        if (btnHistory) btnHistory.classList.add('active');
+        loadMyBookings();
+    } else {
+        bookPanel.style.display = 'block';
+        historyPanel.style.display = 'none';
+        if (btnBook) btnBook.classList.add('active');
+        if (btnHistory) btnHistory.classList.remove('active');
+    }
+}
+
+function initBookingTimeMin() {
+    const timeInput = document.getElementById('bookingTime');
+    if (!timeInput) return;
+    const now = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    const minStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    timeInput.min = minStr;
+}
+
+function validateBookingTimeInput() {
+    const timeInput = document.getElementById('bookingTime');
+    const msg = document.getElementById('timeValidationMsg');
+    if (!timeInput || !msg) return true;
+
+    const val = timeInput.value;
+    if (!val) {
+        msg.hidden = true;
+        return true;
+    }
+
+    const selected = new Date(val);
+    const now = new Date();
+
+    if (selected <= now) {
+        msg.textContent = 'Thời gian đặt lịch không được ở quá khứ. Vui lòng chọn ngày giờ trong tương lai.';
+        msg.hidden = false;
+        return false;
+    }
+
+    const hour = selected.getHours();
+    const min = selected.getMinutes();
+    if (hour < 7 || hour > 20 || (hour === 20 && min > 0)) {
+        msg.textContent = 'Khung giờ đặt lịch phải từ 07:00 đến 20:00 (Cửa hàng mở cửa từ 07:00 - 21:00 từ Thứ 2 đến Chủ Nhật).';
+        msg.hidden = false;
+        return false;
+    }
+
+    msg.hidden = true;
+    return true;
+}
+
+async function loadServices() {
+    try {
+        const res = await fetch('/api/service-types');
+        if (!res.ok) return;
+        const services = await res.json();
+        const select = document.getElementById('serviceSelect');
+        if (!select) return;
+        select.replaceChildren();
+        services.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.id;
+            opt.textContent = `${s.name} - ${s.price.toLocaleString('vi-VN')} VND (${s.duration} phút)`;
+            select.appendChild(opt);
+        });
+    } catch(e) { console.error('Lỗi khi tải loại dịch vụ', e); }
+}
+
+function nextStep(step) {
+    if (step === 3) {
+        const bSel = document.getElementById('branchSelect');
+        const sSel = document.getElementById('serviceSelect');
+        const timeInput = document.getElementById('bookingTime');
+        const time = timeInput.value;
+        const msg = document.getElementById('timeValidationMsg');
+
+        if (!time) {
+            alert('Vui lòng chọn ngày và giờ hẹn.');
+            timeInput.focus();
+            return;
+        }
+
+        const selected = new Date(time);
+        const now = new Date();
+
+        if (selected <= now) {
+            msg.textContent = 'Thời gian đặt lịch không được ở quá khứ. Vui lòng chọn ngày giờ trong tương lai.';
+            msg.hidden = false;
+            alert('Thời gian đặt lịch không được ở quá khứ. Vui lòng chọn thời gian trong tương lai.');
+            timeInput.focus();
+            return;
+        }
+
+        const hour = selected.getHours();
+        const min = selected.getMinutes();
+        if (hour < 7 || hour > 20 || (hour === 20 && min > 0)) {
+            msg.textContent = 'Khung giờ đặt lịch phải từ 07:00 đến 20:00 (Cửa hàng mở cửa từ 07:00 - 21:00 từ Thứ 2 đến Chủ Nhật).';
+            msg.hidden = false;
+            alert('PawConnect chỉ nhận lịch hẹn từ 07:00 đến 20:00 (Cửa hàng mở cửa 07:00 - 21:00 từ Thứ 2 đến Chủ Nhật). Vui lòng chọn lại giờ hẹn!');
+            timeInput.focus();
+            return;
+        }
+
+        msg.hidden = true;
+        document.getElementById('confirmBranch').textContent = bSel.options[bSel.selectedIndex]?.text || 'Chưa chọn';
+        document.getElementById('confirmService').textContent = sSel.options[sSel.selectedIndex]?.text || 'Chưa chọn';
+
+        const pad = n => String(n).padStart(2, '0');
+        const formatted = `${pad(selected.getDate())}/${pad(selected.getMonth()+1)}/${selected.getFullYear()} ${pad(selected.getHours())}:${pad(selected.getMinutes())}`;
+        document.getElementById('confirmTime').textContent = formatted;
+    }
+
+    document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+    document.getElementById(`step-${step}`).classList.add('active');
+
+    document.querySelectorAll('.step').forEach((el, index) => {
+        if (index < step) el.classList.add('active');
+        else el.classList.remove('active');
+    });
+}
+
+function prevStep(step) {
+    document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+    document.getElementById(`step-${step}`).classList.add('active');
+
+    document.querySelectorAll('.step').forEach((el, index) => {
+        if (index < step) el.classList.add('active');
+        else el.classList.remove('active');
+    });
+}
+
+async function submitBooking() {
+    const branchId = document.getElementById('branchSelect').value;
+    const serviceTypeId = document.getElementById('serviceSelect').value;
+    const time = document.getElementById('bookingTime').value;
+
+    const request = {
+        branchId: parseInt(branchId),
+        serviceTypeId: parseInt(serviceTypeId),
+        bookingTime: time
+    };
+
+    const resultDiv = document.getElementById('bookingResult');
+    const submitBtn = document.getElementById('submitBtn');
+    resultDiv.textContent = 'Đang xử lý đặt lịch…';
+    resultDiv.style.color = 'var(--text-main)';
+    submitBtn.disabled = true;
+
+    try {
+        const accessToken = localStorage.getItem('pawconnect.accessToken');
+        if (!accessToken) {
+            window.location.assign('/auth/login?returnTo=%2Fservice');
+            return;
+        }
+        const res = await fetch('/api/bookings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${accessToken}`
+            },
+            body: JSON.stringify(request)
+        });
+
+        if (res.ok) {
+            resultDiv.innerHTML = `
+                <div style="background:#e8f5e9; color:#2e7d32; padding:1.25rem; border-radius:10px; border-left:4px solid #4caf50; line-height: 1.6;">
+                    <i class="fas fa-circle-check" style="font-size: 1.2rem;"></i> <strong>Đặt lịch hẹn thành công!</strong><br>
+                    Chi nhánh đã nhận được lịch hẹn của bạn và nhân viên sẽ tiến hành xác nhận sớm nhất.<br>
+                    <button type="button" class="btn-pill" style="margin-top:0.9rem;" onclick="switchServiceTab('history')">
+                        <i class="fas fa-clock-rotate-left"></i> Xem lịch hẹn của bạn
+                    </button>
+                </div>
+            `;
+            submitBtn.style.display = 'none';
+        } else {
+            const err = await res.json().catch(() => ({}));
+            resultDiv.textContent = err.message || 'Xảy ra lỗi khi đặt lịch hẹn. Vui lòng kiểm tra lại.';
+            resultDiv.style.color = '#e27b58';
+            submitBtn.disabled = false;
+        }
+    } catch (e) {
+        resultDiv.textContent = 'Lỗi kết nối mạng. Vui lòng thử lại.';
+        submitBtn.disabled = false;
+    }
+}
+
+async function loadMyBookings() {
+    const list = document.getElementById('my-bookings-list');
+    if (!list) return;
+    list.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 2rem;">Đang tải lịch hẹn…</p>';
+
+    const accessToken = localStorage.getItem('pawconnect.accessToken');
+    if (!accessToken) {
+        list.innerHTML = '<p style="text-align:center;"><a href="/auth/login?returnTo=%2Fservice">Đăng nhập</a> để xem lịch hẹn của bạn.</p>';
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/bookings/my', {
+            headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        if (!res.ok) throw new Error('Không thể tải danh sách lịch hẹn.');
+        const bookings = await res.json();
+        list.replaceChildren();
+
+        if (!bookings.length) {
+            list.innerHTML = `
+                <div style="text-align: center; padding: 3rem 1rem; background: #fffaf7; border-radius: 12px; border: 1px dashed #e5d5cc;">
+                    <i class="fas fa-calendar-xmark" style="font-size: 2.5rem; color: #d0c5bf; margin-bottom: 0.75rem;"></i>
+                    <p style="color: var(--text-muted); font-size: 1.05rem;">Bạn chưa có lịch hẹn dịch vụ nào.</p>
+                    <button type="button" class="btn-pill" style="margin-top: 0.5rem;" onclick="switchServiceTab('book')">
+                        <i class="fas fa-calendar-plus"></i> Đặt lịch hẹn ngay
+                    </button>
+                </div>`;
+            return;
+        }
+
+        const statusLabelsMap = {
+            PENDING: 'Chờ xác nhận',
+            CONFIRMED: 'Đã xác nhận',
+            ARRIVED: 'Khách đã tới',
+            COMPLETED: 'Đã hoàn thành',
+            NO_SHOW: 'Khách không tới',
+            CANCELLED: 'Đã từ chối / Đã hủy'
+        };
+
+        bookings.forEach(b => {
+            const card = document.createElement('div');
+            card.className = 'my-booking-card';
+
+            const statusText = statusLabelsMap[b.status] || b.status;
+            let statusNoticeHtml = '';
+            let cancelBtnHtml = '';
+
+            if (b.status === 'CONFIRMED') {
+                statusNoticeHtml = `
+                    <div class="booking-confirmed-alert">
+                        <i class="fas fa-circle-check"></i> <strong>Lịch hẹn đã được chi nhánh xác nhận!</strong> Vui lòng mang bé đến đúng giờ hẹn để được phục vụ tốt nhất.
+                    </div>`;
+            } else if (b.status === 'CANCELLED') {
+                statusNoticeHtml = `
+                    <div class="booking-reason-alert">
+                        <i class="fas fa-circle-xmark"></i> <strong>Lý do từ chối / hủy:</strong> ${escapeHtml(b.reason || 'Lịch hẹn chưa phù hợp hoặc chi nhánh bận.')}
+                    </div>`;
+            } else if (b.status === 'PENDING') {
+                cancelBtnHtml = `<button type="button" class="btn-pill btn-outline" style="border-color:#ef5350; color:#c62828; font-size:0.85rem;" onclick="cancelMyServiceBooking(${b.id})">Hủy hẹn</button>`;
+            }
+
+            const formattedTime = formatDateTimeVi(b.bookingTime);
+            const formattedCreated = formatDateTimeVi(b.createdAt);
+
+            card.innerHTML = `
+                <div class="my-booking-info" style="flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                        <h4>#${b.id} - ${escapeHtml(b.serviceTypeName || 'Dịch vụ')}</h4>
+                        <span class="booking-status-pill ${b.status}">${statusText}</span>
+                    </div>
+                    <div class="my-booking-meta">
+                        <span><i class="fas fa-location-dot"></i> ${escapeHtml(b.branchName || `Chi nhánh #${b.branchId}`)}</span>
+                        <span><i class="fas fa-clock"></i> <strong>Hẹn:</strong> ${formattedTime}</span>
+                        ${b.servicePrice ? `<span><i class="fas fa-tag"></i> ${new Intl.NumberFormat('vi-VN').format(b.servicePrice)} VND</span>` : ''}
+                        <span><i class="fas fa-calendar-day"></i> Đặt lúc: ${formattedCreated}</span>
+                    </div>
+                    ${statusNoticeHtml}
+                </div>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    ${cancelBtnHtml}
+                </div>
+            `;
+            list.appendChild(card);
+        });
+
+    } catch (e) {
+        list.innerHTML = `<p style="text-align: center; color: var(--danger); padding: 2rem;">${e.message}</p>`;
+    }
+}
+
+async function cancelMyServiceBooking(id) {
+    if (!confirm(`Bạn có chắc chắn muốn hủy lịch hẹn #${id}?`)) return;
+    const accessToken = localStorage.getItem('pawconnect.accessToken');
+    try {
+        const res = await fetch(`/api/bookings/${id}/cancel`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ reason: 'Khách hàng tự hủy qua giao diện' })
+        });
+        if (res.ok) {
+            alert(`Đã hủy lịch hẹn #${id}.`);
+            await loadMyBookings();
+        } else {
+            const err = await res.json().catch(() => ({}));
+            alert(err.message || 'Không thể hủy lịch hẹn.');
+        }
+    } catch (e) {
+        alert('Lỗi kết nối khi hủy lịch hẹn.');
+    }
+}
+
+function formatDateTimeVi(val) {
+    if (!val) return '—';
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return val;
+    return new Intl.DateTimeFormat('vi-VN', {
+        dateStyle: 'short',
+        timeStyle: 'short'
+    }).format(d);
+}
+
 async function requireBookingLogin() {
     const accessToken = localStorage.getItem('pawconnect.accessToken');
     if (!accessToken) {
@@ -435,3 +665,4 @@ function escapeHtml(value) {
     element.textContent = value;
     return element.innerHTML;
 }
+

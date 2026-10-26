@@ -5,6 +5,7 @@ import com.pawconnect.dto.adoption.AdoptionApplicationResponse;
 import com.pawconnect.dto.adoption.AdoptionPostResponse;
 import com.pawconnect.dto.adoption.AdoptionPostUpdateRequest;
 import com.pawconnect.dto.adoption.CreateAdoptionRequest;
+import com.pawconnect.dto.adoption.RejectApplicationRequest;
 import com.pawconnect.service.community.AdoptionService;
 import com.pawconnect.service.community.AdoptionMediaService;
 import jakarta.validation.Valid;
@@ -140,9 +141,10 @@ public class AdoptionController {
     @PutMapping("/applications/{id}/reject")
     @PreAuthorize("hasAnyRole('ADMIN', 'BRANCH_MANAGER')")
     public AdoptionApplicationResponse reject(@PathVariable Long id,
-                                              @org.springframework.web.bind.annotation.RequestBody(required = false) com.pawconnect.dto.adoption.RejectApplicationRequest request,
-                                              @AuthenticationPrincipal UserDetails principal) {
-        String reason = request != null ? request.reason() : null;
-        return adoptionService.reject(id, reason, principal.getUsername());
+                                              @RequestBody(required = false) RejectApplicationRequest request,
+            @RequestParam(required = false) String reason,
+            @AuthenticationPrincipal UserDetails principal) {
+        String finalReason = request != null && request.reason() != null ? request.reason() : reason;
+        return adoptionService.reject(id, finalReason, principal.getUsername());
     }
 }

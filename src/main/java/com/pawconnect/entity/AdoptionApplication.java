@@ -56,7 +56,7 @@ public class AdoptionApplication {
     @Column(nullable = false, length = 10)
     private AdoptionApplicationStatus status;
 
-    @Column(length = 1_000)
+    @Column(name = "rejection_reason", length = 1_000)
     private String rejectionReason;
 
     @Column(nullable = false, updatable = false)
