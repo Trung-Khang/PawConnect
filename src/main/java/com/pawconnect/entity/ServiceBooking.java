@@ -35,6 +35,19 @@ public class ServiceBooking {
     @Column(nullable = false)
     private String status;
 
+    @Column(length = 1000)
+    private String reason;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
     @Version
     private Long version; // For Optimistic Locking as requested
+
+    @PrePersist
+    void initCreatedAt() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+    }
 }

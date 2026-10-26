@@ -28,6 +28,8 @@ public final class AdoptionMapper {
     public static AdoptionApplicationResponse toResponse(AdoptionApplication application) {
         return new AdoptionApplicationResponse(application.getId(), application.getSeedKey(),
                 application.getAdoptionPost().getId(), application.getApplicant().getId(), application.getApplicant().getFullName(),
-                application.getMessage(), application.getStatus(), application.getCreatedAt(), application.getUpdatedAt());
+                application.getApplicant().getPhone(), application.getApplicant().getEmail(),
+                application.getMessage(), application.getStatus(), application.getRejectionReason(),
+                application.getCreatedAt(), application.getUpdatedAt());
     }
 }

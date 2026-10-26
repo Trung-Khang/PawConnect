@@ -2,6 +2,7 @@
     const token = localStorage.getItem('pawconnect.accessToken');
     let branchId = null;
     let confirmationKey = null;
+    let items = [];
 
     document.addEventListener('DOMContentLoaded', async () => {
         if (!token) return redirectToLogin();
@@ -22,7 +23,7 @@
         const response = await fetch('/api/cart', { headers: authHeaders() });
         if (!response.ok) throw new Error(await responseMessage(response, 'Không thể tải giỏ hàng.'));
         const cart = await response.json();
-        let items = cart.items || [];
+        items = cart.items || [];
         const savedSelectedIds = sessionStorage.getItem('pawconnect.selectedCartItemIds');
         if (savedSelectedIds) {
             try {
@@ -83,7 +84,7 @@
 
     async function submitOrder(event) {
         event.preventDefault();
-        if (!branchId || !confirmationKey) return;
+        if (!branchId || !confirmationKey || !items.length) return;
         const button = document.getElementById('confirm-order');
         button.disabled = true;
         showNotice('Đang xác nhận đơn hàng…');

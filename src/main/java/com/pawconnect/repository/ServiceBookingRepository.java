@@ -10,5 +10,9 @@ import java.util.List;
 @Repository
 public interface ServiceBookingRepository extends JpaRepository<ServiceBooking, Long> {
     List<ServiceBooking> findByUserId(Long userId);
+    List<ServiceBooking> findByUserIdOrderByBookingTimeDesc(Long userId);
+    List<ServiceBooking> findAllByOrderByBookingTimeDesc();
+    List<ServiceBooking> findByBranchIdOrderByBookingTimeDesc(Long branchId);
     List<ServiceBooking> findByBranchIdAndBookingTimeBetween(Long branchId, LocalDateTime start, LocalDateTime end);
+    List<ServiceBooking> findByBranchIdAndBookingTimeBetweenOrderByBookingTimeAsc(Long branchId, LocalDateTime start, LocalDateTime end);
 }

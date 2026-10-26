@@ -12,6 +12,7 @@ import com.pawconnect.entity.ServiceType;
 import com.pawconnect.repository.BranchRepository;
 import com.pawconnect.repository.ServiceBookingRepository;
 import com.pawconnect.repository.ServiceTypeRepository;
+import com.pawconnect.repository.UserRepository;
 import com.pawconnect.security.CustomUserDetails;
 import java.util.List;
 import java.util.Optional;
@@ -31,6 +32,7 @@ class BookingBranchAuthorizationTest {
     @Mock private ServiceBookingRepository bookings;
     @Mock private BranchRepository branches;
     @Mock private ServiceTypeRepository serviceTypes;
+    @Mock private UserRepository userRepository;
     @InjectMocks private BookingServiceImpl service;
 
     @AfterEach
