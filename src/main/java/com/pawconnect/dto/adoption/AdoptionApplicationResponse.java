@@ -9,8 +9,11 @@ public record AdoptionApplicationResponse(
         Long adoptionPostId,
         Long applicantUserId,
         String applicantName,
+        String applicantPhone,
+        String applicantEmail,
         String message,
         AdoptionApplicationStatus status,
+        String rejectionReason,
         Instant createdAt,
         Instant updatedAt) {
 }

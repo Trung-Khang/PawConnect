@@ -139,7 +139,12 @@ public class AdoptionController {
 
     @PutMapping("/applications/{id}/reject")
     @PreAuthorize("hasAnyRole('ADMIN', 'BRANCH_MANAGER')")
-    public AdoptionApplicationResponse reject(@PathVariable Long id, @AuthenticationPrincipal UserDetails principal) {
-        return adoptionService.reject(id, principal.getUsername());
+    public AdoptionApplicationResponse reject(
+            @PathVariable Long id,
+            @RequestBody(required = false) java.util.Map<String, String> body,
+            @RequestParam(required = false) String reason,
+            @AuthenticationPrincipal UserDetails principal) {
+        String finalReason = body != null && body.containsKey("reason") ? body.get("reason") : reason;
+        return adoptionService.reject(id, finalReason, principal.getUsername());
     }
 }

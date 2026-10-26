@@ -4,10 +4,143 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <th:block th:replace="~{fragments/bootstrap :: assets}"></th:block>
-    <title>Đặt lịch - PawConnect</title>
+    <title>Đặt lịch & Quản lý Dịch vụ - PawConnect</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/shop.css">
     <link rel="stylesheet" href="/css/header.css?v=20261021-1">
+    <style>
+        .service-tabs-wrapper {
+            display: flex;
+            justify-content: center;
+            margin: 1rem 0 2.25rem;
+        }
+        .service-tabs-nav {
+            display: inline-flex;
+            background: #f0e6e0;
+            padding: 5px;
+            border-radius: 40px;
+            gap: 6px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .service-tab-btn {
+            background: transparent;
+            border: none;
+            font-size: 1.02rem;
+            font-weight: 700;
+            color: #634d43;
+            padding: 0.75rem 1.8rem;
+            border-radius: 35px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+        }
+        .service-tab-btn:hover {
+            color: #c56546;
+            background: rgba(255, 255, 255, 0.7);
+        }
+        .service-tab-btn.active {
+            color: #ffffff !important;
+            background: #e27b58 !important;
+            box-shadow: 0 4px 14px rgba(226, 123, 88, 0.45);
+        }
+
+        .store-hours-card {
+            margin-top: 1.25rem;
+            padding: 1.1rem 1.25rem;
+            background: #fffaf5;
+            border: 1px solid #fed7aa;
+            border-radius: 12px;
+            font-size: 0.92rem;
+            color: #7c2d12;
+            line-height: 1.6;
+        }
+        .store-hours-header {
+            font-weight: 700;
+            margin-bottom: 0.4rem;
+            color: #c2410c;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .store-hours-text {
+            margin: 0;
+            color: #9a3412;
+        }
+
+        .my-booking-card {
+            background: #fff;
+            border: 1px solid #ede3dc;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.25rem;
+            transition: transform 0.15s ease;
+        }
+        .my-booking-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.07);
+        }
+        .my-booking-info h4 {
+            margin: 0 0 0.4rem;
+            font-size: 1.15rem;
+            color: var(--text-main);
+        }
+        .my-booking-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.25rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: 0.4rem;
+        }
+        .my-booking-meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        .booking-status-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.35rem 0.85rem;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            white-space: nowrap;
+            letter-spacing: 0.02em;
+        }
+        .booking-status-pill.PENDING { background: #fff8e1; color: #f57f17; }
+        .booking-status-pill.CONFIRMED { background: #e8f5e9; color: #2e7d32; }
+        .booking-status-pill.ARRIVED { background: #e3f2fd; color: #1565c0; }
+        .booking-status-pill.COMPLETED { background: #e0f2f1; color: #00695c; }
+        .booking-status-pill.NO_SHOW { background: #eceff1; color: #455a64; }
+        .booking-status-pill.CANCELLED { background: #ffebee; color: #c62828; }
+        .booking-reason-alert {
+            margin-top: 0.6rem;
+            padding: 0.5rem 0.75rem;
+            background: #fff8f8;
+            border-left: 3px solid #ef5350;
+            border-radius: 4px;
+            font-size: 0.88rem;
+            color: #c62828;
+        }
+        .booking-confirmed-alert {
+            margin-top: 0.6rem;
+            padding: 0.5rem 0.75rem;
+            background: #f1f8e9;
+            border-left: 3px solid #689f38;
+            border-radius: 4px;
+            font-size: 0.88rem;
+            color: #33691e;
+        }
+    </style>
 </head>
 <body>
 
@@ -16,66 +149,114 @@
     <section class="section booking-section">
         <div class="container">
             <div class="section-header">
-                <h2>Đặt lịch hẹn</h2>
-                <p style="color:var(--text-muted)">Sắp xếp lịch hẹn cho thú cưng của bạn chỉ với vài bước đơn giản.</p>
+                <h2>Dịch vụ & Lịch hẹn</h2>
+                <p style="color:var(--text-muted)">Sắp xếp lịch hẹn chăm sóc thú cưng của bạn hoặc theo dõi lịch đã đặt.</p>
             </div>
 
-        <div class="booking-form-wrapper">
-            <div class="step-indicator">
-                <div class="step active" id="indicator-1">1</div>
-                <div class="step" id="indicator-2">2</div>
-                <div class="step" id="indicator-3">3</div>
-            </div>
-
-            <!-- STEP 1 -->
-            <div class="step-content active" id="step-1">
-                <h3 style="margin-bottom:1.5rem">Chọn Dịch vụ</h3>
-                <div class="form-group">
-                    <label>Chi nhánh</label>
-                    <select id="branchSelect" class="form-control"></select>
-                </div>
-                <div class="form-group">
-                    <label>Loại dịch vụ</label>
-                    <select id="serviceSelect" class="form-control"></select>
-                </div>
-                <div class="form-actions" style="justify-content: flex-end;">
-                    <button class="btn-pill" onclick="nextStep(2)">Bước tiếp theo <i class="fas fa-arrow-right"></i></button>
+            <!-- TAB SWITCHER (NÚT RÕ RÀNG, ĐẸP MẮT) -->
+            <div class="service-tabs-wrapper">
+                <div class="service-tabs-nav">
+                    <button type="button" class="service-tab-btn active" id="tab-book-view-btn" onclick="switchServiceTab('book')">
+                        <i class="fas fa-calendar-plus"></i> Đặt lịch hẹn mới
+                    </button>
+                    <button type="button" class="service-tab-btn" id="tab-history-view-btn" onclick="switchServiceTab('history')">
+                        <i class="fas fa-clock-rotate-left"></i> Lịch hẹn của tôi
+                    </button>
                 </div>
             </div>
 
-            <!-- STEP 2 -->
-            <div class="step-content" id="step-2">
-                <h3 style="margin-bottom:1.5rem">Chọn Ngày & Giờ</h3>
-                <div class="form-group">
-                    <label>Khung giờ mong muốn</label>
-                    <input type="datetime-local" id="bookingTime" class="form-control">
-                </div>
-                <div class="form-actions">
-                    <button class="btn-pill btn-outline" onclick="prevStep(1)"><i class="fas fa-arrow-left"></i> Quay lại</button>
-                    <button class="btn-pill" onclick="nextStep(3)">Bước tiếp theo <i class="fas fa-arrow-right"></i></button>
+            <!-- TAB 1: FORM ĐẶT LỊCH HẸN -->
+            <div id="service-book-panel">
+                <div class="booking-form-wrapper">
+                    <div class="step-indicator">
+                        <div class="step active" id="indicator-1">1</div>
+                        <div class="step" id="indicator-2">2</div>
+                        <div class="step" id="indicator-3">3</div>
+                    </div>
+
+                    <!-- STEP 1 -->
+                    <div class="step-content active" id="step-1">
+                        <h3 style="margin-bottom:1.5rem">Chọn Dịch vụ & Chi nhánh</h3>
+                        <div class="form-group">
+                            <label>Chi nhánh thực hiện dịch vụ</label>
+                            <select id="branchSelect" class="form-control"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Loại dịch vụ chăm sóc</label>
+                            <select id="serviceSelect" class="form-control"></select>
+                        </div>
+                        <div class="form-actions" style="justify-content: flex-end;">
+                            <button class="btn-pill" onclick="nextStep(2)">Bước tiếp theo <i class="fas fa-arrow-right"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 2 -->
+                    <div class="step-content" id="step-2">
+                        <h3 style="margin-bottom:1.5rem">Chọn Ngày & Giờ hẹn</h3>
+                        <div class="form-group">
+                            <label>Khung giờ mong muốn</label>
+                            <input type="datetime-local" id="bookingTime" class="form-control" onchange="validateBookingTimeInput()">
+                            <small id="timeValidationMsg" style="color: #c62828; display: block; margin-top: 0.4rem; font-weight: 600;" hidden></small>
+                        </div>
+
+                        <!-- THỜI GIAN HOẠT ĐỘNG CỦA CỬA HÀNG -->
+                        <div class="store-hours-card">
+                            <div class="store-hours-header">
+                                <i class="fas fa-clock"></i>
+                                <span>Thời gian hoạt động của PawConnect:</span>
+                            </div>
+                            <p class="store-hours-text">
+                                • Cửa hàng mở cửa từ <strong>07:00 đến 21:00</strong> tất cả các ngày trong tuần (Thứ 2 – Chủ Nhật).<br>
+                                • Khung giờ nhận đặt lịch hẹn: từ <strong>07:00 đến 20:00</strong> (không nhận lịch sau 20:00 để phục vụ chu đáo nhất).
+                            </p>
+                        </div>
+
+                        <div class="form-actions" style="margin-top: 1.5rem;">
+                            <button class="btn-pill btn-outline" onclick="prevStep(1)"><i class="fas fa-arrow-left"></i> Quay lại</button>
+                            <button class="btn-pill" onclick="nextStep(3)">Bước tiếp theo <i class="fas fa-arrow-right"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 3 -->
+                    <div class="step-content" id="step-3">
+                        <h3 style="margin-bottom:1.5rem">Xác nhận Đặt lịch hẹn</h3>
+                        <div style="background:var(--bg-color); padding:1.5rem; border-radius:10px; margin-bottom:1.5rem;">
+                            <p><strong>Chi nhánh:</strong> <span id="confirmBranch"></span></p>
+                            <p><strong>Dịch vụ:</strong> <span id="confirmService"></span></p>
+                            <p><strong>Ngày & Giờ hẹn:</strong> <span id="confirmTime" style="color: #d35400; font-weight: 700;"></span></p>
+                            <p style="margin-top:0.75rem; font-size:0.88rem; color:var(--text-muted);">
+                                <i class="fas fa-circle-info"></i> Sau khi bạn xác nhận, nhân viên chi nhánh sẽ tiếp nhận và xác nhận lịch hẹn của bạn.
+                            </p>
+                        </div>
+                        <div id="bookingResult" style="margin-bottom: 1rem; font-weight: 700;"></div>
+                        <div class="form-actions" id="bookingActions">
+                            <button class="btn-pill btn-outline" onclick="prevStep(2)"><i class="fas fa-arrow-left"></i> Quay lại</button>
+                            <button class="btn-pill" id="submitBtn" onclick="submitBooking()">Xác nhận Cuộc hẹn</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- STEP 3 -->
-            <div class="step-content" id="step-3">
-                <h3 style="margin-bottom:1.5rem">Xác nhận Đặt lịch</h3>
-                <div style="background:var(--bg-color); padding:1.5rem; border-radius:10px; margin-bottom:1.5rem;">
-                    <p><strong>Chi nhánh:</strong> <span id="confirmBranch"></span></p>
-                    <p><strong>Dịch vụ:</strong> <span id="confirmService"></span></p>
-                    <p><strong>Ngày & Giờ:</strong> <span id="confirmTime"></span></p>
-                </div>
-                <div id="bookingResult" style="margin-bottom: 1rem; font-weight: 700;"></div>
-                <div class="form-actions">
-                    <button class="btn-pill btn-outline" onclick="prevStep(2)"><i class="fas fa-arrow-left"></i> Quay lại</button>
-                    <button class="btn-pill" id="submitBtn" onclick="submitBooking()">Xác nhận Cuộc hẹn</button>
+            <!-- TAB 2: LỊCH SỬ DỊCH VỤ CỦA TÔI -->
+            <div id="service-history-panel" style="display: none;">
+                <div class="booking-form-wrapper" style="max-width: 960px; margin: 0 auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid #f0e6e0; padding-bottom: 1rem;">
+                        <h3 style="margin: 0; color: var(--text-main); font-size: 1.35rem;">Lịch hẹn dịch vụ của bạn</h3>
+                        <button type="button" class="btn btn-secondary" onclick="loadMyBookings()" style="font-size: 0.9rem;">
+                            <i class="fas fa-rotate"></i> Tải lại
+                        </button>
+                    </div>
+                    <div id="my-bookings-list">
+                        <p style="text-align: center; color: var(--text-muted); padding: 2rem;">Đang tải lịch hẹn…</p>
+                    </div>
                 </div>
             </div>
+
         </div>
-    </div>
-</section>
+    </section>
 
     <div th:replace="~{fragments/footer :: footer}"></div>
 
-    <script src="/js/shop.js"></script>
+    <script src="/js/shop.js?v=20261026-services-3"></script>
 </body>
 </html>

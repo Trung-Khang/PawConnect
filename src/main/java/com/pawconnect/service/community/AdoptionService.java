@@ -333,6 +333,11 @@ public class AdoptionService {
 
     @Transactional
     public AdoptionApplicationResponse reject(Long applicationId, String actorEmail) {
+        return reject(applicationId, null, actorEmail);
+    }
+
+    @Transactional
+    public AdoptionApplicationResponse reject(Long applicationId, String reason, String actorEmail) {
         User actor = currentUser(actorEmail);
         requireStaff(actor);
         AdoptionApplication application = findApplication(applicationId);
@@ -342,20 +347,29 @@ public class AdoptionService {
             throw new ResourceConflictException("Only a pending application can be rejected");
         }
         application.setStatus(AdoptionApplicationStatus.REJECTED);
+        if (reason != null && !reason.isBlank()) {
+            application.setRejectionReason(reason.trim());
+        }
         return AdoptionMapper.toResponse(application);
     }
 
     private void rejectPendingApplications(Long postId) {
         adoptionApplicationRepository.findByAdoptionPostId(postId).stream()
                 .filter(application -> application.getStatus() == AdoptionApplicationStatus.PENDING)
-                .forEach(application -> application.setStatus(AdoptionApplicationStatus.REJECTED));
+                .forEach(application -> {
+                    application.setStatus(AdoptionApplicationStatus.REJECTED);
+                    application.setRejectionReason("Bài nhận nuôi đã đóng.");
+                });
     }
 
     private void rejectPendingApplicationsExcept(Long postId, Long approvedApplicationId) {
         adoptionApplicationRepository.findByAdoptionPostId(postId).stream()
                 .filter(application -> !application.getId().equals(approvedApplicationId))
                 .filter(application -> application.getStatus() == AdoptionApplicationStatus.PENDING)
-                .forEach(application -> application.setStatus(AdoptionApplicationStatus.REJECTED));
+                .forEach(application -> {
+                    application.setStatus(AdoptionApplicationStatus.REJECTED);
+                    application.setRejectionReason("Chi nhánh đã duyệt đơn của người khác cho bé.");
+                });
     }
 
     private DogProfile findDog(Long dogId) {

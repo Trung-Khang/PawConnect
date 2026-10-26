@@ -1,4 +1,4 @@
-(() => {
+﻿(() => {
     const token = localStorage.getItem('pawconnect.accessToken');
     const statusLabels = { PAID: 'Đã thanh toán', CONFIRMED: 'Đã xác nhận', PREPARING: 'Đang chuẩn bị', SHIPPING: 'Đang giao', COMPLETED: 'Hoàn tất', CANCELLED: 'Đã hủy', PENDING: 'Chờ xác nhận', SHIPPED: 'Đang giao', DELIVERED: 'Đã giao' };
     const adoptionLabels = { PENDING: 'Chờ duyệt', APPROVED: 'Đã duyệt', REJECTED: 'Đã từ chối' };
@@ -58,10 +58,39 @@
             applications.forEach(application => {
                 const card = document.createElement('article');
                 card.className = 'commerce-panel commerce-order';
-                card.innerHTML = '<div><h2 class="order-title"></h2><p class="order-meta"></p></div><a class="btn-pill" href="#">Xem bài nhận nuôi</a>';
-                card.querySelector('.order-title').textContent = `Đơn nhận nuôi #${application.id} · ${adoptionLabels[application.status] || application.status}`;
-                card.querySelector('.order-meta').textContent = `Gửi lúc ${formatDate(application.createdAt)}`;
-                card.querySelector('a').href = `/adoptions/${application.adoptionPostId}`;
+
+                let statusNoticeHtml = '';
+                if (application.status === 'APPROVED') {
+                    statusNoticeHtml = `
+                        <div style="margin: 0.6rem 0; padding: 0.65rem 0.9rem; background: #e8f5e9; color: #2e7d32; border-radius: 8px; border-left: 4px solid #4caf50; font-size: 0.92rem; font-weight: 500;">
+                            <i class="fas fa-check-circle"></i> <strong>Đơn nhận nuôi đã được duyệt!</strong> Nhân viên chi nhánh sẽ chủ động liên hệ với bạn trong vài giờ sắp tới để sắp xếp thời gian rước bé.
+                        </div>`;
+                } else if (application.status === 'REJECTED') {
+                    statusNoticeHtml = `
+                        <div style="margin: 0.6rem 0; padding: 0.65rem 0.9rem; background: #ffebee; color: #c62828; border-radius: 8px; border-left: 4px solid #ef5350; font-size: 0.92rem;">
+                            <i class="fas fa-circle-xmark"></i> <strong>Lý do từ chối từ nhân viên:</strong> ${escapeHtml(application.rejectionReason || 'Hồ sơ chưa phù hợp hoặc bài nhận nuôi đã đóng.')}
+                        </div>`;
+                } else {
+                    statusNoticeHtml = `
+                        <div style="margin: 0.6rem 0; padding: 0.65rem 0.9rem; background: #fffde7; color: #f57f17; border-radius: 8px; border-left: 4px solid #fbc02d; font-size: 0.92rem;">
+                            <i class="fas fa-clock"></i> Đơn đang chờ nhân viên chi nhánh xét duyệt hồ sơ.
+                        </div>`;
+                }
+
+                card.innerHTML = `
+                    <div style="flex: 1;">
+                        <h2 class="order-title">Đơn nhận nuôi #${application.id} · ${adoptionLabels[application.status] || application.status}</h2>
+                        <p class="order-meta">Gửi lúc ${formatDate(application.createdAt)}</p>
+                        <div style="margin: 0.5rem 0; padding: 0.65rem 0.9rem; background: #fafafa; border-radius: 8px; border: 1px solid #eee; font-size: 0.9rem;">
+                            <strong>Nội dung đăng ký đã gửi:</strong><br>
+                            <span style="color: var(--text-main);">${escapeHtml(application.message)}</span>
+                        </div>
+                        ${statusNoticeHtml}
+                    </div>
+                    <div class="order-side" style="align-self: flex-start; margin-top: 0.5rem;">
+                        <a class="btn-pill" href="/adoptions/${application.adoptionPostId}">Xem bài nhận nuôi</a>
+                    </div>
+                `;
                 list.append(card);
             });
         } catch (error) { list.textContent = error.message; }
@@ -88,4 +117,10 @@
     function formatMoney(value) { return `${new Intl.NumberFormat('vi-VN').format(value || 0)} VND`; }
     function formatDate(value) { return value ? new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)) : '—'; }
     function showNotice(message, error = false) { const notice = document.getElementById('orders-notice'); notice.textContent = message; notice.classList.toggle('error', error); notice.hidden = false; }
+    function escapeHtml(text) {
+        if (!text) return '';
+        const d = document.createElement('div');
+        d.textContent = text;
+        return d.innerHTML;
+    }
 })();
