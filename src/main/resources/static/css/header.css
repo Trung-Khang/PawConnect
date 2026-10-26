@@ -583,10 +583,16 @@ body.management-menu-open { overflow: hidden; }
     border-radius: 16px !important;
     box-shadow: 0 16px 45px rgba(0, 0, 0, 0.16) !important;
     z-index: 999999 !important;
-    overflow: hidden !important;
+    overflow-x: hidden !important;
+    overflow-y: hidden !important;
     box-sizing: border-box !important;
     text-align: left !important;
+    white-space: normal !important;
     animation: notificationFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.notification-dropdown * {
+    box-sizing: border-box !important;
 }
 
 .notification-dropdown[hidden] {
@@ -605,6 +611,7 @@ body.management-menu-open { overflow: hidden; }
     padding: 0.85rem 1.15rem !important;
     background: #faf7f5 !important;
     border-bottom: 1px solid #ebdcd3 !important;
+    white-space: normal !important;
 }
 
 .notification-dropdown-title,
@@ -616,6 +623,7 @@ body.management-menu-open { overflow: hidden; }
     align-items: center !important;
     gap: 0.5rem !important;
     margin: 0 !important;
+    white-space: nowrap !important;
 }
 
 .notification-dropdown-title i,
@@ -633,6 +641,7 @@ body.management-menu-open { overflow: hidden; }
     padding: 0.25rem 0.5rem !important;
     border-radius: 6px !important;
     transition: background 0.15s ease !important;
+    white-space: nowrap !important;
 }
 
 .notification-mark-all:hover {
@@ -642,8 +651,10 @@ body.management-menu-open { overflow: hidden; }
 .notification-list {
     max-height: 380px !important;
     overflow-y: auto !important;
+    overflow-x: hidden !important;
     padding: 0 !important;
     margin: 0 !important;
+    white-space: normal !important;
 }
 
 .notification-item {
@@ -657,6 +668,9 @@ body.management-menu-open { overflow: hidden; }
     position: relative !important;
     background: #ffffff !important;
     text-decoration: none !important;
+    width: 100% !important;
+    white-space: normal !important;
+    box-sizing: border-box !important;
 }
 
 .notification-item:hover {
@@ -689,6 +703,7 @@ body.management-menu-open { overflow: hidden; }
     justify-content: center !important;
     font-size: 0.95rem !important;
     margin-top: 2px !important;
+    flex-shrink: 0 !important;
 }
 
 .notification-item-icon.approved {
@@ -709,23 +724,32 @@ body.management-menu-open { overflow: hidden; }
 
 .notification-item-content,
 .notification-item-body {
-    flex: 1 1 auto !important;
+    flex: 1 1 0% !important;
     min-width: 0 !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
+    word-break: break-word !important;
 }
 
 .notification-item-title {
     font-size: 0.88rem !important;
     font-weight: 700 !important;
     color: var(--text-main, #2d3748) !important;
-    margin: 0 0 0.2rem 0 !important;
+    margin: 0 0 0.25rem 0 !important;
     line-height: 1.35 !important;
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
+    word-break: break-word !important;
 }
 
 .notification-item-desc {
     font-size: 0.82rem !important;
     color: var(--text-muted, #64748b) !important;
-    margin: 0 0 0.3rem 0 !important;
+    margin: 0 0 0.35rem 0 !important;
     line-height: 1.45 !important;
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
     word-break: break-word !important;
 }
 
@@ -734,6 +758,8 @@ body.management-menu-open { overflow: hidden; }
     color: #94a3b8 !important;
     font-weight: 600 !important;
     display: block !important;
+    white-space: normal !important;
+    margin-top: 2px !important;
 }
 
 .notification-unread-dot {
@@ -751,4 +777,5 @@ body.management-menu-open { overflow: hidden; }
     color: var(--text-muted, #718096) !important;
     font-size: 0.9rem !important;
     margin: 0 !important;
+    white-space: normal !important;
 }
