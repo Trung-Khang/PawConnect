@@ -275,7 +275,40 @@ public class AdoptionService {
                 .message(message)
                 .status(AdoptionApplicationStatus.PENDING)
                 .build();
-        return AdoptionMapper.toResponse(adoptionApplicationRepository.save(application));
+        AdoptionApplication saved = adoptionApplicationRepository.save(application);
+
+        try {
+            if (notificationService != null) {
+                String dogName = post.getDogProfile() != null ? post.getDogProfile().getName() : "bé cưng";
+                String branchName = post.getDogProfile() != null && post.getDogProfile().getBranch() != null ? post.getDogProfile().getBranch().getName() : "chi nhánh";
+                Long branchId = post.getDogProfile() != null && post.getDogProfile().getBranch() != null ? post.getDogProfile().getBranch().getId() : null;
+
+                // Gửi thông báo đến chuông của khách hàng
+                notificationService.createNotification(
+                        applicant,
+                        "Đơn nhận nuôi bé " + dogName + " đã được gửi",
+                        "Đơn đăng ký nhận nuôi bé " + dogName + " của bạn đã được chuyển tới " + branchName + ". Vui lòng chờ nhân viên xét duyệt nhé!",
+                        "ADOPTION_APPLIED",
+                        "/adoption",
+                        saved.getId()
+                );
+
+                // Gửi thông báo đến chuông của Quản lý chi nhánh
+                if (branchId != null) {
+                    notificationService.notifyBranchManagers(
+                            branchId,
+                            "Đơn nhận nuôi mới: Bé " + dogName,
+                            "Khách hàng " + applicant.getFullName() + " vừa nộp đơn đăng ký nhận nuôi bé " + dogName + ". Hãy kiểm tra hồ sơ và xét duyệt.",
+                            "ADOPTION_APPLIED",
+                            "/adoption",
+                            saved.getId()
+                    );
+                }
+            }
+        } catch (Exception ignored) {
+        }
+
+        return AdoptionMapper.toResponse(saved);
     }
 
     public List<AdoptionApplicationResponse> getMyApplications(String actorEmail) {

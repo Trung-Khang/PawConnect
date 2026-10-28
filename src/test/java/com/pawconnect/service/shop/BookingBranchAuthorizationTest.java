@@ -33,6 +33,7 @@ class BookingBranchAuthorizationTest {
     @Mock private BranchRepository branches;
     @Mock private ServiceTypeRepository serviceTypes;
     @Mock private UserRepository userRepository;
+    @Mock private com.pawconnect.service.notification.NotificationService notificationService;
     @InjectMocks private BookingServiceImpl service;
 
     @AfterEach
