@@ -245,7 +245,7 @@ const state = { posts: [], branches: [], user: null, currentPost: null, managedA
             const closedBanner = document.createElement('div');
             closedBanner.className = 'adoption-closed-banner';
             closedBanner.style.cssText = 'background: #e6fffa; color: #234e52; border: 1px solid #b2f5ea; border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-weight: 600; display: flex; align-items: center; gap: 8px; font-size: 0.95rem;';
-            closedBanner.innerHTML = '🎉 Bé đã tìm được mái ấm và hoàn tất nhận nuôi thành công!';
+            closedBanner.innerHTML = 'Bé đã tìm được mái ấm và hoàn tất nhận nuôi thành công!';
             content.append(closedBanner);
         }
         content.append(textElement('h2', post.title));
