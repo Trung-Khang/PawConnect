@@ -17,4 +17,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<User> findLockedById(Long id);
+
+    java.util.List<User> findByBranchId(Long branchId);
+    java.util.List<User> findByRoleName(com.pawconnect.entity.RoleName roleName);
 }

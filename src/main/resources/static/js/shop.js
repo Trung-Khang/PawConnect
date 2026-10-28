@@ -1,225 +1,412 @@
-// --- SHOP PAGE LOGIC ---
-let productRequestController = null;
-let productLoadSequence = 0;
-const branchesMap = new Map();
-
-function getBranchName(branchId) {
-    if (!branchId) return 'Chưa cập nhật';
-    return branchesMap.get(Number(branchId)) || `Chi nhánh #${branchId}`;
-}
-
-document.addEventListener('DOMContentLoaded', async () => {
-    // Determine which page we are on
-    if (document.getElementById('productGrid')) {
-        await loadBranches('branchFilter');
-        const query = new URLSearchParams(window.location.search).get('search');
-        if (query) document.getElementById('shopSearch').value = query;
-        await loadProducts();
-        await openLinkedItemModal();
-        document.getElementById('applyShopFilters').addEventListener('click', loadProducts);
-        document.getElementById('shopSearch').addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                loadProducts();
-            }
-        });
-    }
-    
-    if (document.getElementById('branchSelect')) {
-        const bookingUser = await requireBookingLogin();
-        if (!bookingUser) return;
-        if (bookingUser.role !== 'CUSTOMER') {
-            showBookingAccessMessage('Đặt lịch dịch vụ chỉ dành cho tài khoản khách hàng.');
-            return;
-        }
-        await loadBranches('branchSelect');
+// --- SHOP PAGE LOGIC ---
+
+let productRequestController = null;
+
+let productLoadSequence = 0;
+
+const branchesMap = new Map();
+
+function getBranchName(branchId) {
+
+    if (!branchId) return 'Chưa cập nhật';
+
+    return branchesMap.get(Number(branchId)) || `Chi nhánh #${branchId}`;
+
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+
+    // Determine which page we are on
+
+    if (document.getElementById('productGrid')) {
+
+        await loadBranches('branchFilter');
+
+        const query = new URLSearchParams(window.location.search).get('search');
+
+        if (query) document.getElementById('shopSearch').value = query;
+
+        await loadProducts();
+
+        await openLinkedItemModal();
+
+        document.getElementById('applyShopFilters').addEventListener('click', loadProducts);
+
+        document.getElementById('shopSearch').addEventListener('keydown', (event) => {
+
+            if (event.key === 'Enter') {
+
+                event.preventDefault();
+
+                loadProducts();
+
+            }
+
+        });
+
+    }
+
+    
+
+    if (document.getElementById('branchSelect')) {
+
+        const bookingUser = await requireBookingLogin();
+
+        if (!bookingUser) return;
+
+        if (bookingUser.role !== 'CUSTOMER') {
+
+            showBookingAccessMessage('Đặt lịch dịch vụ chỉ dành cho tài khoản khách hàng.');
+
+            return;
+
+        }
+
+        await loadBranches('branchSelect');
+
         await loadServices();
-        initBookingTimeMin();
-    }
-});
-
-async function loadBranches(elementId) {
-    try {
-        const res = await fetch('/api/branches');
-        const branches = await res.json();
-        branches.forEach(b => {
-            branchesMap.set(Number(b.id), b.name);
-        });
-        const select = document.getElementById(elementId);
-        branches.forEach(b => {
-            const opt = document.createElement('option');
-            opt.value = b.id;
-            opt.textContent = b.name;
-            select.appendChild(opt);
-        });
-    } catch (e) {
-        console.error("Failed to load branches");
-    }
-}
-
-async function loadProducts() {
-    const branchId = document.getElementById('branchFilter').value;
-    const type = document.getElementById('typeFilter').value;
-    const query = document.getElementById('shopSearch').value.trim().toLocaleLowerCase('vi');
-    const requestSequence = ++productLoadSequence;
-    const searchButton = document.getElementById('applyShopFilters');
-
-    productRequestController?.abort();
-    productRequestController = new AbortController();
-    const { signal } = productRequestController;
-    if (searchButton) searchButton.disabled = true;
-
-    let products = [];
-
-    try {
-        if (!type || type === 'product') {
-            let url = '/api/products?';
-            if (branchId) url += `branchId=${branchId}`;
-            const res = await fetch(url, { signal });
-            let json = await res.json();
-            json.forEach(p => p.itemType = 'product');
-            products = products.concat(json);
-        }
-        if (!type || type === 'puppy') {
-            let url = '/api/puppy-listings?';
-            if (branchId) url += `branchId=${branchId}`;
-            const res = await fetch(url, { signal });
-            let json = await res.json();
-            json.forEach(p => p.itemType = 'puppy');
-            products = products.concat(json);
-        }
-        const matches = products.filter((product) => {
-            if (!query) return true;
-            const searchable = product.itemType === 'puppy'
-                ? [product.listingTitle, product.breedCode, product.description]
-                : [product.name, product.description, product.ingredients, product.targetAudience];
-            return searchable.filter(Boolean).join(' ').toLocaleLowerCase('vi').includes(query);
-        });
-        if (requestSequence !== productLoadSequence) return;
-        currentFilteredProducts = matches;
-        currentShopPage = 1;
-        renderShopPage();
-    } catch (e) {
-        if (e.name === 'AbortError') return;
-        if (requestSequence !== productLoadSequence) return;
-        document.getElementById('productGrid').innerHTML = '<p>Không thể tải sản phẩm. Vui lòng thử lại.</p>';
-    } finally {
-        if (requestSequence === productLoadSequence && searchButton) {
-            searchButton.disabled = false;
-        }
-    }
-}
-
-let currentFilteredProducts = [];
-let currentShopPage = 1;
-const SHOP_PAGE_SIZE = 6;
-
-function renderShopPage() {
-    const totalItems = currentFilteredProducts.length;
-    const totalPages = Math.ceil(totalItems / SHOP_PAGE_SIZE) || 1;
-    if (currentShopPage > totalPages) currentShopPage = totalPages;
-    if (currentShopPage < 1) currentShopPage = 1;
-
-    const start = (currentShopPage - 1) * SHOP_PAGE_SIZE;
-    const pageItems = currentFilteredProducts.slice(start, start + SHOP_PAGE_SIZE);
-
-    const type = document.getElementById('typeFilter').value;
-    const query = document.getElementById('shopSearch').value.trim().toLocaleLowerCase('vi');
-    renderProducts(pageItems, type, query, totalItems);
-    renderShopPagination(totalPages);
-}
-
-function renderShopPagination(totalPages) {
-    const container = document.getElementById('shopPagination');
-    if (!container) return;
-    if (totalPages <= 1) {
-        container.innerHTML = '';
-        return;
-    }
-
-    let html = `
-        <button class="paw-pagination-btn" ${currentShopPage <= 1 ? 'disabled' : ''} onclick="changeShopPage(${currentShopPage - 1})">
-            <i class="fas fa-chevron-left"></i> Trang trước
-        </button>
-    `;
-
-    for (let p = 1; p <= totalPages; p++) {
-        html += `
-            <button class="paw-pagination-btn ${p === currentShopPage ? 'active' : ''}" onclick="changeShopPage(${p})">
-                ${p}
-            </button>
-        `;
-    }
-
-    html += `
-        <button class="paw-pagination-btn" ${currentShopPage >= totalPages ? 'disabled' : ''} onclick="changeShopPage(${currentShopPage + 1})">
-            Trang sau <i class="fas fa-chevron-right"></i>
-        </button>
-    `;
-    container.innerHTML = html;
-}
-
-function changeShopPage(page) {
-    currentShopPage = page;
-    renderShopPage();
-    document.getElementById('shop-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-function renderProducts(products, type, query, totalItems = null) {
-    const grid = document.getElementById('productGrid');
-    grid.innerHTML = '';
-    
-    const countToCheck = totalItems !== null ? totalItems : products.length;
-    if(countToCheck === 0) {
-        const emptyMessage = query
-            ? `Không tìm thấy sản phẩm phù hợp với “${escapeHtml(query)}”.`
-            : type === 'puppy'
-                ? 'Hiện chưa có chó con đang được rao bán.'
-                : type === 'product'
-                    ? 'Hiện chưa có sản phẩm thuộc lựa chọn này.'
-                    : 'Hiện chưa có sản phẩm để hiển thị.';
-        grid.innerHTML = `<p>${emptyMessage}</p>`;
-        return;
-    }
-
-    products.forEach(p => {
-        const card = document.createElement('div');
-        card.className = 'product-card';
-        if (p.itemType === 'puppy') card.innerHTML += `<div class="product-badge">Pet</div>`;
-        
-        const safeProductJson = JSON.stringify(p).replace(/"/g, '&quot;');
-        const title = p.itemType === 'puppy' ? p.listingTitle : p.name;
-        const price = p.itemType === 'puppy' ? p.pricePerPuppyVnd : p.price;
-        const branchName = getBranchName(p.branchId);
-        
-        card.innerHTML += `
-            <img src="${p.imageUrl || 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=800&auto=format&fit=crop'}" alt="product" class="product-image" onclick="openModal(${safeProductJson})" style="cursor:pointer">
-            <h3 class="product-title" onclick="openModal(${safeProductJson})" style="cursor:pointer"></h3>
-            <div class="product-branch"><i class="fas fa-location-dot"></i> <span>${escapeHtml(branchName)}</span></div>
-            <p class="product-price">${price.toLocaleString()} VND</p>
-            <div class="product-card-actions">
-                <button class="btn-icon-cart" onclick="addToCart('${p.itemType}', ${p.id})" title="Thêm vào giỏ hàng" aria-label="Thêm vào giỏ hàng"><i class="fas fa-cart-plus"></i></button>
-                <button class="btn-add-cart" onclick="buyNow('${p.itemType}', ${p.id})" style="flex:1;">Mua ngay</button>
-            </div>
-        `;
-        card.querySelector('.product-title').textContent = title;
-        grid.appendChild(card);
-    });
-}
-
-async function addToCart(itemType, id) {
-    if (!window.PawConnectCart) {
-        alert('Chức năng giỏ hàng đang được tải. Vui lòng tải lại trang rồi thử lại.');
-        return false;
-    }
-    try {
-        return await window.PawConnectCart.add(itemType, id);
-    } catch (e) {
-        alert('Không thể thêm vào giỏ hàng. Vui lòng thử lại.');
-        return false;
-    }
-}
-
+        initBookingDatePicker();
+        const bSelect = document.getElementById('branchSelect');
+        if (bSelect) {
+            bSelect.addEventListener('change', () => {
+                const step2 = document.getElementById('step-2');
+                if (step2 && step2.classList.contains('active')) {
+                    loadAvailableTimeSlots();
+                }
+            });
+        }
+    }
+});
+async function loadBranches(elementId) {
+
+    try {
+
+        const res = await fetch('/api/branches');
+
+        const branches = await res.json();
+
+        branches.forEach(b => {
+
+            branchesMap.set(Number(b.id), b.name);
+
+        });
+
+        const select = document.getElementById(elementId);
+
+        branches.forEach(b => {
+
+            const opt = document.createElement('option');
+
+            opt.value = b.id;
+
+            opt.textContent = b.name;
+
+            select.appendChild(opt);
+
+        });
+
+    } catch (e) {
+
+        console.error("Failed to load branches");
+
+    }
+
+}
+
+async function loadProducts() {
+
+    const branchId = document.getElementById('branchFilter').value;
+
+    const type = document.getElementById('typeFilter').value;
+
+    const query = document.getElementById('shopSearch').value.trim().toLocaleLowerCase('vi');
+
+    const requestSequence = ++productLoadSequence;
+
+    const searchButton = document.getElementById('applyShopFilters');
+
+    productRequestController?.abort();
+
+    productRequestController = new AbortController();
+
+    const { signal } = productRequestController;
+
+    if (searchButton) searchButton.disabled = true;
+
+    let products = [];
+
+    try {
+
+        if (!type || type === 'product') {
+
+            let url = '/api/products?';
+
+            if (branchId) url += `branchId=${branchId}`;
+
+            const res = await fetch(url, { signal });
+
+            let json = await res.json();
+
+            json.forEach(p => p.itemType = 'product');
+
+            products = products.concat(json);
+
+        }
+
+        if (!type || type === 'puppy') {
+
+            let url = '/api/puppy-listings?';
+
+            if (branchId) url += `branchId=${branchId}`;
+
+            const res = await fetch(url, { signal });
+
+            let json = await res.json();
+
+            json.forEach(p => p.itemType = 'puppy');
+
+            products = products.concat(json);
+
+        }
+
+        const matches = products.filter((product) => {
+
+            if (!query) return true;
+
+            const searchable = product.itemType === 'puppy'
+
+                ? [product.listingTitle, product.breedCode, product.description]
+
+                : [product.name, product.description, product.ingredients, product.targetAudience];
+
+            return searchable.filter(Boolean).join(' ').toLocaleLowerCase('vi').includes(query);
+
+        });
+
+        if (requestSequence !== productLoadSequence) return;
+
+        currentFilteredProducts = matches;
+
+        currentShopPage = 1;
+
+        renderShopPage();
+
+    } catch (e) {
+
+        if (e.name === 'AbortError') return;
+
+        if (requestSequence !== productLoadSequence) return;
+
+        document.getElementById('productGrid').innerHTML = '<p>Không thể tải sản phẩm. Vui lòng thử lại.</p>';
+
+    } finally {
+
+        if (requestSequence === productLoadSequence && searchButton) {
+
+            searchButton.disabled = false;
+
+        }
+
+    }
+
+}
+
+let currentFilteredProducts = [];
+
+let currentShopPage = 1;
+
+const SHOP_PAGE_SIZE = 6;
+
+function renderShopPage() {
+
+    const totalItems = currentFilteredProducts.length;
+
+    const totalPages = Math.ceil(totalItems / SHOP_PAGE_SIZE) || 1;
+
+    if (currentShopPage > totalPages) currentShopPage = totalPages;
+
+    if (currentShopPage < 1) currentShopPage = 1;
+
+    const start = (currentShopPage - 1) * SHOP_PAGE_SIZE;
+
+    const pageItems = currentFilteredProducts.slice(start, start + SHOP_PAGE_SIZE);
+
+    const type = document.getElementById('typeFilter').value;
+
+    const query = document.getElementById('shopSearch').value.trim().toLocaleLowerCase('vi');
+
+    renderProducts(pageItems, type, query, totalItems);
+
+    renderShopPagination(totalPages);
+
+}
+
+function renderShopPagination(totalPages) {
+
+    const container = document.getElementById('shopPagination');
+
+    if (!container) return;
+
+    if (totalPages <= 1) {
+
+        container.innerHTML = '';
+
+        return;
+
+    }
+
+    let html = `
+
+        <button class="paw-pagination-btn" ${currentShopPage <= 1 ? 'disabled' : ''} onclick="changeShopPage(${currentShopPage - 1})">
+
+            <i class="fas fa-chevron-left"></i> Trang trước
+
+        </button>
+
+    `;
+
+    for (let p = 1; p <= totalPages; p++) {
+
+        html += `
+
+            <button class="paw-pagination-btn ${p === currentShopPage ? 'active' : ''}" onclick="changeShopPage(${p})">
+
+                ${p}
+
+            </button>
+
+        `;
+
+    }
+
+    html += `
+
+        <button class="paw-pagination-btn" ${currentShopPage >= totalPages ? 'disabled' : ''} onclick="changeShopPage(${currentShopPage + 1})">
+
+            Trang sau <i class="fas fa-chevron-right"></i>
+
+        </button>
+
+    `;
+
+    container.innerHTML = html;
+
+}
+
+function changeShopPage(page) {
+
+    currentShopPage = page;
+
+    renderShopPage();
+
+    document.getElementById('shop-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+}
+
+function renderProducts(products, type, query, totalItems = null) {
+
+    const grid = document.getElementById('productGrid');
+
+    grid.innerHTML = '';
+
+    
+
+    const countToCheck = totalItems !== null ? totalItems : products.length;
+
+    if(countToCheck === 0) {
+
+        const emptyMessage = query
+
+            ? `Không tìm thấy sản phẩm phù hợp với “${escapeHtml(query)}”.`
+
+            : type === 'puppy'
+
+                ? 'Hiện chưa có chó con đang được rao bán.'
+
+                : type === 'product'
+
+                    ? 'Hiện chưa có sản phẩm thuộc lựa chọn này.'
+
+                    : 'Hiện chưa có sản phẩm để hiển thị.';
+
+        grid.innerHTML = `<p>${emptyMessage}</p>`;
+
+        return;
+
+    }
+
+    products.forEach(p => {
+
+        const card = document.createElement('div');
+
+        card.className = 'product-card';
+
+        if (p.itemType === 'puppy') card.innerHTML += `<div class="product-badge">Pet</div>`;
+
+        
+
+        const safeProductJson = JSON.stringify(p).replace(/"/g, '&quot;');
+
+        const title = p.itemType === 'puppy' ? p.listingTitle : p.name;
+
+        const price = p.itemType === 'puppy' ? p.pricePerPuppyVnd : p.price;
+
+        const branchName = getBranchName(p.branchId);
+
+        
+
+        card.innerHTML += `
+
+            <img src="${p.imageUrl || 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=800&auto=format&fit=crop'}" alt="product" class="product-image" onclick="openModal(${safeProductJson})" style="cursor:pointer">
+
+            <h3 class="product-title" onclick="openModal(${safeProductJson})" style="cursor:pointer"></h3>
+
+            <div class="product-branch"><i class="fas fa-location-dot"></i> <span>${escapeHtml(branchName)}</span></div>
+
+            <p class="product-price">${price.toLocaleString()} VND</p>
+
+            <div class="product-card-actions">
+
+                <button class="btn-icon-cart" onclick="addToCart('${p.itemType}', ${p.id})" title="Thêm vào giỏ hàng" aria-label="Thêm vào giỏ hàng"><i class="fas fa-cart-plus"></i></button>
+
+                <button class="btn-add-cart" onclick="buyNow('${p.itemType}', ${p.id})" style="flex:1;">Mua ngay</button>
+
+            </div>
+
+        `;
+
+        card.querySelector('.product-title').textContent = title;
+
+        grid.appendChild(card);
+
+    });
+
+}
+
+async function addToCart(itemType, id) {
+
+    if (!window.PawConnectCart) {
+
+        alert('Chức năng giỏ hàng đang được tải. Vui lòng tải lại trang rồi thử lại.');
+
+        return false;
+
+    }
+
+    try {
+
+        return await window.PawConnectCart.add(itemType, id);
+
+    } catch (e) {
+
+        alert('Không thể thêm vào giỏ hàng. Vui lòng thử lại.');
+
+        return false;
+
+    }
+
+}
+
 // --- BOOKING PAGE LOGIC (MULTI-STEP & MANAGEMENT) ---
 
 function switchServiceTab(tab) {
@@ -244,45 +431,163 @@ function switchServiceTab(tab) {
     }
 }
 
-function initBookingTimeMin() {
-    const timeInput = document.getElementById('bookingTime');
-    if (!timeInput) return;
+const OPERATING_SLOTS = [
+    '07:00', '08:00', '09:00', '10:00', '11:00', '12:00',
+    '13:00', '14:00', '15:00', '16:00', '17:00', '18:00',
+    '19:00', '20:00'
+];
+
+function initBookingDatePicker() {
+    const dateInput = document.getElementById('bookingDateInput');
+    if (!dateInput) return;
     const now = new Date();
     const pad = n => String(n).padStart(2, '0');
-    const minStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
-    timeInput.min = minStr;
+    const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    dateInput.min = todayStr;
+    if (!dateInput.value) {
+        if (now.getHours() >= 20) {
+            const tmr = new Date(now);
+            tmr.setDate(tmr.getDate() + 1);
+            dateInput.value = `${tmr.getFullYear()}-${pad(tmr.getMonth() + 1)}-${pad(tmr.getDate())}`;
+        } else {
+            dateInput.value = todayStr;
+        }
+    }
 }
 
-function validateBookingTimeInput() {
+function onBookingDateChange() {
     const timeInput = document.getElementById('bookingTime');
+    if (timeInput) timeInput.value = '';
+    const selectedBox = document.getElementById('selectedSlotInfo');
+    if (selectedBox) selectedBox.style.display = 'none';
     const msg = document.getElementById('timeValidationMsg');
-    if (!timeInput || !msg) return true;
+    if (msg) msg.hidden = true;
 
-    const val = timeInput.value;
-    if (!val) {
-        msg.hidden = true;
-        return true;
+    loadAvailableTimeSlots();
+}
+
+async function loadAvailableTimeSlots() {
+    const grid = document.getElementById('timeSlotsGrid');
+    const dateInput = document.getElementById('bookingDateInput');
+    const branchSelect = document.getElementById('branchSelect');
+    if (!grid || !dateInput || !branchSelect) return;
+
+    const dateVal = dateInput.value;
+    const branchId = branchSelect.value;
+
+    if (!dateVal) {
+        grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 1rem;">Vui lòng chọn ngày để xem lịch trống.</p>';
+        return;
     }
 
-    const selected = new Date(val);
-    const now = new Date();
+    grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 1rem;"><i class="fas fa-spinner fa-spin"></i> Đang kiểm tra lịch trống…</p>';
 
-    if (selected <= now) {
-        msg.textContent = 'Thời gian đặt lịch không được ở quá khứ. Vui lòng chọn ngày giờ trong tương lai.';
-        msg.hidden = false;
-        return false;
+    try {
+        const res = await fetch(`/api/bookings/busy-slots?branchId=${branchId}&date=${dateVal}`);
+        let busyList = [];
+        if (res.ok) {
+            busyList = await res.json();
+        }
+
+        const busyHours = new Set();
+        if (Array.isArray(busyList)) {
+            busyList.forEach(b => {
+                if (b.bookingTime) {
+                    const bt = new Date(b.bookingTime);
+                    if (!isNaN(bt.getTime())) {
+                        const h = String(bt.getHours()).padStart(2, '0') + ':00';
+                        busyHours.add(h);
+                    }
+                }
+            });
+        }
+
+        const now = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+        const isToday = (dateVal === todayStr);
+        const currentHour = now.getHours();
+
+        grid.replaceChildren();
+
+        const currentSelectedTime = document.getElementById('bookingTime')?.value || '';
+
+        OPERATING_SLOTS.forEach(timeStr => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'time-slot-btn';
+            btn.setAttribute('data-time', timeStr);
+
+            const slotHour = parseInt(timeStr.split(':')[0], 10);
+
+            if (isToday && slotHour <= currentHour) {
+                btn.classList.add('slot-past');
+                btn.disabled = true;
+                btn.innerHTML = `
+                    <span>${timeStr}</span>
+                    <span class="slot-status-text">Đã qua</span>
+                `;
+            } else if (busyHours.has(timeStr)) {
+                btn.classList.add('slot-busy');
+                btn.disabled = true;
+                btn.innerHTML = `
+                    <span>${timeStr}</span>
+                    <span class="slot-status-text">Đã kín</span>
+                `;
+            } else {
+                const fullDateTime = `${dateVal}T${timeStr}:00`;
+                const isSelected = (currentSelectedTime === fullDateTime);
+                if (isSelected) {
+                    btn.classList.add('slot-selected');
+                }
+                btn.innerHTML = `
+                    <span>${timeStr}</span>
+                    <span class="slot-status-text">${isSelected ? 'Đang chọn' : 'Còn trống'}</span>
+                `;
+                btn.onclick = () => selectTimeSlot(dateVal, timeStr, btn);
+            }
+
+            grid.appendChild(btn);
+        });
+
+    } catch (e) {
+        console.error('Lỗi khi tải lịch trống:', e);
+        grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--danger); padding: 1rem;">Không thể tải lịch trống lúc này. Vui lòng thử lại.</p>';
+    }
+}
+
+function selectTimeSlot(dateVal, timeStr, selectedBtn) {
+    const grid = document.getElementById('timeSlotsGrid');
+    if (grid) {
+        grid.querySelectorAll('.time-slot-btn').forEach(btn => {
+            if (!btn.disabled) {
+                btn.classList.remove('slot-selected');
+                const statusSpan = btn.querySelector('.slot-status-text');
+                if (statusSpan) statusSpan.textContent = 'Còn trống';
+            }
+        });
     }
 
-    const hour = selected.getHours();
-    const min = selected.getMinutes();
-    if (hour < 7 || hour > 20 || (hour === 20 && min > 0)) {
-        msg.textContent = 'Khung giờ đặt lịch phải từ 07:00 đến 20:00 (Cửa hàng mở cửa từ 07:00 - 21:00 từ Thứ 2 đến Chủ Nhật).';
-        msg.hidden = false;
-        return false;
+    selectedBtn.classList.add('slot-selected');
+    const curStatus = selectedBtn.querySelector('.slot-status-text');
+    if (curStatus) curStatus.textContent = 'Đang chọn';
+
+    const fullIsoTime = `${dateVal}T${timeStr}:00`;
+    const timeInput = document.getElementById('bookingTime');
+    if (timeInput) {
+        timeInput.value = fullIsoTime;
     }
 
-    msg.hidden = true;
-    return true;
+    const [year, month, day] = dateVal.split('-');
+    const selectedBox = document.getElementById('selectedSlotInfo');
+    const selectedText = document.getElementById('selectedSlotText');
+    if (selectedBox && selectedText) {
+        selectedText.textContent = `Khung giờ đã chọn: ${timeStr} ngày ${day}/${month}/${year}`;
+        selectedBox.style.display = 'flex';
+    }
+
+    const msg = document.getElementById('timeValidationMsg');
+    if (msg) msg.hidden = true;
 }
 
 async function loadServices() {
@@ -303,16 +608,23 @@ async function loadServices() {
 }
 
 function nextStep(step) {
+    if (step === 2) {
+        initBookingDatePicker();
+        loadAvailableTimeSlots();
+    }
     if (step === 3) {
         const bSel = document.getElementById('branchSelect');
         const sSel = document.getElementById('serviceSelect');
         const timeInput = document.getElementById('bookingTime');
-        const time = timeInput.value;
+        const time = timeInput ? timeInput.value : '';
         const msg = document.getElementById('timeValidationMsg');
 
         if (!time) {
-            alert('Vui lòng chọn ngày và giờ hẹn.');
-            timeInput.focus();
+            if (msg) {
+                msg.textContent = 'Vui lòng chọn một khung giờ còn trống trong danh sách.';
+                msg.hidden = false;
+            }
+            alert('Vui lòng chọn một khung giờ hẹn còn trống trước khi tiếp tục!');
             return;
         }
 
@@ -320,24 +632,15 @@ function nextStep(step) {
         const now = new Date();
 
         if (selected <= now) {
-            msg.textContent = 'Thời gian đặt lịch không được ở quá khứ. Vui lòng chọn ngày giờ trong tương lai.';
-            msg.hidden = false;
-            alert('Thời gian đặt lịch không được ở quá khứ. Vui lòng chọn thời gian trong tương lai.');
-            timeInput.focus();
+            if (msg) {
+                msg.textContent = 'Thời gian đặt lịch không được ở quá khứ. Vui lòng chọn khung giờ trong tương lai.';
+                msg.hidden = false;
+            }
+            alert('Thời gian đặt lịch không được ở quá khứ. Vui lòng chọn lại khung giờ!');
             return;
         }
 
-        const hour = selected.getHours();
-        const min = selected.getMinutes();
-        if (hour < 7 || hour > 20 || (hour === 20 && min > 0)) {
-            msg.textContent = 'Khung giờ đặt lịch phải từ 07:00 đến 20:00 (Cửa hàng mở cửa từ 07:00 - 21:00 từ Thứ 2 đến Chủ Nhật).';
-            msg.hidden = false;
-            alert('PawConnect chỉ nhận lịch hẹn từ 07:00 đến 20:00 (Cửa hàng mở cửa 07:00 - 21:00 từ Thứ 2 đến Chủ Nhật). Vui lòng chọn lại giờ hẹn!');
-            timeInput.focus();
-            return;
-        }
-
-        msg.hidden = true;
+        if (msg) msg.hidden = true;
         document.getElementById('confirmBranch').textContent = bSel.options[bSel.selectedIndex]?.text || 'Chưa chọn';
         document.getElementById('confirmService').textContent = sSel.options[sSel.selectedIndex]?.text || 'Chưa chọn';
 
@@ -545,124 +848,221 @@ function formatDateTimeVi(val) {
     }).format(d);
 }
 
-async function requireBookingLogin() {
-    const accessToken = localStorage.getItem('pawconnect.accessToken');
-    if (!accessToken) {
-        window.location.replace('/auth/login?returnTo=%2Fservice');
-        return null;
-    }
-
-    try {
-        const response = await fetch('/api/auth/me', {
-            headers: { Authorization: `Bearer ${accessToken}` }
-        });
-        if (response.ok) return await response.json();
-    } catch (_) {
-        // A failed validation is handled as an unavailable session below.
-    }
-
-    ['pawconnect.accessToken', 'pawconnect.refreshToken', 'accessToken', 'refreshToken', 'token']
-        .forEach((key) => localStorage.removeItem(key));
-    window.location.replace('/auth/login?returnTo=%2Fservice');
-    return null;
-}
-
-function showBookingAccessMessage(message) {
-    const wrapper = document.querySelector('.booking-form-wrapper');
-    if (!wrapper) return;
-    wrapper.innerHTML = `<div class="booking-access-message"><i class="fas fa-circle-info"></i><p>${message}</p></div>`;
-}
-
-// --- MODAL & BUY NOW LOGIC ---
-function openModal(p) {
-    document.getElementById('modalImage').src = p.imageUrl || 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=800&auto=format&fit=crop';
-    
-    const title = p.itemType === 'puppy' ? p.listingTitle : p.name;
-    const price = p.itemType === 'puppy' ? p.pricePerPuppyVnd : p.price;
-    
-    document.getElementById('modalName').textContent = title;
-    document.getElementById('modalPrice').textContent = price.toLocaleString() + ' VND';
-    const modalBranch = document.getElementById('modalBranch');
-    if (modalBranch) {
-        modalBranch.textContent = getBranchName(p.branchId);
-    }
-    document.getElementById('modalBreed').textContent = p.breedCode || p.breed || 'Chưa cập nhật';
-    document.getElementById('modalAge').textContent = p.ageMonths ? p.ageMonths + ' months' : (p.age || 'Chưa cập nhật');
-    document.getElementById('modalHealth').textContent = p.healthStatus || 'Đang cập nhật';
-    document.getElementById('modalCare').textContent = p.careInstructions || 'Liên hệ để biết thêm chi tiết';
-    
-    document.getElementById('modalCartBtn').onclick = () => addToCart(p.itemType, p.id);
-    document.getElementById('modalConsultBtn').onclick = () => {
-        if (!window.PawConnectChat) {
-            alert('Chức năng tin nhắn đang được tải. Vui lòng thử lại sau ít giây.');
-            return;
-        }
-        closeModal();
-        window.PawConnectChat.openSupport({
-            branchId: p.branchId,
-            productId: p.itemType === 'product' ? p.id : null,
-            puppyListingId: p.itemType === 'puppy' ? p.id : null,
-            title
-        });
-    };
-    document.getElementById('modalBuyBtn').onclick = () => buyNow(p.itemType, p.id);
-    
-    document.getElementById('productModal').classList.add('active');
-}
-
-function closeModal() {
-    document.getElementById('productModal').classList.remove('active');
-    clearItemDeepLink();
-}
-
-async function openLinkedItemModal() {
-    const params = new URLSearchParams(window.location.search);
-    const itemType = params.get('itemType');
-    const itemId = Number(params.get('itemId'));
-    if (!['product', 'puppy'].includes(itemType) || !Number.isSafeInteger(itemId) || itemId <= 0) return;
-
-    const endpoint = itemType === 'product' ? `/api/products/${itemId}` : `/api/puppy-listings/${itemId}`;
-    try {
-        const response = await fetch(endpoint);
-        if (!response.ok) throw new Error(`Item request failed with status ${response.status}`);
-        const item = await response.json();
-        item.itemType = itemType;
-        openModal(item);
-    } catch (_) {
-        showLinkedItemNotice('Sản phẩm bạn muốn xem không còn khả dụng hoặc đã bị xóa.');
-    }
-}
-
-function clearItemDeepLink() {
-    const url = new URL(window.location.href);
-    if (!url.searchParams.has('itemType') && !url.searchParams.has('itemId')) return;
-    url.searchParams.delete('itemType');
-    url.searchParams.delete('itemId');
-    const query = url.searchParams.toString();
-    window.history.replaceState({}, '', `${url.pathname}${query ? `?${query}` : ''}${url.hash}`);
-}
-
-function showLinkedItemNotice(message) {
-    const grid = document.getElementById('productGrid');
-    if (!grid) return;
-    let notice = document.getElementById('shopDeepLinkNotice');
-    if (!notice) {
-        notice = document.createElement('p');
-        notice.id = 'shopDeepLinkNotice';
-        notice.className = 'shop-deep-link-notice';
-        grid.before(notice);
-    }
-    notice.textContent = message;
-}
-
-async function buyNow(itemType, id) {
-    const added = await addToCart(itemType, id);
-    if (added) window.location.assign('/checkout');
-}
-
-function escapeHtml(value) {
-    const element = document.createElement('div');
-    element.textContent = value;
-    return element.innerHTML;
-}
+async function requireBookingLogin() {
+
+    const accessToken = localStorage.getItem('pawconnect.accessToken');
+
+    if (!accessToken) {
+
+        window.location.replace('/auth/login?returnTo=%2Fservice');
+
+        return null;
+
+    }
+
+    try {
+
+        const response = await fetch('/api/auth/me', {
+
+            headers: { Authorization: `Bearer ${accessToken}` }
+
+        });
+
+        if (response.ok) return await response.json();
+
+    } catch (_) {
+
+        // A failed validation is handled as an unavailable session below.
+
+    }
+
+    ['pawconnect.accessToken', 'pawconnect.refreshToken', 'accessToken', 'refreshToken', 'token']
+
+        .forEach((key) => localStorage.removeItem(key));
+
+    window.location.replace('/auth/login?returnTo=%2Fservice');
+
+    return null;
+
+}
+
+function showBookingAccessMessage(message) {
+
+    const wrapper = document.querySelector('.booking-form-wrapper');
+
+    if (!wrapper) return;
+
+    wrapper.innerHTML = `<div class="booking-access-message"><i class="fas fa-circle-info"></i><p>${message}</p></div>`;
+
+}
+
+// --- MODAL & BUY NOW LOGIC ---
+
+function openModal(p) {
+
+    document.getElementById('modalImage').src = p.imageUrl || 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=800&auto=format&fit=crop';
+
+    
+
+    const title = p.itemType === 'puppy' ? p.listingTitle : p.name;
+
+    const price = p.itemType === 'puppy' ? p.pricePerPuppyVnd : p.price;
+
+    
+
+    document.getElementById('modalName').textContent = title;
+
+    document.getElementById('modalPrice').textContent = price.toLocaleString() + ' VND';
+
+    const modalBranch = document.getElementById('modalBranch');
+
+    if (modalBranch) {
+
+        modalBranch.textContent = getBranchName(p.branchId);
+
+    }
+
+    document.getElementById('modalBreed').textContent = p.breedCode || p.breed || 'Chưa cập nhật';
+
+    document.getElementById('modalAge').textContent = p.ageMonths ? p.ageMonths + ' months' : (p.age || 'Chưa cập nhật');
+
+    document.getElementById('modalHealth').textContent = p.healthStatus || 'Đang cập nhật';
+
+    document.getElementById('modalCare').textContent = p.careInstructions || 'Liên hệ để biết thêm chi tiết';
+
+    
+
+    document.getElementById('modalCartBtn').onclick = () => addToCart(p.itemType, p.id);
+
+    document.getElementById('modalConsultBtn').onclick = () => {
+
+        if (!window.PawConnectChat) {
+
+            alert('Chức năng tin nhắn đang được tải. Vui lòng thử lại sau ít giây.');
+
+            return;
+
+        }
+
+        closeModal();
+
+        window.PawConnectChat.openSupport({
+
+            branchId: p.branchId,
+
+            productId: p.itemType === 'product' ? p.id : null,
+
+            puppyListingId: p.itemType === 'puppy' ? p.id : null,
+
+            title
+
+        });
+
+    };
+
+    document.getElementById('modalBuyBtn').onclick = () => buyNow(p.itemType, p.id);
+
+    
+
+    document.getElementById('productModal').classList.add('active');
+
+}
+
+function closeModal() {
+
+    document.getElementById('productModal').classList.remove('active');
+
+    clearItemDeepLink();
+
+}
+
+async function openLinkedItemModal() {
+
+    const params = new URLSearchParams(window.location.search);
+
+    const itemType = params.get('itemType');
+
+    const itemId = Number(params.get('itemId'));
+
+    if (!['product', 'puppy'].includes(itemType) || !Number.isSafeInteger(itemId) || itemId <= 0) return;
+
+    const endpoint = itemType === 'product' ? `/api/products/${itemId}` : `/api/puppy-listings/${itemId}`;
+
+    try {
+
+        const response = await fetch(endpoint);
+
+        if (!response.ok) throw new Error(`Item request failed with status ${response.status}`);
+
+        const item = await response.json();
+
+        item.itemType = itemType;
+
+        openModal(item);
+
+    } catch (_) {
+
+        showLinkedItemNotice('Sản phẩm bạn muốn xem không còn khả dụng hoặc đã bị xóa.');
+
+    }
+
+}
+
+function clearItemDeepLink() {
+
+    const url = new URL(window.location.href);
+
+    if (!url.searchParams.has('itemType') && !url.searchParams.has('itemId')) return;
+
+    url.searchParams.delete('itemType');
+
+    url.searchParams.delete('itemId');
+
+    const query = url.searchParams.toString();
+
+    window.history.replaceState({}, '', `${url.pathname}${query ? `?${query}` : ''}${url.hash}`);
+
+}
+
+function showLinkedItemNotice(message) {
+
+    const grid = document.getElementById('productGrid');
+
+    if (!grid) return;
+
+    let notice = document.getElementById('shopDeepLinkNotice');
+
+    if (!notice) {
+
+        notice = document.createElement('p');
+
+        notice.id = 'shopDeepLinkNotice';
+
+        notice.className = 'shop-deep-link-notice';
+
+        grid.before(notice);
+
+    }
+
+    notice.textContent = message;
+
+}
+
+async function buyNow(itemType, id) {
+
+    const added = await addToCart(itemType, id);
+
+    if (added) window.location.assign('/checkout');
+
+}
+
+function escapeHtml(value) {
+
+    const element = document.createElement('div');
+
+    element.textContent = value;
+
+    return element.innerHTML;
+
+}
 
