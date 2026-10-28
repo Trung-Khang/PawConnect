@@ -1,13 +1,19 @@
 package com.pawconnect.service.admin;
 
-import com.pawconnect.dto.admin.AdminBranchResponse;
 import com.pawconnect.dto.admin.AdminBranchCreateRequest;
+import com.pawconnect.dto.admin.AdminBranchDetailResponse;
+import com.pawconnect.dto.admin.AdminBranchResponse;
 import com.pawconnect.dto.admin.AdminBranchUpdateRequest;
 import com.pawconnect.entity.Branch;
+import com.pawconnect.entity.DogProfile;
+import com.pawconnect.entity.Order;
+import com.pawconnect.entity.Product;
+import com.pawconnect.entity.PuppyListing;
 import com.pawconnect.exception.BusinessException;
 import com.pawconnect.exception.ResourceNotFoundException;
 import com.pawconnect.repository.BranchRepository;
 import jakarta.persistence.EntityManager;
+import java.math.BigDecimal;
 import java.util.List;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Sort;
@@ -31,6 +37,63 @@ public class AdminBranchService {
                 .stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    public AdminBranchDetailResponse getBranchDetails(Long branchId) {
+        Branch branch = branchRepository.findById(branchId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy chi nhánh."));
+        AdminBranchResponse branchResponse = toResponse(branch);
+
+        // Top products in stock
+        List<Product> products = entityManager.createQuery(
+                "select p from Product p left join fetch p.category where p.branch.id = :branchId order by p.stock desc", Product.class)
+                .setParameter("branchId", branchId)
+                .setMaxResults(20)
+                .getResultList();
+        List<AdminBranchDetailResponse.ProductSummary> productSummaries = products.stream()
+                .map(p -> new AdminBranchDetailResponse.ProductSummary(
+                        p.getId(), p.getName(), p.getPrice(), p.getStock(),
+                        p.getCategory() != null ? p.getCategory().getName() : "Phụ kiện"))
+                .toList();
+
+        // Puppies
+        List<PuppyListing> puppies = entityManager.createQuery(
+                "select pl from PuppyListing pl where pl.branch.id = :branchId order by pl.createdAt desc", PuppyListing.class)
+                .setParameter("branchId", branchId)
+                .setMaxResults(20)
+                .getResultList();
+        List<AdminBranchDetailResponse.PuppySummary> puppySummaries = puppies.stream()
+                .map(pl -> new AdminBranchDetailResponse.PuppySummary(
+                        pl.getId(), pl.getListingTitle(), pl.getBreedCode(),
+                        pl.getPricePerPuppyVnd(), pl.getStock(), pl.getStatus().name()))
+                .toList();
+
+        // Adoptions
+        List<DogProfile> dogs = entityManager.createQuery(
+                "select dp from DogProfile dp where dp.branch.id = :branchId order by dp.createdAt desc", DogProfile.class)
+                .setParameter("branchId", branchId)
+                .setMaxResults(20)
+                .getResultList();
+        List<AdminBranchDetailResponse.AdoptionSummary> adoptionSummaries = dogs.stream()
+                .map(dp -> new AdminBranchDetailResponse.AdoptionSummary(
+                        dp.getId(), dp.getName(), dp.getBreed(),
+                        dp.getSize() != null ? dp.getSize().name() : "MEDIUM",
+                        dp.getAgeMonths(), "AVAILABLE"))
+                .toList();
+
+        // Recent orders
+        List<Order> orders = entityManager.createQuery(
+                "select o from Order o where o.branch.id = :branchId and o.status != 'CANCELLED' order by o.createdAt desc", Order.class)
+                .setParameter("branchId", branchId)
+                .setMaxResults(15)
+                .getResultList();
+        List<AdminBranchDetailResponse.OrderSummary> orderSummaries = orders.stream()
+                .map(o -> new AdminBranchDetailResponse.OrderSummary(
+                        o.getId(), o.getCustomerName(), o.getTotalAmount(),
+                        o.getStatus(), o.getPaymentStatus(), o.getCreatedAt()))
+                .toList();
+
+        return new AdminBranchDetailResponse(branchResponse, productSummaries, puppySummaries, adoptionSummaries, orderSummaries);
     }
 
     @Transactional
@@ -101,7 +164,64 @@ public class AdminBranchService {
     }
 
     private AdminBranchResponse toResponse(Branch branch) {
-        return new AdminBranchResponse(branch.getId(), branch.getCode(), branch.getName(), branch.getAddress(),
-                branch.getPhone(), branch.getLatitude(), branch.getLongitude());
+        Long branchId = branch.getId();
+
+        // Products stats
+        Object[] productStats = (Object[]) entityManager.createQuery(
+                "select count(p), coalesce(sum(p.stock), 0) from Product p where p.branch.id = :branchId")
+                .setParameter("branchId", branchId)
+                .getSingleResult();
+        int productTypesCount = productStats[0] != null ? ((Number) productStats[0]).intValue() : 0;
+        int productStock = productStats[1] != null ? ((Number) productStats[1]).intValue() : 0;
+
+        // Puppy listings stats
+        Object[] puppyStats = (Object[]) entityManager.createQuery(
+                "select count(pl), coalesce(sum(pl.stock), 0) from PuppyListing pl where pl.branch.id = :branchId and pl.status = com.pawconnect.entity.ListingStatus.AVAILABLE")
+                .setParameter("branchId", branchId)
+                .getSingleResult();
+        int puppyListingsCount = puppyStats[0] != null ? ((Number) puppyStats[0]).intValue() : 0;
+        int puppyStock = puppyStats[1] != null ? ((Number) puppyStats[1]).intValue() : 0;
+
+        int totalStock = productStock + puppyStock;
+
+        // Adoption stats
+        Long adoptionTotal = entityManager.createQuery(
+                "select count(dp) from DogProfile dp where dp.branch.id = :branchId", Long.class)
+                .setParameter("branchId", branchId)
+                .getSingleResult();
+
+        Long adoptionAvailable = entityManager.createQuery(
+                "select count(ap) from AdoptionPost ap where ap.dogProfile.branch.id = :branchId and ap.status = com.pawconnect.entity.AdoptionPostStatus.AVAILABLE", Long.class)
+                .setParameter("branchId", branchId)
+                .getSingleResult();
+
+        // Orders & sales stats
+        Object[] orderStats = (Object[]) entityManager.createQuery(
+                "select count(o), coalesce(sum(o.totalAmount), 0) from Order o where o.branch.id = :branchId and o.status != 'CANCELLED'")
+                .setParameter("branchId", branchId)
+                .getSingleResult();
+        int soldOrdersCount = orderStats[0] != null ? ((Number) orderStats[0]).intValue() : 0;
+        BigDecimal totalRevenue;
+        if (orderStats[1] instanceof BigDecimal bd) {
+            totalRevenue = bd;
+        } else if (orderStats[1] instanceof Number num) {
+            totalRevenue = BigDecimal.valueOf(num.doubleValue());
+        } else {
+            totalRevenue = BigDecimal.ZERO;
+        }
+
+        Object totalItemsSoldObj = entityManager.createQuery(
+                "select coalesce(sum(oi.quantity), 0) from OrderItem oi where oi.order.branch.id = :branchId and oi.order.status != 'CANCELLED'")
+                .setParameter("branchId", branchId)
+                .getSingleResult();
+        int totalItemsSold = totalItemsSoldObj != null ? ((Number) totalItemsSoldObj).intValue() : 0;
+
+        return new AdminBranchResponse(
+                branch.getId(), branch.getCode(), branch.getName(), branch.getAddress(),
+                branch.getPhone(), branch.getLatitude(), branch.getLongitude(),
+                totalStock, productStock, productTypesCount, puppyStock, puppyListingsCount,
+                adoptionTotal != null ? adoptionTotal.intValue() : 0,
+                adoptionAvailable != null ? adoptionAvailable.intValue() : 0,
+                soldOrdersCount, totalItemsSold, totalRevenue);
     }
 }

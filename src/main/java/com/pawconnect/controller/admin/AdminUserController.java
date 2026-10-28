@@ -1,5 +1,6 @@
 package com.pawconnect.controller.admin;
 
+import com.pawconnect.dto.admin.AdminBranchDetailResponse;
 import com.pawconnect.dto.admin.AdminBranchResponse;
 import com.pawconnect.dto.admin.AdminBranchCreateRequest;
 import com.pawconnect.dto.admin.AdminBranchUpdateRequest;
@@ -47,6 +48,11 @@ public class AdminUserController {
     @GetMapping("/branches")
     public List<AdminBranchResponse> branches() {
         return adminBranchService.getAllBranches();
+    }
+
+    @GetMapping("/branches/{branchId}/details")
+    public AdminBranchDetailResponse branchDetails(@PathVariable Long branchId) {
+        return adminBranchService.getBranchDetails(branchId);
     }
 
     @PostMapping("/branches")

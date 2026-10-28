@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="/css/admin.css?v=20261028-no-cart-1">
     <link rel="stylesheet" href="/css/header.css?v=20261028-no-cart-1">
     <link rel="stylesheet" href="/css/admin-users.css">
-    <link rel="stylesheet" href="/css/admin-branches.css">
+    <link rel="stylesheet" href="/css/admin-branches.css?v=20261028-stats-1">
     <link rel="stylesheet" href="/css/mobile-admin-tables.css?v=20261027-1">
 </head>
 <body>
@@ -32,12 +32,107 @@
         <div class="admin-users-table-title"><h2 id="branches-title">Danh sách chi nhánh</h2><span id="branch-total" class="account-total">0 chi nhánh</span></div>
         <div class="admin-users-table-scroll table-responsive mobile-admin-table-container">
             <table class="mobile-admin-table">
-                <thead><tr><th>Mã</th><th>Tên</th><th>Địa chỉ</th><th>Điện thoại</th><th>Thao tác</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>Mã & Tên chi nhánh</th>
+                        <th>Địa chỉ & Hotline</th>
+                        <th>Tồn kho</th>
+                        <th>Nhận nuôi</th>
+                        <th>Đã bán & Doanh thu</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
                 <tbody id="branches-body"></tbody>
             </table>
         </div>
     </section>
 </main>
+
+<!-- DIALOG XEM CHI TIẾT CHI NHÁNH (TỒN KHO, NHẬN NUÔI, ĐÃ BÁN) -->
+<dialog id="branch-details-dialog" class="branch-details-dialog" aria-labelledby="branch-details-title">
+    <div class="branch-details-header">
+        <div>
+            <span class="branch-details-badge" id="details-branch-code">BR_HCM_01</span>
+            <h2 id="branch-details-title">Chi tiết chi nhánh</h2>
+            <p id="details-branch-address" class="branch-details-subtitle"></p>
+        </div>
+        <button id="close-branch-details" class="admin-reload-button" type="button" aria-label="Đóng"><i class="fas fa-xmark"></i> Đóng</button>
+    </div>
+
+    <!-- TÓM TẮT 3 CHỈ SỐ: TỒN KHO, NHẬN NUÔI, ĐÃ BÁN -->
+    <div class="branch-metric-cards">
+        <div class="branch-metric-card stock-card">
+            <div class="metric-icon"><i class="fas fa-boxes-stacked"></i></div>
+            <div class="metric-info">
+                <span class="metric-label">Tồn kho hiện tại</span>
+                <strong class="metric-value" id="modal-metric-stock">0</strong>
+                <small class="metric-desc" id="modal-metric-stock-desc">0 sản phẩm · 0 cún</small>
+            </div>
+        </div>
+
+        <div class="branch-metric-card adoption-card">
+            <div class="metric-icon"><i class="fas fa-paw"></i></div>
+            <div class="metric-info">
+                <span class="metric-label">Cứu hộ & Nhận nuôi</span>
+                <strong class="metric-value" id="modal-metric-adoption">0</strong>
+                <small class="metric-desc" id="modal-metric-adoption-desc">0 đang mở tìm chủ</small>
+            </div>
+        </div>
+
+        <div class="branch-metric-card sales-card">
+            <div class="metric-icon"><i class="fas fa-receipt"></i></div>
+            <div class="metric-info">
+                <span class="metric-label">Đã bán & Doanh thu</span>
+                <strong class="metric-value" id="modal-metric-orders">0 đơn</strong>
+                <small class="metric-desc" id="modal-metric-sales-desc">0 món · 0 ₫</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABS CHI TIẾT DANH MỤC -->
+    <div class="branch-details-tabs">
+        <button type="button" class="branch-tab-btn active" data-tab="tab-inventory"><i class="fas fa-box-open"></i> Hàng tồn kho</button>
+        <button type="button" class="branch-tab-btn" data-tab="tab-puppies"><i class="fas fa-dog"></i> Cún đang bán</button>
+        <button type="button" class="branch-tab-btn" data-tab="tab-adoptions"><i class="fas fa-shield-heart"></i> Hồ sơ nhận nuôi</button>
+        <button type="button" class="branch-tab-btn" data-tab="tab-orders"><i class="fas fa-clipboard-list"></i> Đơn hàng gần đây</button>
+    </div>
+
+    <div class="branch-tab-content active" id="tab-inventory">
+        <div class="table-responsive">
+            <table class="details-mini-table">
+                <thead><tr><th>Sản phẩm</th><th>Phân loại</th><th>Giá bán</th><th>Tồn kho</th></tr></thead>
+                <tbody id="details-products-body"><tr><td colspan="4">Đang tải...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="branch-tab-content" id="tab-puppies" hidden>
+        <div class="table-responsive">
+            <table class="details-mini-table">
+                <thead><tr><th>Tiêu đề</th><th>Mã giống</th><th>Giá cún</th><th>Số lượng</th><th>Trạng thái</th></tr></thead>
+                <tbody id="details-puppies-body"><tr><td colspan="5">Đang tải...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="branch-tab-content" id="tab-adoptions" hidden>
+        <div class="table-responsive">
+            <table class="details-mini-table">
+                <thead><tr><th>Tên bé cún</th><th>Giống</th><th>Kích cỡ</th><th>Tuổi (tháng)</th><th>Trạng thái</th></tr></thead>
+                <tbody id="details-adoptions-body"><tr><td colspan="5">Đang tải...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="branch-tab-content" id="tab-orders" hidden>
+        <div class="table-responsive">
+            <table class="details-mini-table">
+                <thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>Tổng tiền</th><th>Trạng thái</th><th>Ngày tạo</th></tr></thead>
+                <tbody id="details-orders-body"><tr><td colspan="5">Đang tải...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+</dialog>
 
 <dialog id="branch-dialog" class="branch-dialog" aria-labelledby="branch-dialog-title">
     <form id="branch-form">
@@ -54,6 +149,6 @@
     </form>
 </dialog>
 <div th:replace="~{fragments/footer :: footer}"></div>
-<script src="/js/admin-branches.js" defer></script>
+<script src="/js/admin-branches.js?v=20261028-stats-1" defer></script>
 </body>
 </html>

@@ -1,13 +1,264 @@
 .branch-heading-actions, .branch-form-actions { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; }
 .branch-heading-actions[hidden], .admin-users-table-wrap[hidden] { display: none !important; }
 .branch-heading-actions .btn-pill, .branch-form-actions .btn-pill { min-height: 2.8rem; }
-.branch-dialog { box-sizing: border-box; width: min(94vw, 42rem); max-height: 90dvh; overflow-y: auto; border: 1px solid #f0ded3; border-radius: 12px; padding: 1.5rem; box-shadow: 0 20px 45px rgba(45,55,72,.2); }
-.branch-dialog::backdrop { background: rgba(45,55,72,.45); }
+
+/* Dialog tạo/sửa chi nhánh */
+.branch-dialog { box-sizing: border-box; width: min(94vw, 42rem); max-height: 90dvh; overflow-y: auto; border: 1px solid #f0ded3; border-radius: 16px; padding: 1.5rem; box-shadow: 0 20px 45px rgba(45,55,72,.2); }
+.branch-dialog::backdrop, .branch-details-dialog::backdrop { background: rgba(45,55,72,.45); backdrop-filter: blur(2px); }
 .branch-dialog h2 { margin: 0 0 1.25rem; font-size: 1.35rem; }
 .branch-dialog label { display: block; font-weight: 700; }
 .branch-dialog input { box-sizing: border-box; margin-top: .35rem; width: 100%; }
 .branch-form-actions { margin-top: 1.5rem; }
-.branch-row-actions { display: flex; gap: .5rem; white-space: nowrap; }
-.branch-row-actions button { min-height: 2.5rem; padding: .4rem .7rem; border-radius: 8px; border: 1px solid #e27b58; background: #fff; color: #b45d40; font: inherit; font-weight: 700; cursor: pointer; }
+
+/* Hành động trên từng dòng */
+.branch-row-actions { display: flex; gap: .4rem; white-space: nowrap; align-items: center; }
+.branch-row-actions button { min-height: 2.3rem; padding: .35rem .65rem; border-radius: 8px; border: 1px solid #e27b58; background: #fff; color: #b45d40; font: inherit; font-size: 0.86rem; font-weight: 700; cursor: pointer; transition: all .2s ease; display: inline-flex; align-items: center; gap: 0.3rem; }
+.branch-row-actions button:hover { background: #fff5f0; }
+.branch-row-actions .view-branch { border-color: #3182ce; color: #2b6cb0; }
+.branch-row-actions .view-branch:hover { background: #ebf8ff; }
 .branch-row-actions .delete-branch { border-color: #e53e3e; color: #b22b2b; }
-@media (max-width: 390px) { .branch-dialog { padding: 1rem; } }
+.branch-row-actions .delete-branch:hover { background: #fff5f5; }
+
+/* Các ô thông số (Tồn kho, Nhận nuôi, Đã bán) trên bảng */
+.branch-metric-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+.metric-primary {
+    font-weight: 800;
+    font-size: 0.98rem;
+    color: var(--text-main, #2d3748);
+}
+.metric-secondary {
+    font-size: 0.78rem;
+    color: var(--text-muted, #718096);
+    line-height: 1.25;
+}
+.stock-val { color: #dd6b20; }
+.adoption-val { color: #805ad5; }
+.sold-val { color: #38a169; }
+
+.branch-code-badge {
+    display: inline-block;
+    padding: 0.15rem 0.45rem;
+    background: #edf2f7;
+    color: #4a5568;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-family: monospace;
+    margin-top: 0.2rem;
+}
+
+/* ========================================================
+   MODAL CHI TIẾT CHI NHÁNH
+   ======================================================== */
+.branch-details-dialog {
+    box-sizing: border-box;
+    width: min(95vw, 54rem);
+    max-height: 90dvh;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 1.75rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    background: #ffffff;
+}
+
+.branch-details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid #e2e8f0;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+}
+
+.branch-details-header h2 {
+    margin: 0.35rem 0 0.2rem;
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: var(--text-main, #2d3748);
+}
+
+.branch-details-subtitle {
+    margin: 0;
+    font-size: 0.88rem;
+    color: var(--text-muted, #718096);
+}
+
+.branch-details-badge {
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    background: #fed7d7;
+    color: #9b2c2c;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+}
+
+/* Thẻ 3 chỉ số trong modal */
+.branch-metric-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+}
+
+.branch-metric-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.15rem;
+    border-radius: 14px;
+    border: 1px solid #edf2f7;
+    background: #f7fafc;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.branch-metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+}
+
+.branch-metric-card.stock-card {
+    background: linear-gradient(135deg, #fffaf0 0%, #feebc8 100%);
+    border-color: #fbd38d;
+}
+
+.branch-metric-card.adoption-card {
+    background: linear-gradient(135deg, #faf5ff 0%, #e9d8fd 100%);
+    border-color: #d6bcfa;
+}
+
+.branch-metric-card.sales-card {
+    background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+    border-color: #9ae6b4;
+}
+
+.metric-icon {
+    width: 3.2rem;
+    height: 3.2rem;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    background: rgba(255, 255, 255, 0.85);
+    flex-shrink: 0;
+}
+
+.stock-card .metric-icon { color: #dd6b20; }
+.adoption-card .metric-icon { color: #805ad5; }
+.sales-card .metric-icon { color: #38a169; }
+
+.metric-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.metric-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #4a5568;
+    margin-bottom: 0.2rem;
+}
+
+.metric-value {
+    font-size: 1.45rem;
+    font-weight: 900;
+    line-height: 1.2;
+    color: #1a202c;
+}
+
+.metric-desc {
+    font-size: 0.8rem;
+    color: #718096;
+    margin-top: 0.15rem;
+}
+
+/* Tabs trong modal */
+.branch-details-tabs {
+    display: flex;
+    gap: 0.5rem;
+    border-bottom: 2px solid #edf2f7;
+    margin-bottom: 1.25rem;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+}
+
+.branch-tab-btn {
+    border: none;
+    background: none;
+    padding: 0.65rem 1.1rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #718096;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    white-space: nowrap;
+}
+
+.branch-tab-btn:hover {
+    color: #2d3748;
+    background: #edf2f7;
+}
+
+.branch-tab-btn.active {
+    color: #c53030;
+    background: #fff5f5;
+    border: 1px solid #feb2b2;
+}
+
+/* Bảng con trong tab modal */
+.details-mini-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.details-mini-table th {
+    background: #f7fafc;
+    color: #4a5568;
+    font-weight: 700;
+    text-align: left;
+    padding: 0.65rem 0.85rem;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.details-mini-table td {
+    padding: 0.65rem 0.85rem;
+    border-bottom: 1px solid #edf2f7;
+    color: #2d3748;
+}
+
+.details-mini-table tr:hover td {
+    background: #f8fafc;
+}
+
+.status-chip {
+    display: inline-block;
+    padding: 0.2rem 0.55rem;
+    border-radius: 12px;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+.status-chip.chip-success { background: #def7ec; color: #03543f; }
+.status-chip.chip-warning { background: #fef08a; color: #854d0e; }
+.status-chip.chip-danger { background: #fde8e8; color: #9b1c1c; }
+.status-chip.chip-info { background: #e1effe; color: #1e429f; }
+
+@media (max-width: 640px) {
+    .branch-details-dialog { padding: 1rem; }
+    .branch-metric-cards { grid-template-columns: 1fr; }
+}
