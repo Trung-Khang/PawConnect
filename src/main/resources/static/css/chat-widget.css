@@ -269,7 +269,7 @@
     background-size: cover;
     background-position: center 30%;
     background-repeat: no-repeat;
-    background-attachment: local;
+    background-attachment: scroll;
 }
 
 /* Custom scrollbar */
@@ -732,7 +732,7 @@
     background-size: cover;
     background-position: center 30%;
     background-repeat: no-repeat;
-    background-attachment: local;
+    background-attachment: scroll;
 }
 
 .chat-inbox-header-bar {
