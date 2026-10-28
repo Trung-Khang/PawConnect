@@ -16,6 +16,15 @@
 
 .main-header [hidden], .management-sidebar [hidden] { display: none !important; }
 
+html.is-management-page #cartBtn,
+html.is-management-page [data-booking-access],
+body.admin-body #cartBtn,
+body.admin-body [data-booking-access],
+.admin-orders-page ~ * #cartBtn,
+.admin-orders-page ~ * [data-booking-access] {
+    display: none !important;
+}
+
 .icon-btn:hover,
 .icon-btn:focus-visible {
     background: rgba(226, 123, 88, .12);

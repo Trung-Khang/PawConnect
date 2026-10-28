@@ -265,7 +265,23 @@
     white-space: normal !important;
 }
 
+html.is-management-page #cartBtn,
+html.is-management-page [data-booking-access],
+body.admin-body #cartBtn,
+body.admin-body [data-booking-access],
+.admin-orders-page ~ * #cartBtn,
+.admin-orders-page ~ * [data-booking-access] {
+    display: none !important;
+}
         </style>
+        <script>
+            (function() {
+                var p = window.location.pathname;
+                if (p.startsWith('/admin') || p.startsWith('/adoptions/manage')) {
+                    document.documentElement.classList.add('is-management-page');
+                }
+            })();
+        </script>
         <div class="container">
             <div class="brand-cluster">
                 <button id="management-menu-toggle" class="management-menu-toggle" type="button" aria-controls="management-sidebar" aria-expanded="false" title="Mở menu quản lý" hidden>
@@ -290,7 +306,7 @@
                 <button class="icon-btn" id="headerSearchBtn" type="button" title="Tìm kiếm" aria-label="Tìm kiếm">
                     <i class="fas fa-search"></i>
                 </button>
-                <button class="icon-btn" id="cartBtn" type="button" title="Giỏ hàng" aria-label="Mở giỏ hàng">
+                <button class="icon-btn" id="cartBtn" type="button" title="Giỏ hàng" aria-label="Mở giỏ hàng" data-customer-only>
                     <i class="fas fa-shopping-cart"></i>
                     <span class="cart-badge" id="cartCount">0</span>
                 </button>
@@ -309,7 +325,7 @@
                         </div>
                     </div>
                 </div>
-                <a href="/service" class="btn-pill" data-booking-access>Đặt lịch ngay</a>
+                <a href="/service" class="btn-pill" data-booking-access data-customer-only>Đặt lịch ngay</a>
                 <a class="user-pill account-profile-link" id="account-summary" href="/profile" title="Mở hồ sơ tài khoản" hidden>
                     <i id="account-icon" class="fas fa-user-circle"></i>
                     <img id="account-avatar" class="header-avatar" alt="Ảnh đại diện" hidden>
@@ -341,11 +357,11 @@
             </div>
         </aside>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-        <link rel="stylesheet" href="/css/header.css?v=20261027-mobile-1">
+        <link rel="stylesheet" href="/css/header.css?v=20261028-no-admin-cart-1">
         <link rel="stylesheet" href="/css/chat-widget.css?v=20261017-8">
         <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js" defer></script>
         <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js" defer></script>
-        <script src="/js/header.js?v=20261028-main-1" defer></script>
+        <script src="/js/header.js?v=20261028-no-admin-cart-1" defer></script>
         <script src="/js/chat-widget.js?v=20261017-7" defer></script>
     </header>
 </body>
