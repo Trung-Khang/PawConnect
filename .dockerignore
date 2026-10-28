@@ -1,10 +1,13 @@
 target/
 .git/
+.gemini/
 .vscode/
 .idea/
+docs/
+data-pipeline/
+apache-maven-3.9.6/
+maven.zip
 *.ps1
 *.md
 *.pdf
-apache-maven-3.9.6/
-maven.zip
 *.log

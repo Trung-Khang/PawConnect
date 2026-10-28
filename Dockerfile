@@ -1,24 +1,27 @@
-# Multi-stage Dockerfile for PawConnect (Spring Boot 3.4.4 + Java 17)
-FROM maven:3.9.6-eclipse-temurin-17-alpine AS builder
+# ==========================================
+# Stage 1: Build JAR using Maven and Java 17
+# ==========================================
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
 
-# Cache dependencies
+# Cache Maven dependencies
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
+RUN mvn dependency:go-offline -B || true
 
-# Build application
+# Copy source code and package
 COPY src ./src
-RUN mvn clean package -DskipTests
+RUN mvn clean package -DskipTests -B
 
-# Runtime stage
-FROM eclipse-temurin:17-jre-alpine
+# ==========================================
+# Stage 2: Minimal Runtime Image
+# ==========================================
+FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 
-# Copy executable jar
-COPY --from=builder /app/target/*.jar app.jar
+# Copy executable jar from build stage
+COPY --from=build /app/target/*.jar app.jar
 
-# Railway injects $PORT dynamically; default is 8080
 ENV PORT=8080
-EXPOSE ${PORT}
+EXPOSE 8080
 
-ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-Dserver.port=${PORT}", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "java -Djava.security.egd=file:/dev/./urandom -jar app.jar"]
