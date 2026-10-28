@@ -7,6 +7,7 @@ import com.pawconnect.entity.Cart;
 import com.pawconnect.entity.CartItem;
 import com.pawconnect.entity.ListingStatus;
 import com.pawconnect.entity.Order;
+import com.pawconnect.entity.OrderCancellationRequest;
 import com.pawconnect.entity.OrderItem;
 import com.pawconnect.entity.OrderStatusEvent;
 import com.pawconnect.entity.Product;
@@ -17,6 +18,7 @@ import com.pawconnect.exception.ResourceNotFoundException;
 import com.pawconnect.repository.BranchRepository;
 import com.pawconnect.repository.CartRepository;
 import com.pawconnect.repository.OrderRepository;
+import com.pawconnect.repository.OrderCancellationRequestRepository;
 import com.pawconnect.repository.OrderStatusEventRepository;
 import com.pawconnect.repository.ProductRepository;
 import com.pawconnect.repository.PuppyListingRepository;
@@ -27,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -36,12 +39,19 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
+    private static final String PAYMENT_REPORTED = "PAYMENT_REPORTED";
+    private static final String CUSTOMER_CONFIRMED = "CUSTOMER_CONFIRMED";
     private static final String PAID = "PAID";
+    private static final String PROCESSING = "PROCESSING";
+    private static final String PENDING = "PENDING";
+    private static final String APPROVED = "APPROVED";
+    private static final String REJECTED = "REJECTED";
     private static final String REFUNDED = "REFUNDED";
     private static final String CANCELLED = "CANCELLED";
     private static final Map<String, String> NEXT_STATUS = Map.of(
-            PAID, "CONFIRMED",
-            "CONFIRMED", "PREPARING",
+            PROCESSING, "SHIPPING",
+            PAID, "SHIPPING",
+            "CONFIRMED", "SHIPPING",
             "PREPARING", "SHIPPING",
             "SHIPPING", "COMPLETED");
 
@@ -52,6 +62,7 @@ public class OrderServiceImpl implements OrderService {
     private final CartRepository cartRepository;
     private final UserRepository userRepository;
     private final OrderStatusEventRepository statusEventRepository;
+    private final OrderCancellationRequestRepository cancellationRequestRepository;
     private final CartService cartService;
 
     @Override
@@ -91,9 +102,9 @@ public class OrderServiceImpl implements OrderService {
         Order order = Order.builder()
                 .userId(userId)
                 .branch(branch)
-                .status(PAID)
+                .status(PAYMENT_REPORTED)
                 .paymentMethod("SIMULATED")
-                .paymentStatus(PAID)
+                .paymentStatus(CUSTOMER_CONFIRMED)
                 .idempotencyKey(request.getIdempotencyKey())
                 .customerName(buyer.getFullName())
                 .branchNameSnapshot(branch.getName())
@@ -147,7 +158,7 @@ public class OrderServiceImpl implements OrderService {
         }
         order.setTotalAmount(total);
         orderRepository.saveAndFlush(order);
-        recordEvent(order, null, PAID, userId, "Xác nhận thanh toán mô phỏng");
+        recordEvent(order, null, PAYMENT_REPORTED, userId, "Khách xác nhận thanh toán");
         if (request.getItemIds() != null && !request.getItemIds().isEmpty()) {
             cartService.removeItems(cart, itemsToOrder);
         } else {
@@ -183,33 +194,107 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public OrderResponse cancelMyOrder(Long orderId) {
+    public OrderResponse cancelMyOrder(Long orderId, String reason) {
+        if (!SecurityUtils.hasRole("CUSTOMER")) {
+            throw new AccessDeniedException("Chỉ khách hàng được hủy đơn của mình.");
+        }
         Order order = orderRepository.findByIdForUpdate(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn hàng."));
         if (!Objects.equals(order.getUserId(), SecurityUtils.getCurrentUserId())) {
             throw new AccessDeniedException("Khách chỉ được hủy đơn của chính mình.");
         }
-        return cancelBeforeConfirmation(order, "Khách hủy trước khi chi nhánh xác nhận");
+        if (!PAYMENT_REPORTED.equals(order.getStatus())) {
+            throw new BusinessException(isProcessing(order)
+                    ? "Đơn đang xử lý: hãy gửi yêu cầu hủy để chi nhánh xem xét."
+                    : "Không thể hủy trực tiếp đơn đã bàn giao vận chuyển hoặc đã kết thúc.");
+        }
+        return cancelEligibleOrder(order, requiredReason(reason, "Cần ghi lý do hủy đơn."), false);
+    }
+
+    @Override
+    @Transactional
+    public OrderResponse requestCancellation(Long orderId, String reason) {
+        if (!SecurityUtils.hasRole("CUSTOMER")) {
+            throw new AccessDeniedException("Chỉ khách hàng được yêu cầu hủy đơn của mình.");
+        }
+        Order order = orderRepository.findByIdForUpdate(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn hàng."));
+        if (!Objects.equals(order.getUserId(), SecurityUtils.getCurrentUserId())) {
+            throw new AccessDeniedException("Khách chỉ được yêu cầu hủy đơn của chính mình.");
+        }
+        if (!isProcessing(order) || !PAID.equals(order.getPaymentStatus())) {
+            throw new BusinessException("Chỉ được yêu cầu hủy khi đơn đang xử lý và chưa bàn giao vận chuyển.");
+        }
+        if (pendingCancellation(order).isPresent()) {
+            throw new BusinessException("Đơn đã có yêu cầu hủy đang chờ chi nhánh trả lời.");
+        }
+        OrderCancellationRequest request = new OrderCancellationRequest();
+        request.setOrder(order);
+        request.setRequestedBy(SecurityUtils.getCurrentUserId());
+        request.setReason(requiredReason(reason, "Cần ghi lý do yêu cầu hủy."));
+        request.setStatus(PENDING);
+        cancellationRequestRepository.save(request);
+        return mapToResponse(order);
+    }
+
+    @Override
+    @Transactional
+    public OrderResponse resolveCancellation(Long orderId, boolean approve, String reason) {
+        requireStaffRole();
+        Order order = orderRepository.findByIdForUpdate(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn hàng."));
+        requireStaffBranchAccess(order);
+        if (!isProcessing(order) || !PAID.equals(order.getPaymentStatus())) {
+            throw new BusinessException("Đơn không còn ở giai đoạn có thể duyệt hủy.");
+        }
+        OrderCancellationRequest request = pendingCancellation(order)
+                .orElseThrow(() -> new BusinessException("Không có yêu cầu hủy đang chờ duyệt."));
+        String decisionReason = requiredReason(reason, "Cần ghi lý do chấp nhận hoặc từ chối yêu cầu hủy.");
+        request.setStatus(approve ? APPROVED : REJECTED);
+        request.setDecisionReason(decisionReason);
+        request.setResolvedBy(SecurityUtils.getCurrentUserId());
+        request.setResolvedAt(Instant.now());
+        cancellationRequestRepository.save(request);
+        if (approve) return cancelEligibleOrder(order, decisionReason, true);
+        return mapToResponse(order);
+    }
+
+    @Override
+    @Transactional
+    public OrderResponse confirmPayment(Long orderId) {
+        if (!SecurityUtils.hasRole("ADMIN") && !SecurityUtils.hasRole("BRANCH_MANAGER")) {
+            throw new AccessDeniedException("Chỉ nhân viên được xác nhận đã nhận thanh toán.");
+        }
+        Order order = orderRepository.findByIdForUpdate(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn hàng."));
+        requireStaffBranchAccess(order);
+        if (!PAYMENT_REPORTED.equals(order.getStatus())
+                || !CUSTOMER_CONFIRMED.equals(order.getPaymentStatus())) {
+            throw new BusinessException("Đơn không còn chờ xác nhận thanh toán.");
+        }
+        order.setStatus(PROCESSING);
+        order.setPaymentStatus(PAID);
+        orderRepository.save(order);
+        recordEvent(order, PAYMENT_REPORTED, PROCESSING, SecurityUtils.getCurrentUserId(),
+                "Chi nhánh xác nhận đã nhận thanh toán và tiếp nhận xử lý đơn");
+        return mapToResponse(order);
     }
 
     @Override
     @Transactional
     public OrderResponse updateOrderStatus(Long orderId, String status, String reason) {
-        if (!SecurityUtils.hasRole("ADMIN") && !SecurityUtils.hasRole("BRANCH_MANAGER")) {
-            throw new AccessDeniedException("Chỉ quản lý được cập nhật trạng thái đơn.");
-        }
+        requireStaffRole();
         Order order = orderRepository.findByIdForUpdate(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn hàng."));
-        if (SecurityUtils.hasRole("BRANCH_MANAGER")
-                && !Objects.equals(SecurityUtils.getCurrentUserBranchId(), order.getBranch().getId())) {
-            throw new AccessDeniedException("Nhân viên chỉ được xử lý đơn của chi nhánh mình.");
-        }
+        requireStaffBranchAccess(order);
         if (CANCELLED.equals(status)) {
-            if (reason == null || reason.isBlank()) throw new BusinessException("Cần ghi lý do hủy đơn.");
-            return cancelBeforeConfirmation(order, reason.trim());
+            return cancelEligibleOrder(order, requiredReason(reason, "Cần ghi lý do hủy đơn."), false);
         }
         if (!Objects.equals(NEXT_STATUS.get(order.getStatus()), status)) {
             throw new BusinessException("Không thể chuyển trạng thái đơn từ " + order.getStatus() + " sang " + status + ".");
+        }
+        if (pendingCancellation(order).isPresent()) {
+            throw new BusinessException("Phải duyệt hoặc từ chối yêu cầu hủy trước khi bàn giao vận chuyển.");
         }
         String before = order.getStatus();
         order.setStatus(status);
@@ -219,9 +304,15 @@ public class OrderServiceImpl implements OrderService {
         return mapToResponse(order);
     }
 
-    private OrderResponse cancelBeforeConfirmation(Order order, String reason) {
-        if (!PAID.equals(order.getStatus()) || !PAID.equals(order.getPaymentStatus())) {
-            throw new BusinessException("Chỉ có thể hủy và hoàn tiền trước khi đơn được xác nhận.");
+    private OrderResponse cancelEligibleOrder(Order order, String reason, boolean approvingRequest) {
+        boolean received = isProcessing(order) && PAID.equals(order.getPaymentStatus());
+        boolean reported = PAYMENT_REPORTED.equals(order.getStatus())
+                && CUSTOMER_CONFIRMED.equals(order.getPaymentStatus());
+        if (!received && !reported) {
+            throw new BusinessException("Chỉ có thể hủy trước khi đơn bàn giao vận chuyển.");
+        }
+        if (!approvingRequest && pendingCancellation(order).isPresent()) {
+            throw new BusinessException("Phải duyệt hoặc từ chối yêu cầu hủy đang chờ trước khi hủy đơn.");
         }
         for (OrderItem item : order.getOrderItems()) {
             int updated = item.getProduct() != null
@@ -229,11 +320,40 @@ public class OrderServiceImpl implements OrderService {
                     : puppyListingRepository.restoreStock(item.getPuppyListing().getId(), item.getQuantity());
             if (updated != 1) throw new BusinessException("Không thể khôi phục tồn kho để hủy đơn.");
         }
+        String before = order.getStatus();
         order.setStatus(CANCELLED);
-        order.setPaymentStatus(REFUNDED);
+        order.setPaymentStatus(received ? REFUNDED : CANCELLED);
         orderRepository.save(order);
-        recordEvent(order, PAID, CANCELLED, SecurityUtils.getCurrentUserId(), reason);
+        recordEvent(order, before, CANCELLED, SecurityUtils.getCurrentUserId(), reason);
         return mapToResponse(order);
+    }
+
+    private boolean isProcessing(Order order) {
+        return List.of(PROCESSING, PAID, "CONFIRMED", "PREPARING").contains(order.getStatus());
+    }
+
+    private java.util.Optional<OrderCancellationRequest> pendingCancellation(Order order) {
+        return cancellationRequestRepository.findFirstByOrder_IdAndStatusOrderByRequestedAtDescIdDesc(order.getId(), PENDING);
+    }
+
+    private String requiredReason(String reason, String error) {
+        if (reason == null || reason.isBlank() || reason.trim().length() > 500) {
+            throw new BusinessException(error);
+        }
+        return reason.trim();
+    }
+
+    private void requireStaffRole() {
+        if (!SecurityUtils.hasRole("ADMIN") && !SecurityUtils.hasRole("BRANCH_MANAGER")) {
+            throw new AccessDeniedException("Chỉ nhân viên được xử lý đơn hàng.");
+        }
+    }
+
+    private void requireStaffBranchAccess(Order order) {
+        if (SecurityUtils.hasRole("BRANCH_MANAGER")
+                && !Objects.equals(SecurityUtils.getCurrentUserBranchId(), order.getBranch().getId())) {
+            throw new AccessDeniedException("Nhân viên chỉ được xử lý đơn của chi nhánh mình.");
+        }
     }
 
     private void requireAccess(Order order) {
@@ -273,6 +393,28 @@ public class OrderServiceImpl implements OrderService {
         response.setDeliveryAddress(order.getDeliveryAddress());
         response.setTotalAmount(order.getTotalAmount());
         response.setCreatedAt(order.getCreatedAt());
+        response.setStatusHistory(statusEventRepository.findByOrder_IdOrderByCreatedAtAscIdAsc(order.getId())
+                .stream().map(event -> {
+                    OrderResponse.StatusEventResponse history = new OrderResponse.StatusEventResponse();
+                    history.setStatus(event.getToStatus());
+                    history.setPaymentStatus(event.getPaymentStatus());
+                    history.setReason(event.getReason());
+                    history.setCreatedAt(event.getCreatedAt());
+                    return history;
+                }).toList());
+        response.setCancellationRequests(cancellationRequestRepository.findByOrder_IdOrderByRequestedAtAscIdAsc(order.getId())
+                .stream().map(request -> {
+                    OrderResponse.CancellationRequestResponse item = new OrderResponse.CancellationRequestResponse();
+                    item.setId(request.getId());
+                    item.setStatus(request.getStatus());
+                    item.setReason(request.getReason());
+                    item.setRequestedBy(request.getRequestedBy());
+                    item.setRequestedAt(request.getRequestedAt());
+                    item.setDecisionReason(request.getDecisionReason());
+                    item.setResolvedBy(request.getResolvedBy());
+                    item.setResolvedAt(request.getResolvedAt());
+                    return item;
+                }).toList());
         if (order.getOrderItems() != null) {
             response.setItems(order.getOrderItems().stream().map(item -> {
                 OrderResponse.OrderItemResponse itemResponse = new OrderResponse.OrderItemResponse();

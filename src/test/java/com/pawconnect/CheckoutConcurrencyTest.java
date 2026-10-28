@@ -97,13 +97,98 @@ class CheckoutConcurrencyTest {
         place(buyer, branch.getId(), "staff-race-confirmation-01");
         SecurityContextHolder.clearContext();
         Long orderId = orderRepository.findByUserId(buyer.getId()).get(0).getId();
+        authenticate(firstStaff);
+        orders.confirmPayment(orderId);
+        SecurityContextHolder.clearContext();
 
         int successful = race(
                 () -> advance(firstStaff, orderId),
                 () -> advance(secondStaff, orderId));
         assertEquals(1, successful);
-        assertEquals("CONFIRMED", orderRepository.findById(orderId).orElseThrow().getStatus());
+        assertEquals("SHIPPING", orderRepository.findById(orderId).orElseThrow().getStatus());
+        assertEquals(3, jdbc.queryForObject("SELECT COUNT(*) FROM order_status_events WHERE order_id = ?", Integer.class, orderId));
+    }
+
+    @Test
+    void twoStaffMembersCannotConfirmTheSamePaymentTwice() throws Exception {
+        Branch branch = branches.save(Branch.builder().name("Payment race branch").address("Payment race address").build());
+        Product product = products.save(Product.builder().name("Payment race item").price(BigDecimal.TEN)
+                .stock(1).branch(branch).build());
+        CustomUserDetails buyer = customer("payment-race-buyer@test.local");
+        CustomUserDetails firstStaff = staff("payment-race-first@test.local", branch.getId());
+        CustomUserDetails secondStaff = staff("payment-race-second@test.local", branch.getId());
+        authenticate(buyer);
+        carts.addItem(product.getId(), null, 1);
+        place(buyer, branch.getId(), "payment-race-confirm-0001");
+        SecurityContextHolder.clearContext();
+        Long orderId = orderRepository.findByUserId(buyer.getId()).get(0).getId();
+
+        int successful = race(
+                () -> confirmPayment(firstStaff, orderId),
+                () -> confirmPayment(secondStaff, orderId));
+        assertEquals(1, successful);
+        assertEquals("PROCESSING", orderRepository.findById(orderId).orElseThrow().getStatus());
         assertEquals(2, jdbc.queryForObject("SELECT COUNT(*) FROM order_status_events WHERE order_id = ?", Integer.class, orderId));
+    }
+
+    @Test
+    void cancellationRequestAndHandoverCannotBothWin() throws Exception {
+        Branch branch = branches.save(Branch.builder().name("Handover race branch").address("Address").build());
+        Product product = products.save(Product.builder().name("Handover race item").price(BigDecimal.TEN)
+                .stock(1).branch(branch).build());
+        CustomUserDetails buyer = customer("handover-race-buyer@test.local");
+        CustomUserDetails manager = staff("handover-race-staff@test.local", branch.getId());
+        authenticate(buyer);
+        carts.addItem(product.getId(), null, 1);
+        place(buyer, branch.getId(), "handover-race-confirm-001");
+        SecurityContextHolder.clearContext();
+        Long orderId = orderRepository.findByUserId(buyer.getId()).get(0).getId();
+        authenticate(manager);
+        orders.confirmPayment(orderId);
+        SecurityContextHolder.clearContext();
+
+        int successful = race(
+                () -> requestCancel(buyer, orderId),
+                () -> advance(manager, orderId));
+        assertEquals(1, successful);
+        var order = orderRepository.findById(orderId).orElseThrow();
+        assertEquals("PAID", order.getPaymentStatus());
+        assertEquals(0, stock(product.getId()));
+        if ("SHIPPING".equals(order.getStatus())) {
+            assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM order_cancellation_requests WHERE order_id = ?", Integer.class, orderId));
+        } else {
+            assertEquals("PROCESSING", order.getStatus());
+            assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM order_cancellation_requests WHERE order_id = ? AND status = 'PENDING'", Integer.class, orderId));
+        }
+    }
+
+    @Test
+    void twoStaffMembersCannotApproveTheSameRefundTwice() throws Exception {
+        Branch branch = branches.save(Branch.builder().name("Refund race branch").address("Address").build());
+        Product product = products.save(Product.builder().name("Refund race item").price(BigDecimal.TEN)
+                .stock(1).branch(branch).build());
+        CustomUserDetails buyer = customer("refund-race-buyer@test.local");
+        CustomUserDetails firstStaff = staff("refund-race-first@test.local", branch.getId());
+        CustomUserDetails secondStaff = staff("refund-race-second@test.local", branch.getId());
+        authenticate(buyer);
+        carts.addItem(product.getId(), null, 1);
+        place(buyer, branch.getId(), "refund-race-confirm-0001");
+        SecurityContextHolder.clearContext();
+        Long orderId = orderRepository.findByUserId(buyer.getId()).get(0).getId();
+        authenticate(firstStaff);
+        orders.confirmPayment(orderId);
+        SecurityContextHolder.clearContext();
+        authenticate(buyer);
+        orders.requestCancellation(orderId, "Không mua nữa");
+        SecurityContextHolder.clearContext();
+
+        int successful = race(
+                () -> approveCancel(firstStaff, orderId),
+                () -> approveCancel(secondStaff, orderId));
+        assertEquals(1, successful);
+        assertEquals("CANCELLED", orderRepository.findById(orderId).orElseThrow().getStatus());
+        assertEquals(1, stock(product.getId()));
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM order_cancellation_requests WHERE order_id = ? AND status = 'APPROVED'", Integer.class, orderId));
     }
 
     private int race(Callable<Boolean> first, Callable<Boolean> second) throws Exception {
@@ -144,9 +229,45 @@ class CheckoutConcurrencyTest {
     private boolean advance(CustomUserDetails staff, Long orderId) {
         authenticate(staff);
         try {
-            orders.updateOrderStatus(orderId, "CONFIRMED", "Tiếp nhận đơn");
+            orders.updateOrderStatus(orderId, "SHIPPING", "Bàn giao vận chuyển");
             return true;
         } catch (RuntimeException expectedForLosingTransition) {
+            return false;
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
+
+    private boolean confirmPayment(CustomUserDetails staff, Long orderId) {
+        authenticate(staff);
+        try {
+            orders.confirmPayment(orderId);
+            return true;
+        } catch (RuntimeException expectedForLosingConfirmation) {
+            return false;
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
+
+    private boolean requestCancel(CustomUserDetails buyer, Long orderId) {
+        authenticate(buyer);
+        try {
+            orders.requestCancellation(orderId, "Đổi ý");
+            return true;
+        } catch (RuntimeException expectedForLosingRequest) {
+            return false;
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
+
+    private boolean approveCancel(CustomUserDetails staff, Long orderId) {
+        authenticate(staff);
+        try {
+            orders.resolveCancellation(orderId, true, "Chấp thuận");
+            return true;
+        } catch (RuntimeException expectedForLosingApproval) {
             return false;
         } finally {
             SecurityContextHolder.clearContext();

@@ -6,7 +6,10 @@
 
     document.addEventListener('DOMContentLoaded', async () => {
         if (!token) return redirectToLogin();
-        document.getElementById('checkout-form').addEventListener('submit', submitOrder);
+        document.getElementById('checkout-form').addEventListener('submit', openPaymentDialog);
+        document.getElementById('checkout-confirm-form').addEventListener('submit', submitOrder);
+        document.getElementById('checkout-confirm-back').addEventListener('click', () =>
+            document.getElementById('checkout-confirm-dialog').close());
         try {
             const userResponse = await fetch('/api/auth/me', { headers: authHeaders() });
             if (userResponse.status === 401) return redirectToLogin();
@@ -82,12 +85,23 @@
         } catch (error) { showNotice(error.message, true); }
     }
 
+    function openPaymentDialog(event) {
+        event.preventDefault();
+        if (!branchId || !confirmationKey || !items.length) return;
+        document.getElementById('confirm-branch').textContent = document.getElementById('checkout-branch').value;
+        document.getElementById('confirm-recipient').textContent = document.getElementById('recipient-name').value.trim();
+        document.getElementById('confirm-amount').textContent = document.getElementById('checkout-total').textContent;
+        document.getElementById('checkout-confirm-dialog').showModal();
+    }
+
     async function submitOrder(event) {
         event.preventDefault();
         if (!branchId || !confirmationKey || !items.length) return;
         const button = document.getElementById('confirm-order');
+        const dialogButton = document.getElementById('checkout-confirm-submit');
         button.disabled = true;
-        showNotice('Đang xác nhận đơn hàng…');
+        dialogButton.disabled = true;
+        showNotice('Đang ghi nhận xác nhận thanh toán của bạn…');
         try {
             const response = await fetch('/api/orders', {
                 method: 'POST',
@@ -108,8 +122,10 @@
             sessionStorage.removeItem('pawconnect.selectedCartItemIds');
             window.location.assign(`/orders/${order.id}/receipt`);
         } catch (error) {
+            document.getElementById('checkout-confirm-dialog').close();
             showNotice(error.message, true);
             button.disabled = false;
+            dialogButton.disabled = false;
         }
     }
 

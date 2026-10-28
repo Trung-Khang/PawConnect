@@ -11,6 +11,7 @@ import com.pawconnect.entity.Branch;
 import com.pawconnect.entity.Order;
 import com.pawconnect.repository.BranchRepository;
 import com.pawconnect.repository.OrderRepository;
+import com.pawconnect.repository.OrderCancellationRequestRepository;
 import com.pawconnect.repository.OrderStatusEventRepository;
 import com.pawconnect.repository.ProductRepository;
 import com.pawconnect.repository.PuppyListingRepository;
@@ -37,6 +38,7 @@ class OrderServiceAuthorizationTest {
     @Mock private BranchRepository branchRepository;
     @Mock private CartService cartService;
     @Mock private OrderStatusEventRepository statusEventRepository;
+    @Mock private OrderCancellationRequestRepository cancellationRequestRepository;
     @InjectMocks private OrderServiceImpl service;
 
     @AfterEach
@@ -59,7 +61,7 @@ class OrderServiceAuthorizationTest {
         authenticateManager(10L);
         when(orderRepository.findByIdForUpdate(42L)).thenReturn(Optional.of(orderForBranch(11L)));
 
-        assertThrows(AccessDeniedException.class, () -> service.updateOrderStatus(42L, "CONFIRMED", null));
+        assertThrows(AccessDeniedException.class, () -> service.updateOrderStatus(42L, "SHIPPING", null));
 
         verify(orderRepository, never()).save(any(Order.class));
     }
@@ -70,7 +72,7 @@ class OrderServiceAuthorizationTest {
         Order order = orderForBranch(10L);
         when(orderRepository.findByIdForUpdate(42L)).thenReturn(Optional.of(order));
 
-        assertDoesNotThrow(() -> service.updateOrderStatus(42L, "CONFIRMED", null));
+        assertDoesNotThrow(() -> service.updateOrderStatus(42L, "SHIPPING", null));
         verify(orderRepository).save(order);
     }
 

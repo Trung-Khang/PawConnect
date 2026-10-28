@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/shop.css">
     <link rel="stylesheet" href="/css/header.css?v=20261026-5">
-    <link rel="stylesheet" href="/css/commerce.css">
+    <link rel="stylesheet" href="/css/commerce.css?v=20261026-2">
 </head>
 <body class="commerce-screen">
 <div th:replace="~{fragments/header :: header}"></div>
@@ -36,13 +36,26 @@
                 <label class="form-label" for="delivery-address">Địa chỉ nhận hàng</label>
                 <textarea id="delivery-address" name="deliveryAddress" class="form-control mb-3" maxlength="500" rows="3" required autocomplete="street-address"></textarea>
                 <label class="form-label" for="payment-method">Phương thức thanh toán</label>
-                <input id="payment-method" class="form-control mb-4" value="Thanh toán trực tuyến" readonly>
-                <button id="confirm-order" class="btn-pill commerce-submit" type="submit" disabled>Xác nhận thanh toán</button>
+                <input id="payment-method" class="form-control mb-4" value="Thanh toán xác nhận bởi chi nhánh" readonly>
+                <button id="confirm-order" class="btn-pill commerce-submit" type="submit" disabled>Kiểm tra và xác nhận thanh toán</button>
             </form>
         </section>
     </div>
 </main>
+<dialog id="checkout-confirm-dialog" class="commerce-confirm-dialog" aria-labelledby="checkout-confirm-title">
+    <form id="checkout-confirm-form" class="p-3 p-sm-4">
+        <h2 id="checkout-confirm-title" class="h4 mb-3">Xác nhận thanh toán</h2>
+        <p class="mb-2">Chi nhánh: <strong id="confirm-branch"></strong></p>
+        <p class="mb-2">Người nhận: <strong id="confirm-recipient"></strong></p>
+        <p class="mb-3">Số tiền: <strong id="confirm-amount"></strong></p>
+        <p class="text-muted small">Sau khi bạn xác nhận, chi nhánh sẽ kiểm tra và xác nhận đã nhận thanh toán trước khi xử lý đơn.</p>
+        <div class="d-flex flex-column-reverse flex-sm-row justify-content-end gap-2 mt-4">
+            <button id="checkout-confirm-back" class="btn btn-outline-secondary" type="button">Quay lại</button>
+            <button id="checkout-confirm-submit" class="btn btn-primary" type="submit">Tôi xác nhận thanh toán</button>
+        </div>
+    </form>
+</dialog>
 <div th:replace="~{fragments/footer :: footer}"></div>
-<script src="/js/checkout.js?v=20261026-1" defer></script>
+<script src="/js/checkout.js?v=20261026-2" defer></script>
 </body>
 </html>

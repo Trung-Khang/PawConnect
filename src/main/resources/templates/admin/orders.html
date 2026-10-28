@@ -10,7 +10,8 @@
     <link rel="stylesheet" href="/css/admin.css">
     <link rel="stylesheet" href="/css/shop.css">
     <link rel="stylesheet" href="/css/header.css?v=20261026-5">
-    <link rel="stylesheet" href="/css/admin-orders.css">
+    <link rel="stylesheet" href="/css/admin-orders.css?v=20261026-2">
+    <link rel="stylesheet" href="/css/order-progress.css?v=20261026-2">
 </head>
 <body>
 <div th:replace="~{fragments/header :: header}"></div>
@@ -20,18 +21,26 @@
         <div>
             <p class="orders-kicker">Vận hành cửa hàng</p>
             <h1>Quản lý đơn hàng</h1>
-            <p class="orders-subtitle">Theo dõi và cập nhật trạng thái đơn hàng thuộc phạm vi được phân quyền.</p>
+            <p class="orders-subtitle">Chi nhánh xác nhận thanh toán và nhận xử lý trong một bước. Yêu cầu hủy của khách phải được trả lời trước khi bàn giao vận chuyển.</p>
         </div>
         <button id="reload-orders" class="btn btn-secondary" type="button">Tải lại</button>
     </header>
-    <p id="orders-notice" class="orders-notice" hidden></p>
-    <section class="table-container table-responsive">
-        <table class="data-table">
-            <thead><tr><th>Mã đơn</th><th>Thời gian</th><th>Chi nhánh</th><th>Sản phẩm</th><th>Tổng tiền</th><th>Thanh toán</th><th>Trạng thái / thao tác</th></tr></thead>
-            <tbody id="orders-table-body"></tbody>
-        </table>
-    </section>
+    <p id="orders-notice" class="orders-notice" role="status" hidden></p>
+    <section id="managed-orders" class="orders-card-list" aria-label="Danh sách đơn hàng" aria-live="polite">Đang tải đơn hàng…</section>
 </main>
-<script src="/js/admin-orders.js"></script>
+<dialog id="order-action-dialog" class="order-action-dialog" aria-labelledby="order-action-title">
+    <form id="order-action-form" class="p-3 p-sm-4">
+        <h2 id="order-action-title" class="h5 mb-2"></h2>
+        <p id="order-action-description" class="mb-3"></p>
+        <label for="order-action-reason" class="form-label">Ghi chú cho khách hàng <span id="order-reason-required" hidden>(bắt buộc)</span></label>
+        <textarea id="order-action-reason" class="form-control" rows="3" maxlength="500" placeholder="Ghi chú sẽ hiển thị trong lịch sử đơn hàng"></textarea>
+        <div class="d-flex flex-column-reverse flex-sm-row justify-content-end gap-2 mt-4">
+            <button id="order-action-back" type="button" class="btn btn-outline-secondary">Quay lại</button>
+            <button id="order-action-submit" type="submit" class="btn btn-primary">Xác nhận</button>
+        </div>
+    </form>
+</dialog>
+<script src="/js/order-progress.js?v=20261027-1" defer></script>
+<script src="/js/admin-orders.js?v=20261027-1" defer></script>
 </body>
 </html>

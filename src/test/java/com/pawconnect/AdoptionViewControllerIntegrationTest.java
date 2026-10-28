@@ -58,7 +58,8 @@ class AdoptionViewControllerIntegrationTest {
         mockMvc.perform(get("/admin/orders"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/orders"))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"orders-table-body\"")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"managed-orders\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"order-action-dialog\"")));
     }
 
     @Test
