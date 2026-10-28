@@ -38,7 +38,7 @@ public class ViewController {
 
     @GetMapping("/admin/branches")
     public String adminBranchesPage() {
-        return "redirect:/admin/products";
+        return "admin/branches";
     }
 
     @GetMapping("/checkout")
