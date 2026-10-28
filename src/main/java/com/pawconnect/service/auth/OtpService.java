@@ -62,9 +62,17 @@ public class OtpService {
         otp.setExpiresAt(now.plus(ttl));
         otp.setLastSentAt(now);
         otpRepository.save(otp);
-        boolean sent = mailService.send(user.getEmail(), user.getFullName(), purpose, code);
+        OtpMailService.DeliveryResult delivery = mailService.sendWithResult(user.getEmail(), user.getFullName(), purpose, code);
+        boolean sent;
+        String demoCode = null;
+        if (delivery != null) {
+            sent = delivery.sent();
+            demoCode = delivery.demoCode();
+        } else {
+            sent = mailService.send(user.getEmail(), user.getFullName(), purpose, code);
+        }
         if (!sent) otp.setLastSentAt(now.minus(resendCooldown));
-        return new OtpDispatch(sent, 0);
+        return new OtpDispatch(sent, 0, demoCode);
     }
 
     @Transactional(noRollbackFor = AuthException.class)
@@ -96,5 +104,9 @@ public class OtpService {
     }
 
     private AuthException invalidOtp() { return new AuthException(HttpStatus.BAD_REQUEST, "Mã OTP không hợp lệ hoặc đã hết hạn."); }
-    public record OtpDispatch(boolean emailSent, long retryAfterSeconds) { }
+    public record OtpDispatch(boolean emailSent, long retryAfterSeconds, String demoCode) {
+        public OtpDispatch(boolean emailSent, long retryAfterSeconds) {
+            this(emailSent, retryAfterSeconds, null);
+        }
+    }
 }
