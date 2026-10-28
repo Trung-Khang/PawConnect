@@ -126,7 +126,6 @@
         if (isCustomer) {
             refreshCartCount();
         }
-        }
     }
 
     function openManagementMenu() {
