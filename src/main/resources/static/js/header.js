@@ -76,6 +76,11 @@
 
     let notificationPollInterval = null;
 
+    function isManagementContext() {
+        const path = window.location.pathname;
+        return path.startsWith('/admin') || path.startsWith('/adoptions/manage');
+    }
+
     function setLoggedOutAccountState() {
         signedIn = false;
         if (notificationPollInterval) {
@@ -95,8 +100,14 @@
             .forEach((link) => link.hidden = true);
         const notifWrapper = document.getElementById('notificationWrapper');
         if (notifWrapper) notifWrapper.hidden = true;
+
+        const isManagement = isManagementContext();
         const cartButton = document.getElementById('cartBtn');
-        if (cartButton) cartButton.hidden = false;
+        if (cartButton) cartButton.hidden = isManagement;
+        document.querySelectorAll('[data-booking-access]').forEach((link) => {
+            link.hidden = isManagement;
+        });
+
         document.getElementById('management-menu-toggle')?.setAttribute('hidden', '');
         closeManagementMenu();
         document.dispatchEvent(new Event('pawconnect:signed-out'));
@@ -105,10 +116,17 @@
     function updateRoleNavigation(role) {
         const isCustomer = role === 'CUSTOMER';
         const isStaff = role === 'ADMIN' || role === 'BRANCH_MANAGER';
+        const isManagement = isManagementContext() || isStaff;
+
         const cartButton = document.getElementById('cartBtn');
-        if (cartButton) cartButton.hidden = !isCustomer;
+        if (cartButton) cartButton.hidden = isManagement || !isCustomer;
+
+        document.querySelectorAll('[data-booking-access]').forEach((link) => {
+            link.hidden = isManagement || !isCustomer;
+        });
+
         document.querySelector('.main-header')?.classList.add('main-header-signed-in');
-        document.querySelectorAll('[data-customer-only]').forEach((link) => link.hidden = !isCustomer);
+        document.querySelectorAll('[data-customer-only]').forEach((link) => link.hidden = isManagement || !isCustomer);
         document.querySelectorAll('[data-staff-only]').forEach((link) => link.hidden = !isStaff);
         document.querySelectorAll('[data-admin-only]').forEach((link) => link.hidden = role !== 'ADMIN');
         const menuToggle = document.getElementById('management-menu-toggle');
@@ -123,7 +141,7 @@
             notificationPollInterval = setInterval(fetchUnreadNotificationCount, 20000);
         }
 
-        if (isCustomer) {
+        if (isCustomer && !isManagement) {
             refreshCartCount();
         }
     }

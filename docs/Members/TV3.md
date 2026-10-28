@@ -462,3 +462,12 @@ Người phụ trách xác nhận đã được nhóm trưởng cho phép commit
 - Các chức năng bàn giao từ những commit trước trên `main` gồm xác nhận thanh toán hai phía, trạng thái đơn/hủy có kiểm tra backend và lịch sử, cùng giao diện mobile Bootstrap 5. Phần vừa push **không bổ sung nghiệp vụ mới**; chỉ làm cấu hình chạy Railway an toàn hơn và ghi lại hướng dẫn.
 - Kiểm thử code hiện tại: Java 17 `mvn -q clean verify` đạt 31 suite / 103 test, 0 failure, 0 error, 1 skip (MySQL chuyên biệt). JAR local dùng H2/demo, `PORT=18084`: trang chủ HTTP 200; đăng nhập API của CUSTOMER, BRANCH_MANAGER TP.HCM và ADMIN đều HTTP 200. Kiểm thử giao diện mobile giả lập 90 lượt ở mục 18 là bằng chứng local trước đó, **không phải** kiểm thử điện thoại thật. Thanh toán/hoàn tiền là mô phỏng.
 - **Chưa xác nhận trạng thái deploy Railway:** phiên này không có tài khoản/quyền Railway nên không thể biết push lên `main` có tự kích hoạt deployment hoặc yêu cầu duyệt hay không; cũng chưa xác nhận backup, schema/migration V4.7–V4.8, secret đã đổi, backend service, build log, HTTPS/WSS hay domain. Không chạy SQL hoặc seed trên MySQL chung. Người nhận bàn giao cần làm theo [release_runbook.md](../Project/release_runbook.md) và [production_configuration.md](../Project/production_configuration.md), kiểm tra ngay trạng thái deployment sau push, rồi ghi SHA/URL/kết quả smoke thực tế sau khi phát hành.
+
+## 22. Hướng dẫn và kiểm tra tên đăng nhập khi đăng ký (28/10/2026)
+
+**Commit code:** `7bc0e98` — `fix(auth): clarify username registration validation`.
+
+- Form đăng ký hiển thị hướng dẫn cố định ngay dưới ô tên đăng nhập: chỉ nhận 3–50 ký tự gồm chữ không dấu, số, `.`, `_`, `-`; không nhận khoảng trắng hoặc ký tự có dấu.
+- Khi nhập sai hoặc rời khỏi ô, giao diện đánh dấu đỏ đúng trường và hiển thị thông báo tiếng Việt. Khi người dùng sửa thành giá trị hợp lệ như `ThuHuyen`, thông báo lỗi và trạng thái lỗi tự mất; thông báo định dạng cũ ở đầu form cũng được xóa khi người dùng chỉnh lại.
+- Backend dùng cùng quy tắc và trả thông báo tiếng Việt nếu request bỏ qua kiểm tra giao diện. Đã bổ sung test xác nhận tên có khoảng trắng bị từ chối đúng thông báo và `ThuHuyen` được chấp nhận.
+- Kiểm thử ngày 28/10/2026: `mvn test` PASS — **104 tests, 0 failures, 0 errors, 1 skipped**; `node --check src/main/resources/static/js/auth.js` và `git diff --check` PASS. Kiểm tra Chrome headless ở desktop và viewport 375 px: lỗi hiện đúng vị trí, giá trị hợp lệ xóa lỗi và không tràn ngang. Ảnh kiểm tra cục bộ ở `target/username-validation-evidence/`, không đưa vào Git.

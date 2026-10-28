@@ -2,6 +2,8 @@
     const API = '/api/v1/auth';
     const ACCESS = 'pawconnect.accessToken';
     const REFRESH = 'pawconnect.refreshToken';
+    const USERNAME_PATTERN = /^[A-Za-z0-9._-]{3,50}$/;
+    const USERNAME_ERROR = 'Tên đăng nhập cần 3–50 ký tự, chỉ dùng chữ không dấu, số, dấu chấm (.), gạch dưới (_) hoặc gạch ngang (-); không có dấu cách.';
     const state = { identity: '', resetToken: null, cooldown: null };
     const path = window.location.pathname;
     const formForPath = path === '/auth/register' ? 'register-form' : path === '/auth/verify-email' ? 'verify-form'
@@ -10,6 +12,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById(formForPath).hidden = false;
         bindForms();
+        bindUsernameValidation();
         bindOtpDigits();
         bindPasswordChecklist('register-password', 'password-checklist');
         bindPasswordChecklist('reset-password', 'reset-password-checklist');
@@ -28,6 +31,10 @@
 
     async function register(event) {
         event.preventDefault();
+        if (!validateRegisterUsername(true)) {
+            byId('register-username').focus();
+            return;
+        }
         const values = formValues(event.currentTarget);
         const phone = normalizePhone(values.phone);
         if (!validPhone(phone)) return message('Số điện thoại chưa đúng định dạng Việt Nam.', true);
@@ -107,6 +114,36 @@
     }
 
     function bindOtpDigits() { document.querySelectorAll('input[inputmode="numeric"]').forEach((input) => input.addEventListener('input', () => { input.value = input.value.replace(/\D/g, '').slice(0, 6); })); }
+    function bindUsernameValidation() {
+        const input = byId('register-username');
+        if (!input) return;
+        input.addEventListener('input', () => {
+            const box = byId('auth-message');
+            if (!box.hidden && /username format is invalid|tên đăng nhập/i.test(box.textContent)) clearMessage();
+            validateRegisterUsername(input.dataset.touched === 'true');
+        });
+        input.addEventListener('blur', () => {
+            input.dataset.touched = 'true';
+            validateRegisterUsername(true);
+        });
+        input.addEventListener('invalid', (event) => {
+            event.preventDefault();
+            input.dataset.touched = 'true';
+            validateRegisterUsername(true);
+            input.focus();
+        });
+    }
+    function validateRegisterUsername(showError) {
+        const input = byId('register-username');
+        const error = byId('register-username-error');
+        const valid = USERNAME_PATTERN.test(input.value);
+        input.setCustomValidity(valid ? '' : USERNAME_ERROR);
+        error.hidden = valid || !showError;
+        error.textContent = error.hidden ? '' : USERNAME_ERROR;
+        if (error.hidden) input.removeAttribute('aria-invalid');
+        else input.setAttribute('aria-invalid', 'true');
+        return valid;
+    }
     function bindPasswordChecklist(inputId, listId) {
         const input = byId(inputId); const list = byId(listId); if (!input || !list) return;
         const render = () => { const checks = [['Ít nhất 8 ký tự', input.value.length >= 8], ['Có chữ hoa', /[A-Z]/.test(input.value)], ['Có chữ thường', /[a-z]/.test(input.value)], ['Có chữ số', /\d/.test(input.value)], ['Có ký tự @#$%^&+=!', /[@#$%^&+=!]/.test(input.value)]]; list.innerHTML = checks.map(([label, met]) => `<li class="${met ? 'met' : ''}">${label}</li>`).join(''); };
