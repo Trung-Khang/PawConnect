@@ -53,6 +53,7 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
     private final OrderStatusEventRepository statusEventRepository;
     private final CartService cartService;
+    private final com.pawconnect.service.notification.NotificationService notificationService;
 
     @Override
     @Transactional
@@ -153,6 +154,32 @@ public class OrderServiceImpl implements OrderService {
         } else {
             cartService.clearCart(cart);
         }
+
+        try {
+            if (notificationService != null && buyer != null) {
+                String amountStr = String.format("%,d", total.longValue());
+                // Gửi thông báo đến chuông của khách hàng
+                notificationService.createNotification(
+                        buyer,
+                        "Đơn hàng #" + order.getId() + " thanh toán thành công 🎉",
+                        "Đơn hàng #" + order.getId() + " (trị giá " + amountStr + " VND) đã được xác nhận. Chi nhánh sẽ sớm đóng gói và vận chuyển đến bạn.",
+                        "ORDER_CREATED",
+                        "/orders",
+                        order.getId()
+                );
+                // Gửi thông báo đến chuông của Quản lý chi nhánh
+                notificationService.notifyBranchManagers(
+                        branch.getId(),
+                        "Đơn hàng mới #" + order.getId() + " tại chi nhánh",
+                        "Khách hàng " + buyer.getFullName() + " vừa đặt đơn hàng #" + order.getId() + " trị giá " + amountStr + " VND. Hãy kiểm tra và xử lý đơn.",
+                        "ORDER_CREATED",
+                        "/admin/orders",
+                        order.getId()
+                );
+            }
+        } catch (Exception ignored) {
+        }
+
         return mapToResponse(order);
     }
 

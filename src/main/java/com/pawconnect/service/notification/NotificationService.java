@@ -61,6 +61,27 @@ public class NotificationService {
         return notificationRepository.save(notification);
     }
 
+    public void notifyBranchManagers(Long branchId, String title, String content, String type, String link, Long referenceId) {
+        if (branchId == null) return;
+        List<User> managers = userRepository.findByBranchId(branchId);
+        for (User manager : managers) {
+            try {
+                createNotification(manager, title, content, type, link, referenceId);
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
+    public void notifyAdmins(String title, String content, String type, String link, Long referenceId) {
+        List<User> admins = userRepository.findByRoleName(com.pawconnect.entity.RoleName.ADMIN);
+        for (User admin : admins) {
+            try {
+                createNotification(admin, title, content, type, link, referenceId);
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
     private User findUser(String email) {
         return userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Người dùng không tồn tại"));

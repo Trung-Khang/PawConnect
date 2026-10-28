@@ -7,7 +7,10 @@ import com.pawconnect.config.CloudinaryProperties;
 import com.pawconnect.config.JwtProperties;
 import com.pawconnect.config.SeedUserProperties;
 
+import org.springframework.scheduling.annotation.EnableScheduling;
+
 @SpringBootApplication
+@EnableScheduling
 @EnableConfigurationProperties({JwtProperties.class, CloudinaryProperties.class, SeedUserProperties.class})
 public class PawConnectApplication {
 

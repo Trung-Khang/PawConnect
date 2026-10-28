@@ -14,4 +14,5 @@ public interface BookingService {
     BookingResponse updateBookingStatus(Long bookingId, String status, String reason);
     BookingResponse cancelMyBooking(Long bookingId, String reason);
     List<BookingResponse> getBusySlots(Long branchId, LocalDate date);
+    int autoUpdateNoShowBookings();
 }

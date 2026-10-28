@@ -37,6 +37,8 @@ class OrderServiceAuthorizationTest {
     @Mock private BranchRepository branchRepository;
     @Mock private CartService cartService;
     @Mock private OrderStatusEventRepository statusEventRepository;
+    @Mock private com.pawconnect.repository.UserRepository userRepository;
+    @Mock private com.pawconnect.service.notification.NotificationService notificationService;
     @InjectMocks private OrderServiceImpl service;
 
     @AfterEach

@@ -15,4 +15,5 @@ public interface ServiceBookingRepository extends JpaRepository<ServiceBooking, 
     List<ServiceBooking> findByBranchIdOrderByBookingTimeDesc(Long branchId);
     List<ServiceBooking> findByBranchIdAndBookingTimeBetween(Long branchId, LocalDateTime start, LocalDateTime end);
     List<ServiceBooking> findByBranchIdAndBookingTimeBetweenOrderByBookingTimeAsc(Long branchId, LocalDateTime start, LocalDateTime end);
+    List<ServiceBooking> findByStatusInAndBookingTimeBefore(List<String> statuses, LocalDateTime threshold);
 }

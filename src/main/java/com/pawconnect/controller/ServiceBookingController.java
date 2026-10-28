@@ -64,4 +64,11 @@ public class ServiceBookingController {
         String reason = body != null ? body.get("reason") : null;
         return bookingService.cancelMyBooking(id, reason);
     }
+
+    @PreAuthorize("hasAnyRole('BRANCH_MANAGER', 'ADMIN')")
+    @PostMapping("/auto-no-show")
+    public Map<String, Object> triggerAutoNoShow() {
+        int count = bookingService.autoUpdateNoShowBookings();
+        return Map.of("success", true, "updatedCount", count);
+    }
 }

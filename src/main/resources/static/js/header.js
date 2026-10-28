@@ -94,6 +94,8 @@
         updateAccountAvatar(null);
         document.querySelectorAll('[data-customer-only], [data-staff-only], [data-admin-only]')
             .forEach((link) => link.hidden = true);
+        const notifWrapper = document.getElementById('notificationWrapper');
+        if (notifWrapper) notifWrapper.hidden = true;
         document.getElementById('management-menu-toggle')?.setAttribute('hidden', '');
         closeManagementMenu();
         document.dispatchEvent(new Event('pawconnect:signed-out'));
@@ -110,16 +112,12 @@
         if (menuToggle) menuToggle.hidden = !isStaff;
         if (!isStaff) closeManagementMenu();
 
-        if (isCustomer) {
-            fetchUnreadNotificationCount();
-            if (!notificationPollInterval) {
-                notificationPollInterval = setInterval(fetchUnreadNotificationCount, 20000);
-            }
-        } else {
-            if (notificationPollInterval) {
-                clearInterval(notificationPollInterval);
-                notificationPollInterval = null;
-            }
+        // Chuông thông báo hiển thị cho tất cả tài khoản đã đăng nhập (Khách hàng, Quản lý chi nhánh, Quản trị viên)
+        const notifWrapper = document.getElementById('notificationWrapper');
+        if (notifWrapper) notifWrapper.hidden = false;
+        fetchUnreadNotificationCount();
+        if (!notificationPollInterval) {
+            notificationPollInterval = setInterval(fetchUnreadNotificationCount, 20000);
         }
     }
 
@@ -686,6 +684,22 @@
                 iconColor = '#10b981';
             } else if (item.type === 'ADOPTION_REJECTED') {
                 iconHtml = '<i class="fas fa-times"></i>';
+                iconBg = 'rgba(239, 68, 68, 0.12)';
+                iconColor = '#ef4444';
+            } else if (item.type === 'ORDER_CREATED') {
+                iconHtml = '<i class="fas fa-bag-shopping"></i>';
+                iconBg = 'rgba(226, 123, 88, 0.15)';
+                iconColor = '#e27b58';
+            } else if (item.type === 'ADOPTION_APPLIED') {
+                iconHtml = '<i class="fas fa-paw"></i>';
+                iconBg = 'rgba(99, 102, 241, 0.12)';
+                iconColor = '#6366f1';
+            } else if (item.type === 'SERVICE_BOOKING_CREATED' || item.type === 'SERVICE_BOOKING_CONFIRMED') {
+                iconHtml = '<i class="fas fa-calendar-check"></i>';
+                iconBg = 'rgba(16, 185, 129, 0.12)';
+                iconColor = '#10b981';
+            } else if (item.type === 'SERVICE_BOOKING_CANCELLED') {
+                iconHtml = '<i class="fas fa-calendar-xmark"></i>';
                 iconBg = 'rgba(239, 68, 68, 0.12)';
                 iconColor = '#ef4444';
             }

@@ -140,6 +140,114 @@
             font-size: 0.88rem;
             color: #33691e;
         }
+
+        /* TIME SLOTS GRID (XEM LỊCH TRỐNG CHI NHÁNH) */
+        .time-slots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+            gap: 0.6rem;
+            margin-top: 0.6rem;
+        }
+        .time-slot-btn {
+            background: #ffffff;
+            border: 1.5px solid #a5d6a7;
+            color: #2e7d32;
+            padding: 0.6rem 0.4rem;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            min-height: 52px;
+            text-align: center;
+        }
+        .time-slot-btn:hover:not(:disabled) {
+            background: #e8f5e9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(46, 125, 50, 0.15);
+        }
+        .time-slot-btn .slot-status-text {
+            font-size: 0.72rem;
+            font-weight: 600;
+            opacity: 0.85;
+        }
+        .time-slot-btn.slot-busy {
+            background: #ffebee !important;
+            border-color: #ef9a9a !important;
+            color: #c62828 !important;
+            cursor: not-allowed !important;
+            opacity: 0.75;
+        }
+        .time-slot-btn.slot-past {
+            background: #f5f5f5 !important;
+            border-color: #e0e0e0 !important;
+            color: #9e9e9e !important;
+            cursor: not-allowed !important;
+            opacity: 0.6;
+        }
+        .time-slot-btn.slot-selected {
+            background: #e27b58 !important;
+            border-color: #c56546 !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 12px rgba(226, 123, 88, 0.35);
+            transform: scale(1.03);
+        }
+        .time-slot-btn.slot-selected .slot-status-text {
+            color: #ffffff !important;
+        }
+
+        .slot-legend {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.85rem;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+        .slot-legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .slot-legend-dot {
+            width: 11px;
+            height: 11px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+        .slot-legend-dot.available {
+            background: #e8f5e9;
+            border: 1.5px solid #a5d6a7;
+        }
+        .slot-legend-dot.busy {
+            background: #ffebee;
+            border: 1.5px solid #ef9a9a;
+        }
+        .slot-legend-dot.past {
+            background: #f5f5f5;
+            border: 1.5px solid #e0e0e0;
+        }
+        .selected-slot-box {
+            margin-top: 0.85rem;
+            padding: 0.75rem 1rem;
+            background: #fff8f5;
+            border: 1.5px solid #e27b58;
+            border-radius: 10px;
+            color: #c56546;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: fadeIn 0.25s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -192,22 +300,63 @@
 
                     <!-- STEP 2 -->
                     <div class="step-content" id="step-2">
-                        <h3 style="margin-bottom:1.5rem">Chọn Ngày & Giờ hẹn</h3>
-                        <div class="form-group">
-                            <label>Khung giờ mong muốn</label>
-                            <input type="datetime-local" id="bookingTime" class="form-control" onchange="validateBookingTimeInput()">
-                            <small id="timeValidationMsg" style="color: #c62828; display: block; margin-top: 0.4rem; font-weight: 600;" hidden></small>
+                        <h3 style="margin-bottom:1.5rem">Chọn Ngày & Khung giờ hẹn</h3>
+                        
+                        <!-- CHỌN NGÀY -->
+                        <div class="form-group" style="margin-bottom: 1.25rem;">
+                            <label for="bookingDateInput" style="font-weight: 700; margin-bottom: 0.4rem; display: block;">
+                                <i class="fas fa-calendar-day" style="color: var(--primary-color);"></i> Ngày hẹn dịch vụ
+                            </label>
+                            <input type="date" id="bookingDateInput" class="form-control" onchange="onBookingDateChange()" style="font-size: 1rem; padding: 0.65rem 0.9rem;">
+                        </div>
+
+                        <!-- BỘ CHỌN KHUNG GIỜ (TIME SLOTS PICKER) -->
+                        <div class="form-group" style="margin-bottom: 1.25rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                <label style="font-weight: 700; margin: 0;">
+                                    <i class="fas fa-clock" style="color: var(--primary-color);"></i> Lịch trống trong ngày:
+                                </label>
+                                <!-- CHÚ THÍCH TRẠNG THÁI KHUNG GIỜ -->
+                                <div class="slot-legend">
+                                    <span class="slot-legend-item">
+                                        <span class="slot-legend-dot available"></span> Còn trống
+                                    </span>
+                                    <span class="slot-legend-item">
+                                        <span class="slot-legend-dot busy"></span> Đã kín
+                                    </span>
+                                    <span class="slot-legend-item">
+                                        <span class="slot-legend-dot past"></span> Đã qua
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- LƯỚI KHUNG GIỜ -->
+                            <div id="timeSlotsGrid" class="time-slots-grid">
+                                <p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 1rem;">
+                                    <i class="fas fa-spinner fa-spin"></i> Đang tải lịch trống của chi nhánh…
+                                </p>
+                            </div>
+
+                            <!-- THÔNG BÁO KHUNG GIỜ ĐÃ CHỌN -->
+                            <div id="selectedSlotInfo" class="selected-slot-box" style="display: none;">
+                                <i class="fas fa-check-circle" style="font-size: 1.1rem;"></i>
+                                <span id="selectedSlotText">Chưa chọn khung giờ</span>
+                            </div>
+
+                            <!-- HIDDEN INPUT ĐỒNG BỘ DỮ LIỆU ĐẶT LỊCH -->
+                            <input type="hidden" id="bookingTime" name="bookingTime">
+                            <small id="timeValidationMsg" style="color: #c62828; display: block; margin-top: 0.5rem; font-weight: 600;" hidden></small>
                         </div>
 
                         <!-- THỜI GIAN HOẠT ĐỘNG CỦA CỬA HÀNG -->
                         <div class="store-hours-card">
                             <div class="store-hours-header">
-                                <i class="fas fa-clock"></i>
-                                <span>Thời gian hoạt động của PawConnect:</span>
+                                <i class="fas fa-circle-info"></i>
+                                <span>Quy định giờ hẹn tại PawConnect:</span>
                             </div>
                             <p class="store-hours-text">
-                                • Cửa hàng mở cửa từ <strong>07:00 đến 21:00</strong> tất cả các ngày trong tuần (Thứ 2 – Chủ Nhật).<br>
-                                • Khung giờ nhận đặt lịch hẹn: từ <strong>07:00 đến 20:00</strong> (không nhận lịch sau 20:00 để phục vụ chu đáo nhất).
+                                • Chi nhánh mở cửa phục vụ từ <strong>07:00 đến 21:00</strong> hàng ngày (Thứ 2 – Chủ Nhật).<br>
+                                • Nhận lịch hẹn dịch vụ từ <strong>07:00 đến 20:00</strong>. Mỗi khung giờ được nhân viên sắp xếp và chăm sóc riêng biệt.
                             </p>
                         </div>
 
@@ -257,6 +406,6 @@
 
     <div th:replace="~{fragments/footer :: footer}"></div>
 
-    <script src="/js/shop.js?v=20261026-services-3"></script>
+    <script src="/js/shop.js?v=20261028-slots-1"></script>
 </body>
 </html>
