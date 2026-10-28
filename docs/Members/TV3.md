@@ -444,3 +444,14 @@ Xem [railway_deployment_proposal.md](../Project/railway_deployment_proposal.md):
 **Đối chiếu và kiểm thử 28/10:** `git fetch origin --prune` cho thấy `origin/main` và HEAD trước các commit cùng SHA `7bb3344`; không có remote commit mới cần hòa giải. `mvn -q test` và `mvn -q clean test` đều pass: **103 tests, 0 failures, 0 errors, 1 skipped**; `git diff --check` và `node --check` các JS mobile đã sửa đều qua. Các kiểm thử này dùng H2/local; không chứng minh migration V4.8 hay tính năng trên Railway production đã hoạt động.
 
 **Điều kiện đưa lên nhánh chung/triển khai:** quy trình dự án yêu cầu push nhánh thành viên và người nhận bàn giao duyệt trước khi merge `main`. Nếu owner chọn phát hành trực tiếp, cần xác nhận quyền của người yêu cầu, kiểm tra main có tự deploy không, backup/áp V4.8 trước khi backend production dùng `ddl-auto=validate`, rồi smoke theo `release_runbook.md`. Không tự chạy migration/reseed DB dùng chung. TV1 vẫn cần regression trên thiết bị thật và chat nhiều phiên; chưa đánh dấu mục 4 hoàn tất hoặc có web Internet.
+
+## 20. Chuẩn bị deploy Railway (28/10/2026)
+
+Người phụ trách xác nhận đã được nhóm trưởng cho phép commit trực tiếp lên `main` và yêu cầu triển khai web lên Internet. `git fetch origin` cho thấy `main` local và `origin/main` cùng SHA `8847507` trước thay đổi cấu hình; không tạo nhánh mới. Cấu hình và tài liệu deploy đã được commit trên `main` local ở `c1f2ef6`; **chưa push/deploy**.
+
+- `application.properties`: dùng `PORT` do Railway cấp, fallback `8080` khi chạy local.
+- `application-mysql.yml`: nhận tên database qua `MYSQL_DATABASE`, bỏ `createDatabaseIfNotExist=true`, dùng `sslMode=PREFERRED` thay cho vô hiệu TLS tường minh. Phải kiểm tra cấu hình kết nối trên chính Railway trước khi coi là đạt.
+- `production_configuration.md` và phương án Railway: ghi rõ reference variables MySQL private và JDK 17. Railpack nhận diện Maven từ `pom.xml` mà không cần Maven wrapper; build trên Railway vẫn chưa được xác nhận.
+- Kiểm thử local Java 17: `mvn -q clean verify` PASS, 31 suite / 103 test, 0 failure, 0 error, 1 skip (MySQL chuyên biệt); JAR khởi động với `PORT=18084`, `GET /` trả HTTP 200 và có giao diện PawConnect. `git diff --check` PASS. Không dùng hoặc thay đổi MySQL chung trong các phép thử này.
+
+**Chưa thể tuyên bố deploy thành công:** phiên làm việc chưa có kết nối quản trị Railway để kiểm tra service, auto-deploy từ `main`, backup, migration V4.7/V4.8, các biến secret đã xoay, build log và domain thực. Không push thay đổi cấu hình lên `main` khi chưa rõ auto-deploy có thể đụng DB chung trước migration/backup. Sau khi có quyền, làm đúng `release_runbook.md`: kiểm tra backup/schema, migration trên bản sao rồi DB đích theo thứ tự, cấu hình service, deploy SHA đã test, smoke HTTPS/WSS và ghi bằng chứng ở đây.
