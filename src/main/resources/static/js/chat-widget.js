@@ -570,12 +570,14 @@
                 const img = document.createElement('img');
                 img.src = message.contextImageUrl;
                 img.alt = message.contextTitle || '';
+                img.onerror = () => { img.style.display = 'none'; };
                 card.append(img);
             }
             const info = el('div', 'chat-context-info');
+            const cleanSummary = (message.contextSummary || '').replace(/[\r\n]+/g, ' ').trim();
             info.append(
                 el('strong', '', message.contextTitle || 'Thông tin tư vấn'),
-                el('span', '', message.contextSummary || '')
+                el('span', '', cleanSummary)
             );
             card.append(info);
             bubbleCol.append(card);

@@ -365,6 +365,7 @@
     display: flex;
     flex-direction: column;
     min-width: 0;
+    max-width: 100%;
 }
 
 .chat-widget-message.mine .chat-bubble-col {
@@ -444,38 +445,51 @@
     margin-bottom: 8px;
     background: #ffffff;
     border: 1px solid #ebdcd3;
-    border-radius: 10px;
+    border-radius: 12px;
     text-decoration: none;
     color: #2D3748;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-    transition: transform 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    width: 100%;
+    max-width: 270px;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .chat-context-card:hover {
     transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .chat-context-card img {
     width: 48px;
     height: 48px;
     object-fit: cover;
-    border-radius: 6px;
+    border-radius: 8px;
     flex-shrink: 0;
+    background: #f7fafc;
+    border: 1px solid #edf2f7;
 }
 
 .chat-context-info {
     display: flex;
     flex-direction: column;
     min-width: 0;
+    flex: 1 1 0%;
+    overflow: hidden;
 }
 
 .chat-context-info strong {
-    font-size: 12.5px;
+    font-size: 13px;
     font-weight: 800;
     color: #e87a55;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    display: block;
+    max-width: 100%;
+    margin-bottom: 2px;
 }
 
 .chat-context-info span {
@@ -484,6 +498,9 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    display: block;
+    max-width: 100%;
+    line-height: 1.35;
 }
 
 /* Compose bar */

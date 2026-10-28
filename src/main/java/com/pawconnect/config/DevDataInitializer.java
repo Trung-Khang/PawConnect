@@ -130,7 +130,9 @@ public class DevDataInitializer {
                             product.setDescription(description);
                             product.setPrice(price);
                             product.setStock(stock);
-                            product.setImageUrl(imageUrl);
+                            if (imageUrl != null && !imageUrl.isBlank()) {
+                                product.setImageUrl(imageUrl);
+                            }
                             product.setSuitableSize(suitableSize);
                             product.setCategory(categoryMap.get(categoryCode));
                             product.setBranch(branch);
