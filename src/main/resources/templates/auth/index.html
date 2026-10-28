@@ -5,7 +5,7 @@
     <th:block th:replace="~{fragments/bootstrap :: assets}"></th:block>
     <title>PawConnect - Tài khoản</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/shop.css"><link rel="stylesheet" href="/css/header.css?v=20261026-5"><link rel="stylesheet" href="/css/auth.css">
+    <link rel="stylesheet" href="/css/shop.css"><link rel="stylesheet" href="/css/header.css?v=20261026-5"><link rel="stylesheet" href="/css/auth.css?v=20261028-1">
 </head>
 <body>
 <div th:replace="~{fragments/header :: header}"></div>
@@ -23,7 +23,11 @@
 
     <form id="register-form" class="auth-form" hidden>
         <h1>Tạo tài khoản</h1><p>Đăng ký để mua sắm và gửi đơn nhận nuôi.</p>
-        <label>Tên đăng nhập<input name="username" pattern="[A-Za-z0-9._-]{3,50}" minlength="3" maxlength="50" required></label>
+        <label>Tên đăng nhập
+            <input id="register-username" name="username" autocomplete="username" pattern="[A-Za-z0-9._\-]{3,50}" minlength="3" maxlength="50" title="Dùng 3–50 ký tự: chữ không dấu, số, dấu chấm, gạch dưới hoặc gạch ngang; không có dấu cách." aria-describedby="register-username-help register-username-error" required>
+            <small id="register-username-help">Dùng 3–50 ký tự: chữ không dấu, số, dấu chấm (.), gạch dưới (_) hoặc gạch ngang (-); không có dấu cách.</small>
+            <small id="register-username-error" class="auth-field-error" role="alert" hidden></small>
+        </label>
         <label>Họ và tên<input name="fullName" maxlength="120" required></label>
         <label>Email<input name="email" type="email" maxlength="254" autocomplete="email" required></label>
         <label>Số điện thoại<input id="register-phone" name="phone" inputmode="tel" placeholder="" required></label>
@@ -64,5 +68,5 @@
         <button class="btn-pill" type="submit">Lưu mật khẩu mới</button>
     </form>
 </section></main>
-<script src="/js/auth.js"></script>
+<script src="/js/auth.js?v=20261028-1"></script>
 </body></html>

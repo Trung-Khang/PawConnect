@@ -182,8 +182,13 @@ public class AuthService {
     }
 
     private AuthMessageResponse dispatch(OtpService.OtpDispatch result) {
-        return result.emailSent() ? new AuthMessageResponse("Mã xác minh đã được gửi. Vui lòng kiểm tra Hộp thư đến và Spam.", true, 0)
-                : new AuthMessageResponse("Chưa thể gửi email. Vui lòng thử lại sau.", false, result.retryAfterSeconds());
+        if (!result.emailSent()) {
+            return new AuthMessageResponse("Chưa thể gửi email. Vui lòng thử lại sau.", false, result.retryAfterSeconds());
+        }
+        if (result.demoCode() != null) {
+            return new AuthMessageResponse("Mã xác minh đã được gửi (Mã test OTP: " + result.demoCode() + "). Vui lòng nhập để tiếp tục.", true, 0);
+        }
+        return new AuthMessageResponse("Mã xác minh đã được gửi. Vui lòng kiểm tra Hộp thư đến và Spam.", true, 0);
     }
     private AuthResponse tokensFor(User user) { return new AuthResponse(jwtService.generateAccessToken(user), jwtService.generateRefreshToken(user), "Bearer", toResponse(user)); }
     private UserResponse toResponse(User user) {
