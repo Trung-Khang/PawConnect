@@ -14,14 +14,14 @@
     transition: background-color .2s ease, color .2s ease;
 }
 
-.main-header [hidden], .management-sidebar [hidden] { display: none !important; }
+.main-header [hidden], .management-sidebar [hidden], [data-booking-access][hidden], #cartBtn[hidden], a[href="/service"].btn-pill[hidden] { display: none !important; }
 
 html.is-management-page #cartBtn,
 html.is-management-page [data-booking-access],
+html.is-management-page a[href="/service"].btn-pill,
 body.admin-body #cartBtn,
 body.admin-body [data-booking-access],
-.admin-orders-page ~ * #cartBtn,
-.admin-orders-page ~ * [data-booking-access] {
+body.admin-body a[href="/service"].btn-pill {
     display: none !important;
 }
 
