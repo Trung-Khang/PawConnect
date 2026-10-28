@@ -1,0 +1,11 @@
+target/
+.git/
+TV2/
+.gemini/
+docs/
+*.md
+.vscode/
+.idea/
+*.log
+data-pipeline/
+
