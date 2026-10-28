@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="/css/header.css?v=20261026-5">
     <link rel="stylesheet" href="/css/admin-users.css">
     <link rel="stylesheet" href="/css/admin-branches.css">
+    <link rel="stylesheet" href="/css/mobile-admin-tables.css?v=20261027-1">
 </head>
 <body>
 <div th:replace="~{fragments/header :: header}"></div>
@@ -28,8 +29,8 @@
     <p id="branch-notice" class="admin-users-notice" role="status" hidden></p>
     <section class="admin-users-table-wrap" id="branch-table" aria-labelledby="branches-title" hidden>
         <div class="admin-users-table-title"><h2 id="branches-title">Danh sách chi nhánh</h2><span id="branch-total" class="account-total">0 chi nhánh</span></div>
-        <div class="admin-users-table-scroll table-responsive">
-            <table>
+        <div class="admin-users-table-scroll table-responsive mobile-admin-table-container">
+            <table class="mobile-admin-table">
                 <thead><tr><th>Mã</th><th>Tên</th><th>Địa chỉ</th><th>Điện thoại</th><th>Thao tác</th></tr></thead>
                 <tbody id="branches-body"></tbody>
             </table>

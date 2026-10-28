@@ -88,21 +88,25 @@ class CheckoutReceiptIntegrationTest {
     }
 
     @Test
-    void checkoutReturnsCompleteReceiptAndRetryDoesNotCreateSecondOrder() throws Exception {
+    void checkoutRecordsCustomerConfirmationAndRetryDoesNotCreateSecondOrder() throws Exception {
         addProduct(customer, product.getId(), 2);
         String payload = orderPayload(hcm.getId(), "checkout-repeat-000001");
         long id = createOrder(customer, payload);
 
         mvc.perform(get("/api/orders/{id}", id).with(user(customer)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("PAID"))
+                .andExpect(jsonPath("$.status").value("PAYMENT_REPORTED"))
                 .andExpect(jsonPath("$.paymentMethod").value("SIMULATED"))
+                .andExpect(jsonPath("$.paymentStatus").value("CUSTOMER_CONFIRMED"))
                 .andExpect(jsonPath("$.customerName").value("Test Customer"))
                 .andExpect(jsonPath("$.branchName").value("Chi nhánh HCM"))
                 .andExpect(jsonPath("$.recipientPhone").value("0901234567"))
                 .andExpect(jsonPath("$.deliveryAddress").value("123 Test Street"))
                 .andExpect(jsonPath("$.items[0].productName").value("Thức ăn A"))
                 .andExpect(jsonPath("$.items[0].quantity").value(2))
+                .andExpect(jsonPath("$.statusHistory.length()").value(1))
+                .andExpect(jsonPath("$.statusHistory[0].status").value("PAYMENT_REPORTED"))
+                .andExpect(jsonPath("$.statusHistory[0].createdAt").exists())
                 .andExpect(jsonPath("$.totalAmount").value(240000));
         assertEquals(id, createOrder(customer, payload));
         assertEquals(1, orders.findByUserId(customer.getId()).size());
@@ -172,24 +176,126 @@ class CheckoutReceiptIntegrationTest {
         mvc.perform(get("/api/orders/{id}", id).with(user(hnManager))).andExpect(status().isForbidden());
         mvc.perform(get("/api/orders/{id}", id).with(user(hcmManager))).andExpect(status().isOk());
         mvc.perform(get("/api/orders/{id}", id).with(user(admin))).andExpect(status().isOk());
-        mvc.perform(post("/api/orders/{id}/cancel", id).with(user(anotherCustomer))).andExpect(status().isForbidden());
+        mvc.perform(get("/api/orders/my").with(user(anotherCustomer)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
+        mvc.perform(post("/api/orders/{id}/cancel", id).param("reason", "Không cần nữa")
+                .with(user(anotherCustomer))).andExpect(status().isForbidden());
         mvc.perform(put("/api/orders/{id}/status", id).param("status", "CONFIRMED").with(user(hnManager)))
                 .andExpect(status().isForbidden());
+        mvc.perform(post("/api/orders/{id}/confirm-payment", id).with(user(hnManager)))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/api/orders/{id}/confirm-payment", id).with(user(customer)))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/api/orders/{id}/confirm-payment", id))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void cancellationRefundsOnceAndRestoresStockOnlyBeforeConfirmation() throws Exception {
+    void staffPaymentConfirmationAlsoAcceptsOrderForProcessing() throws Exception {
+        addProduct(customer, product.getId(), 1);
+        long id = createOrder(customer, orderPayload(hcm.getId(), "payment-two-party-001"));
+        mvc.perform(put("/api/orders/{id}/status", id).param("status", "CONFIRMED").with(user(hcmManager)))
+                .andExpect(status().isConflict());
+        mvc.perform(post("/api/orders/{id}/confirm-payment", id).with(user(hcmManager)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PROCESSING"))
+                .andExpect(jsonPath("$.paymentStatus").value("PAID"))
+                .andExpect(jsonPath("$.statusHistory.length()").value(2))
+                .andExpect(jsonPath("$.statusHistory[1].status").value("PROCESSING"))
+                .andExpect(jsonPath("$.statusHistory[1].createdAt").exists());
+        assertEquals(hcmManager.getId(), events.findByOrder_IdOrderByCreatedAtAscIdAsc(id).get(1).getActorUserId());
+        mvc.perform(post("/api/orders/{id}/confirm-payment", id).with(user(hcmManager)))
+                .andExpect(status().isConflict());
+        assertEquals(2, events.count());
+        assertEquals(4, stock(product.getId()));
+    }
+
+    @Test
+    void cancellationBeforeStaffPaymentConfirmationDoesNotInventRefund() throws Exception {
         addProduct(customer, product.getId(), 2);
-        long id = createOrder(customer, orderPayload(hcm.getId(), "cancel-before-000001"));
+        long id = createOrder(customer, orderPayload(hcm.getId(), "cancel-reported-00001"));
         mvc.perform(post("/api/orders/{id}/cancel", id).with(user(customer)))
+                .andExpect(status().isConflict());
+        mvc.perform(post("/api/orders/{id}/cancel", id).param("reason", "   ")
+                        .with(user(customer)))
+                .andExpect(status().isConflict());
+        assertEquals(3, stock(product.getId()));
+        mvc.perform(post("/api/orders/{id}/cancel", id).param("reason", "Đổi ý mua hàng")
+                        .with(user(customer)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CANCELLED"))
+                .andExpect(jsonPath("$.paymentStatus").value("CANCELLED"))
+                .andExpect(jsonPath("$.statusHistory.length()").value(2))
+                .andExpect(jsonPath("$.statusHistory[1].reason").value("Đổi ý mua hàng"));
+        assertEquals(5, stock(product.getId()));
+        mvc.perform(post("/api/orders/{id}/confirm-payment", id).with(user(hcmManager)))
+                .andExpect(status().isConflict());
+        mvc.perform(post("/api/orders/{id}/cancel", id).param("reason", "Hủy lần hai")
+                        .with(user(customer)))
+                .andExpect(status().isConflict());
+        assertEquals(5, stock(product.getId()));
+    }
+
+    @Test
+    void staffCancellationNeedsReasonAndAdminCanConfirmPayment() throws Exception {
+        addProduct(customer, product.getId(), 1);
+        long cancelledId = createOrder(customer, orderPayload(hcm.getId(), "staff-cancel-reported-01"));
+        mvc.perform(put("/api/orders/{id}/status", cancelledId).param("status", "CANCELLED")
+                        .with(user(hcmManager)))
+                .andExpect(status().isConflict());
+        mvc.perform(put("/api/orders/{id}/status", cancelledId).param("status", "CANCELLED")
+                        .param("reason", "Khách đề nghị hủy").with(user(hnManager)))
+                .andExpect(status().isForbidden());
+        mvc.perform(put("/api/orders/{id}/status", cancelledId).param("status", "CANCELLED")
+                        .param("reason", "Khách đề nghị hủy").with(user(hcmManager)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.paymentStatus").value("CANCELLED"))
+                .andExpect(jsonPath("$.statusHistory[1].reason").value("Khách đề nghị hủy"));
+        assertEquals(5, stock(product.getId()));
+
+        addProduct(customer, product.getId(), 1);
+        long paidId = createOrder(customer, orderPayload(hcm.getId(), "admin-confirm-payment-1"));
+        mvc.perform(post("/api/orders/{id}/confirm-payment", paidId).with(user(admin)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.paymentStatus").value("PAID"));
+        mvc.perform(put("/api/orders/{id}/status", paidId).param("status", "CANCELLED")
+                        .param("reason", "Hủy trước khi tiếp nhận").with(user(hcmManager)))
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.paymentStatus").value("REFUNDED"));
         assertEquals(5, stock(product.getId()));
-        assertEquals(2, events.count());
-        mvc.perform(post("/api/orders/{id}/cancel", id).with(user(customer))).andExpect(status().isConflict());
+    }
+
+    @Test
+    void cancellationRequestApprovalRefundsOnceAndRestoresStock() throws Exception {
+        addProduct(customer, product.getId(), 2);
+        long id = createOrder(customer, orderPayload(hcm.getId(), "cancel-before-000001"));
+        confirmPayment(id, hcmManager);
+        mvc.perform(post("/api/orders/{id}/cancel", id).param("reason", "Không cần nữa")
+                        .with(user(customer))).andExpect(status().isConflict());
+        mvc.perform(post("/api/orders/{id}/cancellation-request", id).param("reason", "Không cần nữa")
+                        .with(user(customer)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PROCESSING"))
+                .andExpect(jsonPath("$.paymentStatus").value("PAID"))
+                .andExpect(jsonPath("$.cancellationRequests[0].status").value("PENDING"));
+        assertEquals(3, stock(product.getId()));
+        mvc.perform(put("/api/orders/{id}/status", id).param("status", "SHIPPING").with(user(hcmManager)))
+                .andExpect(status().isConflict());
+        mvc.perform(post("/api/orders/{id}/cancellation-request/approve", id)
+                        .param("reason", "Chấp thuận hủy trước khi giao").with(user(hcmManager)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELLED"))
+                .andExpect(jsonPath("$.paymentStatus").value("REFUNDED"))
+                .andExpect(jsonPath("$.cancellationRequests[0].status").value("APPROVED"))
+                .andExpect(jsonPath("$.cancellationRequests[0].decisionReason").value("Chấp thuận hủy trước khi giao"))
+                .andExpect(jsonPath("$.statusHistory.length()").value(3))
+                .andExpect(jsonPath("$.statusHistory[2].status").value("CANCELLED"));
         assertEquals(5, stock(product.getId()));
-        mvc.perform(put("/api/orders/{id}/status", id).param("status", "CONFIRMED").with(user(hcmManager)))
+        assertEquals(3, events.count());
+        mvc.perform(post("/api/orders/{id}/cancel", id).param("reason", "Hủy lần hai")
+                .with(user(customer))).andExpect(status().isConflict());
+        assertEquals(5, stock(product.getId()));
+        mvc.perform(put("/api/orders/{id}/status", id).param("status", "SHIPPING").with(user(hcmManager)))
                 .andExpect(status().isConflict());
     }
 
@@ -212,7 +318,11 @@ class CheckoutReceiptIntegrationTest {
                 .andExpect(jsonPath("$.totalAmount").value(3500000));
         assertEquals(0, jdbc.queryForObject("SELECT stock FROM puppy_listings WHERE id = ?", Integer.class, puppy.getId()));
         assertEquals("SOLD_OUT", jdbc.queryForObject("SELECT status FROM puppy_listings WHERE id = ?", String.class, puppy.getId()));
-        mvc.perform(post("/api/orders/{id}/cancel", id).with(user(customer)))
+        confirmPayment(id, hcmManager);
+        mvc.perform(post("/api/orders/{id}/cancellation-request", id).param("reason", "Thay đổi kế hoạch")
+                        .with(user(customer))).andExpect(status().isOk());
+        mvc.perform(post("/api/orders/{id}/cancellation-request/approve", id)
+                        .param("reason", "Đồng ý trước khi bàn giao").with(user(hcmManager)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.paymentStatus").value("REFUNDED"));
         assertEquals(1, jdbc.queryForObject("SELECT stock FROM puppy_listings WHERE id = ?", Integer.class, puppy.getId()));
@@ -220,21 +330,149 @@ class CheckoutReceiptIntegrationTest {
     }
 
     @Test
-    void staffMustFollowTransitionsAndCustomerCannotCancelAfterConfirmation() throws Exception {
+    void staffMustFollowTransitionsAndResolveRequestsBeforeShipping() throws Exception {
         addProduct(customer, product.getId(), 1);
         long id = createOrder(customer, orderPayload(hcm.getId(), "status-flow-000001"));
+        confirmPayment(id, hcmManager);
+        mvc.perform(put("/api/orders/{id}/status", id).param("status", "CONFIRMED").with(user(hcmManager)))
+                .andExpect(status().isConflict());
+        mvc.perform(post("/api/orders/{id}/cancel", id).param("reason", "Đã giao trễ")
+                .with(user(customer))).andExpect(status().isConflict());
+        mvc.perform(put("/api/orders/{id}/status", id).param("status", "PREPARING").with(user(hcmManager)))
+                .andExpect(status().isConflict());
+        mvc.perform(post("/api/orders/{id}/cancellation-request", id).param("reason", "Đổi ý")
+                .with(user(customer))).andExpect(status().isOk());
         mvc.perform(put("/api/orders/{id}/status", id).param("status", "SHIPPING").with(user(hcmManager)))
                 .andExpect(status().isConflict());
-        mvc.perform(put("/api/orders/{id}/status", id).param("status", "CONFIRMED").with(user(hcmManager)))
-                .andExpect(status().isOk());
-        mvc.perform(post("/api/orders/{id}/cancel", id).with(user(customer))).andExpect(status().isConflict());
-        mvc.perform(put("/api/orders/{id}/status", id).param("status", "PREPARING").with(user(hcmManager)))
-                .andExpect(status().isOk());
+        mvc.perform(post("/api/orders/{id}/cancellation-request/reject", id)
+                .param("reason", "Đã chuẩn bị hàng").with(user(hcmManager)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cancellationRequests[0].status").value("REJECTED"))
+                .andExpect(jsonPath("$.status").value("PROCESSING"));
         mvc.perform(put("/api/orders/{id}/status", id).param("status", "SHIPPING").with(user(hcmManager)))
                 .andExpect(status().isOk());
+        mvc.perform(post("/api/orders/{id}/cancellation-request", id).param("reason", "Đổi ý nữa")
+                .with(user(customer))).andExpect(status().isConflict());
         mvc.perform(put("/api/orders/{id}/status", id).param("status", "COMPLETED").with(user(hcmManager)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusHistory.length()").value(4))
+                .andExpect(jsonPath("$.statusHistory[3].status").value("COMPLETED"));
+        assertEquals(4, events.count());
+    }
+
+    @Test
+    void cancellationRequestRequiresReasonOwnerBranchAndSinglePendingRequest() throws Exception {
+        addProduct(customer, product.getId(), 1);
+        long id = createOrder(customer, orderPayload(hcm.getId(), "request-guards-000001"));
+        mvc.perform(post("/api/orders/{id}/cancellation-request", id).param("reason", "Đổi ý")
+                .with(user(customer))).andExpect(status().isConflict());
+        confirmPayment(id, hcmManager);
+        mvc.perform(post("/api/orders/{id}/cancellation-request", id).with(user(customer)))
+                .andExpect(status().isConflict());
+        mvc.perform(post("/api/orders/{id}/cancellation-request", id).param("reason", "   ")
+                .with(user(customer))).andExpect(status().isConflict());
+        mvc.perform(post("/api/orders/{id}/cancellation-request", id).param("reason", "Không còn nhu cầu")
+                .with(user(anotherCustomer))).andExpect(status().isForbidden());
+        mvc.perform(post("/api/orders/{id}/cancellation-request", id).param("reason", "Không còn nhu cầu")
+                .with(user(customer)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cancellationRequests[0].reason").value("Không còn nhu cầu"))
+                .andExpect(jsonPath("$.cancellationRequests[0].requestedAt").exists());
+        mvc.perform(post("/api/orders/{id}/cancellation-request", id).param("reason", "Gửi lại")
+                .with(user(customer))).andExpect(status().isConflict());
+        mvc.perform(put("/api/orders/{id}/status", id).param("status", "CANCELLED")
+                .param("reason", "Hủy thay").with(user(hcmManager))).andExpect(status().isConflict());
+        mvc.perform(post("/api/orders/{id}/cancellation-request/approve", id)
+                .param("reason", "Đồng ý").with(user(customer))).andExpect(status().isForbidden());
+        mvc.perform(post("/api/orders/{id}/cancellation-request/approve", id)
+                .param("reason", "Đồng ý").with(user(hnManager))).andExpect(status().isForbidden());
+        mvc.perform(post("/api/orders/{id}/cancellation-request/approve", id)
+                .with(user(hcmManager))).andExpect(status().isConflict());
+        mvc.perform(post("/api/orders/{id}/cancellation-request/reject", id)
+                .param("reason", "   ").with(user(hcmManager))).andExpect(status().isConflict());
+        assertEquals(4, stock(product.getId()));
+        mvc.perform(get("/api/orders/{id}", id).with(user(customer)))
+                .andExpect(jsonPath("$.status").value("PROCESSING"))
+                .andExpect(jsonPath("$.cancellationRequests[0].status").value("PENDING"));
+    }
+
+    @Test
+    void rejectedRequestKeepsOrderAndAllowsNewRequestBeforeHandover() throws Exception {
+        addProduct(customer, product.getId(), 1);
+        long id = createOrder(customer, orderPayload(hcm.getId(), "request-rejected-00001"));
+        confirmPayment(id, hcmManager);
+        mvc.perform(post("/api/orders/{id}/cancellation-request", id).param("reason", "Đổi lịch")
+                .with(user(customer))).andExpect(status().isOk());
+        mvc.perform(post("/api/orders/{id}/cancellation-request/reject", id)
+                .param("reason", "Chi nhánh có thể giao đúng lịch").with(user(admin)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PROCESSING"))
+                .andExpect(jsonPath("$.paymentStatus").value("PAID"))
+                .andExpect(jsonPath("$.cancellationRequests[0].status").value("REJECTED"))
+                .andExpect(jsonPath("$.cancellationRequests[0].decisionReason").value("Chi nhánh có thể giao đúng lịch"))
+                .andExpect(jsonPath("$.cancellationRequests[0].resolvedAt").exists());
+        assertEquals(4, stock(product.getId()));
+        mvc.perform(post("/api/orders/{id}/cancellation-request/reject", id)
+                .param("reason", "Lặp").with(user(hcmManager))).andExpect(status().isConflict());
+        mvc.perform(post("/api/orders/{id}/cancellation-request", id).param("reason", "Vẫn muốn hủy")
+                .with(user(customer)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cancellationRequests.length()").value(2))
+                .andExpect(jsonPath("$.cancellationRequests[1].status").value("PENDING"));
+        mvc.perform(post("/api/orders/{id}/cancellation-request/approve", id)
+                .param("reason", "Đồng ý hủy").with(user(hcmManager)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cancellationRequests[1].status").value("APPROVED"))
+                .andExpect(jsonPath("$.paymentStatus").value("REFUNDED"));
+        assertEquals(5, stock(product.getId()));
+    }
+
+    @Test
+    void staffCanCancelProcessingBeforeHandoverButNotAfterShipping() throws Exception {
+        addProduct(customer, product.getId(), 1);
+        long cancelId = createOrder(customer, orderPayload(hcm.getId(), "staff-processing-cancel1"));
+        confirmPayment(cancelId, hcmManager);
+        mvc.perform(put("/api/orders/{id}/status", cancelId).param("status", "CANCELLED")
+                .param("reason", "Không thể giao hàng").with(user(hcmManager)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.paymentStatus").value("REFUNDED"));
+        assertEquals(5, stock(product.getId()));
+
+        addProduct(customer, product.getId(), 1);
+        long shippedId = createOrder(customer, orderPayload(hcm.getId(), "shipped-no-cancel-0001"));
+        confirmPayment(shippedId, hcmManager);
+        mvc.perform(put("/api/orders/{id}/status", shippedId).param("status", "SHIPPING")
+                .with(user(hcmManager))).andExpect(status().isOk());
+        mvc.perform(post("/api/orders/{id}/cancellation-request", shippedId)
+                .param("reason", "Đổi ý").with(user(customer))).andExpect(status().isConflict());
+        mvc.perform(put("/api/orders/{id}/status", shippedId).param("status", "CANCELLED")
+                .param("reason", "Hủy trễ").with(user(hcmManager))).andExpect(status().isConflict());
+        assertEquals(4, stock(product.getId()));
+    }
+
+    @Test
+    void preexistingProcessingStatusesCanUseTheNewCancellationFlow() throws Exception {
+        for (String legacyStatus : List.of("PAID", "CONFIRMED", "PREPARING")) {
+            addProduct(customer, product.getId(), 1);
+            long id = createOrder(customer, orderPayload(hcm.getId(), "legacy-order-" + legacyStatus.toLowerCase() + "-0001"));
+            confirmPayment(id, hcmManager);
+            var order = orders.findById(id).orElseThrow();
+            order.setStatus(legacyStatus);
+            orders.saveAndFlush(order);
+            mvc.perform(post("/api/orders/{id}/cancellation-request", id).param("reason", "Đổi ý")
+                    .with(user(customer))).andExpect(status().isOk());
+            mvc.perform(post("/api/orders/{id}/cancellation-request/approve", id)
+                    .param("reason", "Đồng ý").with(user(hcmManager)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.status").value("CANCELLED"))
+                    .andExpect(jsonPath("$.paymentStatus").value("REFUNDED"));
+            assertEquals(5, stock(product.getId()));
+        }
+    }
+
+    private void confirmPayment(long id, CustomUserDetails staff) throws Exception {
+        mvc.perform(post("/api/orders/{id}/confirm-payment", id).with(user(staff)))
                 .andExpect(status().isOk());
-        assertEquals(5, events.count());
     }
 
     private CustomUserDetails principal(String email, RoleName role, Long branchId) {

@@ -1,12 +1,19 @@
 (() => {
     const token = localStorage.getItem('pawconnect.accessToken');
-    const statusLabels = { PAID: 'Đã thanh toán', CONFIRMED: 'Đã xác nhận', PREPARING: 'Đang chuẩn bị', SHIPPING: 'Đang giao', COMPLETED: 'Hoàn tất', CANCELLED: 'Đã hủy', PENDING: 'Chờ xác nhận', SHIPPED: 'Đang giao', DELIVERED: 'Đã giao' };
+    const progress = window.PawConnectOrderProgress;
     const adoptionLabels = { PENDING: 'Chờ duyệt', APPROVED: 'Đã duyệt', REJECTED: 'Đã từ chối' };
+    let pendingCancellation = null;
 
     document.addEventListener('DOMContentLoaded', async () => {
         if (!token) return window.location.assign('/auth/login?returnTo=%2Forders');
         document.getElementById('purchase-tab').addEventListener('click', () => showTab('purchase'));
         document.getElementById('adoption-tab').addEventListener('click', () => showTab('adoption'));
+        document.getElementById('cancel-order-back').addEventListener('click', () =>
+            document.getElementById('cancel-order-dialog').close());
+        document.getElementById('cancel-order-dialog').addEventListener('close', () => { pendingCancellation = null; });
+        document.getElementById('cancel-order-form').addEventListener('submit', submitCancellation);
+        document.getElementById('cancel-order-reason').addEventListener('input', event =>
+            event.currentTarget.setCustomValidity(''));
         try {
             const me = await request('/api/auth/me');
             if (me.role !== 'CUSTOMER') throw new Error('Trang này chỉ dành cho tài khoản khách hàng.');
@@ -33,17 +40,41 @@
         if (!orders.length) { list.textContent = 'Bạn chưa có đơn mua hàng nào.'; return; }
         orders.forEach(order => {
             const card = document.createElement('article');
-            card.className = 'commerce-panel commerce-order';
-            card.innerHTML = '<div><h2 class="order-title"></h2><p class="order-meta"></p><p class="order-items"></p><p class="order-payment"></p></div><div class="order-side"><strong class="order-total"></strong><a class="btn-pill" href="#">Xem biên lai</a><button type="button" class="commerce-remove" hidden>Hủy đơn</button></div>';
-            card.querySelector('.order-title').textContent = `Đơn #${order.id} · ${statusLabels[order.status] || order.status}`;
+            card.className = 'commerce-panel commerce-order-card';
+            card.innerHTML = '<div class="row g-3 align-items-start"><div class="col-12 col-md-8"><h2 class="order-title"></h2><span class="order-status-badge"></span><p class="order-meta mt-2"></p><p class="order-items"></p><p class="order-payment"></p></div><div class="col-12 col-md-4 order-side"><strong class="order-total"></strong><a class="btn-pill" href="#">Xem biên lai</a><button type="button" class="commerce-remove" hidden>Hủy đơn và hoàn tiền</button></div></div>';
+            card.querySelector('.order-title').textContent = `Đơn #${order.id}`;
+            const badge = card.querySelector('.order-status-badge');
+            badge.textContent = customerStatusLabel(order.status);
+            if (order.status === 'COMPLETED') badge.classList.add('is-finished');
+            if (order.status === 'CANCELLED') badge.classList.add('is-cancelled');
             card.querySelector('.order-meta').textContent = `${formatDate(order.createdAt)} · ${order.branchName || `Chi nhánh #${order.branchId}`}`;
             card.querySelector('.order-items').textContent = (order.items || []).map(item => `${item.productName} × ${item.quantity}`).join(', ');
             card.querySelector('.order-payment').textContent = `Thanh toán: ${paymentLabel(order)}`;
             card.querySelector('.order-total').textContent = formatMoney(order.totalAmount);
-            card.querySelector('a').href = `/orders/${order.id}/receipt`;
+            const detailsLink = card.querySelector('a');
+            detailsLink.href = `/orders/${order.id}/receipt`;
+            detailsLink.textContent = ['PAID', 'REFUNDED'].includes(order.paymentStatus) ? 'Xem biên lai' : 'Xem đơn hàng';
+            card.append(progress.render(order, { customerView: true }));
             const cancel = card.querySelector('button');
-            cancel.hidden = order.status !== 'PAID';
-            cancel.addEventListener('click', () => cancelOrder(order.id));
+            const processing = ['PROCESSING', 'PAID', 'CONFIRMED', 'PREPARING'].includes(order.status);
+            const pending = (order.cancellationRequests || []).some(request => request.status === 'PENDING');
+            cancel.hidden = !(order.status === 'PAYMENT_REPORTED' || (processing && !pending));
+            cancel.textContent = processing ? 'Gửi yêu cầu hủy' : 'Hủy đơn';
+            cancel.addEventListener('click', () => cancelOrder(order, processing));
+            if (['SHIPPING', 'COMPLETED'].includes(order.status)) {
+                const support = document.createElement('button');
+                support.type = 'button';
+                support.className = 'btn btn-outline-secondary';
+                support.textContent = 'Liên hệ hỗ trợ';
+                support.addEventListener('click', () => {
+                    const chat = document.getElementById('chatWidgetToggle');
+                    if (chat) chat.click();
+                    else showNotice(order.branchPhone
+                        ? `Liên hệ chi nhánh: ${order.branchPhone}`
+                        : 'Vui lòng liên hệ chi nhánh để được hỗ trợ về đơn hàng.', true);
+                });
+                card.querySelector('.order-side').append(support);
+            }
             list.append(card);
         });
     }
@@ -102,13 +133,45 @@
         } catch (error) { list.textContent = error.message; }
     }
 
-    async function cancelOrder(id) {
-        if (!window.confirm(`Hủy đơn #${id} trước khi chi nhánh xác nhận?`)) return;
+    function cancelOrder(order, requestOnly) {
+        pendingCancellation = { order, requestOnly };
+        document.getElementById('cancel-order-title').textContent = requestOnly
+            ? `Gửi yêu cầu hủy đơn #${order.id}?` : `Hủy đơn #${order.id}?`;
+        document.getElementById('cancel-order-description').textContent = requestOnly
+            ? 'Chi nhánh sẽ xem xét và trả lời. Đơn chưa bị hủy hoặc hoàn tiền khi yêu cầu còn chờ; chi nhánh không thể bàn giao vận chuyển trước khi trả lời.'
+            : 'Đơn sẽ được hủy và tồn kho được khôi phục. Chi nhánh chưa ghi nhận thanh toán nên không ghi hoàn tiền.';
+        document.getElementById('cancel-order-submit').textContent = requestOnly ? 'Gửi yêu cầu hủy' : 'Xác nhận hủy đơn';
+        const input = document.getElementById('cancel-order-reason');
+        input.value = '';
+        input.setCustomValidity('');
+        document.getElementById('cancel-order-dialog').showModal();
+    }
+
+    async function submitCancellation(event) {
+        event.preventDefault();
+        if (!pendingCancellation) return;
+        const { order, requestOnly } = pendingCancellation;
+        const input = document.getElementById('cancel-order-reason');
+        const reason = input.value.trim();
+        if (!reason) {
+            input.setCustomValidity('Vui lòng nhập lý do hủy đơn.');
+            input.reportValidity();
+            return;
+        }
+        const submit = document.getElementById('cancel-order-submit');
+        submit.disabled = true;
         try {
-            await request(`/api/orders/${id}/cancel`, { method: 'POST' });
-            showNotice(`Đã hủy đơn #${id} và hoàn tiền.`);
+            const query = new URLSearchParams({ reason });
+            const result = await request(`/api/orders/${order.id}/${requestOnly ? 'cancellation-request' : 'cancel'}?${query}`, { method: 'POST' });
+            document.getElementById('cancel-order-dialog').close();
+            showNotice(requestOnly ? `Đã gửi yêu cầu hủy đơn #${order.id}; chờ chi nhánh trả lời.`
+                : result.paymentStatus === 'REFUNDED' ? `Đã hủy đơn #${order.id} và hoàn tiền.` : `Đã hủy đơn #${order.id}.`);
             await loadPurchases();
-        } catch (error) { showNotice(error.message, true); }
+        } catch (error) {
+            document.getElementById('cancel-order-dialog').close();
+            showNotice(error.message, true);
+            await loadPurchases().catch(() => {});
+        } finally { submit.disabled = false; }
     }
 
     async function request(path, options = {}) {
@@ -119,7 +182,16 @@
         }
         return response.json();
     }
-    function paymentLabel(order) { return order.paymentMethod === 'SIMULATED' ? (order.paymentStatus === 'REFUNDED' ? 'Đã hoàn tiền' : 'Đã thanh toán') : 'Chưa ghi nhận'; }
+    function paymentLabel(order) {
+        if (order.paymentStatus === 'REFUNDED') return 'Đã hoàn tiền';
+        if (order.paymentStatus === 'PAID') return 'Chi nhánh đã ghi nhận thanh toán';
+        if (order.paymentStatus === 'CUSTOMER_CONFIRMED') return 'Bạn đã xác nhận · chờ chi nhánh xác nhận đã nhận';
+        if (order.paymentStatus === 'CANCELLED') return 'Đã hủy trước khi ghi nhận thanh toán';
+        return 'Chưa ghi nhận';
+    }
+    function customerStatusLabel(status) {
+        return progress.labels[status] || status;
+    }
     function formatMoney(value) { return `${new Intl.NumberFormat('vi-VN').format(value || 0)} VND`; }
     function formatDate(value) { return value ? new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)) : '—'; }
     function showNotice(message, error = false) { const notice = document.getElementById('orders-notice'); notice.textContent = message; notice.classList.toggle('error', error); notice.hidden = false; }

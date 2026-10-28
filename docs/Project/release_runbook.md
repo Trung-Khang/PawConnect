@@ -6,7 +6,7 @@
 
 1. Ghi SHA commit cần phát hành, chạy `mvn clean test` và lưu báo cáo kiểm thử; TV1 xác nhận regression shop/adoption/chat. Không deploy code chưa qua nghiệm thu.
 2. Kiểm tra các biến trong [production_configuration.md](production_configuration.md) trên **backend service**. Chỉ ghi tên biến vào báo cáo, không in hoặc commit giá trị. Dùng `SPRING_PROFILES_ACTIVE=production,mysql` và `JPA_DDL_AUTO=validate`.
-3. Đối chiếu schema hiện tại với các file `data-pipeline/migrations/`, đặc biệt V4.5 (tên hiển thị manager) và V4.6 (queue adoption). Lập danh sách migration chưa chạy; không suy ra trạng thái Railway từ source.
+3. Đối chiếu schema hiện tại với các file `data-pipeline/migrations/`, đặc biệt V4.5 (tên hiển thị manager), V4.6 (queue adoption), V4.7 (checkout/biên lai) và V4.8 (yêu cầu hủy đơn). Lập danh sách migration chưa chạy; không suy ra trạng thái Railway từ source.
 4. Tạo và xác minh bản backup MySQL trước mọi migration; ghi thời điểm, người thực hiện và nơi lưu an toàn. Không chạy seed/import lại trên database demo đã có dữ liệu.
 
 ## 2. Migration và deploy
@@ -21,7 +21,7 @@
 | Luồng | Kiểm tra tối thiểu |
 | --- | --- |
 | Auth | Đăng ký/OTP thật, đăng nhập, refresh, quên mật khẩu; API cần JWT trả 401 khi chưa đăng nhập. |
-| Shop/cart/order | Tìm kiếm, thêm/xóa cart; chỉ thử checkout khi nghiệp vụ thanh toán và migration tương ứng đã được nghiệm thu. Kiểm tra stock, tổng tiền và quyền đọc đơn. |
+| Shop/cart/order | Tìm kiếm, thêm/xóa cart; chỉ thử checkout khi nghiệp vụ thanh toán và migration tương ứng đã được nghiệm thu. Kiểm tra stock, tổng tiền, quyền đọc đơn, hủy ngay trước xác nhận thanh toán, gửi/duyệt/từ chối yêu cầu hủy khi đang xử lý, và chặn bàn giao khi yêu cầu còn chờ. Không thử hủy đơn thực của khách trên DB chung. |
 | Booking/adoption | Đặt lịch, nộp đơn nhận nuôi; manager sai chi nhánh không sửa được booking/đơn. |
 | Chat | Một customer một inbox, context/deep-link đúng; WSS/reconnect không nhân đôi hoặc mất tin. |
 | Media | Upload và xóa ảnh thử qua Cloudinary, kiểm tra lỗi provider hiển thị rõ. |

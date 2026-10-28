@@ -335,7 +335,7 @@ body .main-header > .container {
 .header-avatar { width: 2rem; height: 2rem; border-radius: 50%; object-fit: cover; }
 .account-profile-link > [hidden] { display: none !important; }
 
-@media (min-width: 761px) {
+@media (min-width: 901px) {
     .header-auth-action { margin-right: 0; }
     .main-header:not(.main-header-signed-in) .header-auth-action {
         margin-right: 0;
@@ -485,7 +485,7 @@ body .main-header > .container {
 body.management-menu-open { overflow: hidden; }
 
 @media (max-width: 1240px) {
-    .main-header .container {
+    body .main-header > .container {
         grid-template-columns: max-content 1fr;
         row-gap: .5rem;
     }
@@ -502,9 +502,9 @@ body.management-menu-open { overflow: hidden; }
     .main-header.main-header-signed-in .nav-menu-wrapper { transform: none; }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 900px) {
     body .main-header > .container {
-        width: min(94vw, 38rem);
+        width: 94vw;
         grid-template-columns: minmax(0, 1fr);
         row-gap: .45rem;
     }
@@ -517,9 +517,9 @@ body.management-menu-open { overflow: hidden; }
     .header-actions > [data-booking-access] { display: none; }
     .user-pill { padding-inline: .5rem; min-width: 0; }
     .account-status { max-width: 7ch; overflow: hidden; text-overflow: ellipsis; }
-    .nav-menu-wrapper { grid-row: 3; overflow-x: auto; justify-content: flex-start; scrollbar-width: thin; }
-    .nav-menu { gap: 1.2rem; padding-bottom: .3rem; }
-    .nav-menu li a { font-size: .88rem; }
+    .nav-menu-wrapper { grid-row: 3; overflow: visible; justify-content: center; }
+    .nav-menu { width: 100%; flex-wrap: wrap; gap: .2rem .75rem; padding-bottom: .2rem; }
+    .nav-menu li a { display: inline-flex; align-items: center; min-height: 2.5rem; font-size: .88rem; }
 }
 
 /* --- NOTIFICATION BELL & DROPDOWN --- */
@@ -778,4 +778,15 @@ body.management-menu-open { overflow: hidden; }
     font-size: 0.9rem !important;
     margin: 0 !important;
     white-space: normal !important;
+}
+
+@media (max-width: 900px) {
+    .main-header .notification-dropdown {
+        position: fixed !important;
+        top: 8.5rem !important;
+        left: 4vw !important;
+        right: 4vw !important;
+        width: auto !important;
+        max-width: none !important;
+    }
 }

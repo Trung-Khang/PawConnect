@@ -8,7 +8,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/shop.css">
     <link rel="stylesheet" href="/css/header.css?v=20261026-5">
-    <link rel="stylesheet" href="/css/commerce.css">
+    <link rel="stylesheet" href="/css/commerce.css?v=20261026-2">
+    <link rel="stylesheet" href="/css/order-progress.css?v=20261026-2">
 </head>
 <body class="commerce-screen">
 <div th:replace="~{fragments/header :: header}"></div>
@@ -19,10 +20,24 @@
         <button id="purchase-tab" class="nav-link active" type="button" role="tab" aria-selected="true" aria-controls="purchase-orders">Đơn mua hàng</button>
         <button id="adoption-tab" class="nav-link" type="button" role="tab" aria-selected="false" aria-controls="adoption-orders">Đơn nhận nuôi</button>
     </div>
+    <p class="text-muted small mb-3">Bạn có thể hủy ngay khi còn chờ chi nhánh xác nhận. Khi đơn đang xử lý nhưng chưa bàn giao vận chuyển, hãy gửi yêu cầu hủy để chi nhánh xem xét. Đơn đã bàn giao vận chuyển cần liên hệ hỗ trợ.</p>
     <section id="purchase-orders" role="tabpanel" aria-labelledby="purchase-tab" class="commerce-list" aria-live="polite">Đang tải đơn hàng…</section>
     <section id="adoption-orders" role="tabpanel" aria-labelledby="adoption-tab" class="commerce-list" aria-live="polite" hidden></section>
 </main>
+<dialog id="cancel-order-dialog" class="commerce-confirm-dialog" aria-labelledby="cancel-order-title">
+    <form id="cancel-order-form" class="p-3 p-sm-4">
+        <h2 id="cancel-order-title" class="h4 mb-2"></h2>
+        <p id="cancel-order-description" class="mb-3"></p>
+        <label class="form-label" for="cancel-order-reason">Lý do hủy hoặc yêu cầu hủy (bắt buộc)</label>
+        <textarea id="cancel-order-reason" class="form-control" rows="3" maxlength="500" required></textarea>
+        <div class="d-flex flex-column-reverse flex-sm-row justify-content-end gap-2 mt-4">
+            <button id="cancel-order-back" class="btn btn-outline-secondary" type="button">Quay lại</button>
+            <button id="cancel-order-submit" class="btn btn-danger" type="submit">Xác nhận hủy đơn</button>
+        </div>
+    </form>
+</dialog>
 <div th:replace="~{fragments/footer :: footer}"></div>
-<script src="/js/my-orders.js" defer></script>
+<script src="/js/order-progress.js?v=20261027-1" defer></script>
+<script src="/js/my-orders.js?v=20261027-1" defer></script>
 </body>
 </html>

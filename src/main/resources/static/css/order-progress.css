@@ -1,0 +1,29 @@
+.order-progress { min-width: 0; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eadfd9; }
+.order-progress-title { margin: 0 0 .9rem; font-size: 1rem; font-weight: 750; }
+.order-payment-confirmation { margin: 0 0 1rem; padding: .75rem 1rem; border: 1px solid #e6d6c5; border-radius: 12px; background: #fffaf5; }
+.order-payment-confirmation > strong { display: block; margin-bottom: .3rem; }
+.order-payment-confirmation p { margin: .2rem 0; color: #46535d; font-size: .86rem; }
+.order-progress-event { color: #58636b; }
+.order-progress-event time { display: inline; }
+.order-progress-list { list-style: none; display: grid; gap: .55rem; margin: 0; padding: 0; }
+.order-progress-step { display: grid; grid-template-columns: 1.75rem minmax(0, 1fr); gap: .7rem; align-items: start; color: #69727c; }
+.order-progress-step > div { min-width: 0; padding-bottom: .5rem; }
+.order-progress-step strong { display: block; color: #41505e; font-size: .92rem; }
+.order-progress-step p { margin: .12rem 0 0; font-size: .84rem; overflow-wrap: anywhere; }
+.order-progress-step time { display: block; margin-top: .1rem; font-size: .78rem; }
+.order-progress-marker { width: 1.7rem; height: 1.7rem; display: grid; place-items: center; border: 2px solid #bbc3c8; border-radius: 50%; background: #fff; color: #58636b; font-size: .82rem; font-weight: 800; }
+.order-progress-step.is-done .order-progress-marker { border-color: #21804b; background: #21804b; color: #fff; }
+.order-progress-step.is-current strong { color: #a84220; }
+.order-progress-step.is-current .order-progress-marker { border-color: #aa4627; background: #fff1e9; color: #a84220; }
+.order-progress-step.is-cancelled strong { color: #ab352b; }
+.order-progress-step.is-cancelled .order-progress-marker { border-color: #ab352b; background: #fff0ee; color: #ab352b; }
+.order-status-badge { display: inline-flex; align-items: center; width: fit-content; padding: .3rem .7rem; border-radius: 999px; background: #fff1e9; color: #96391d; font-size: .85rem; font-weight: 750; }
+.order-status-badge.is-finished { background: #e8f6ed; color: #176038; }
+.order-status-badge.is-cancelled { background: #fff0ee; color: #a32f25; }
+@media (min-width: 768px) {
+    .order-progress-list { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .45rem; }
+    .order-progress.is-customer .order-progress-list { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .order-progress-step { display: block; }
+    .order-progress-marker { margin-bottom: .5rem; }
+    .order-progress-step.is-cancelled { grid-column: 1 / -1; display: flex; gap: .7rem; align-items: flex-start; }
+}

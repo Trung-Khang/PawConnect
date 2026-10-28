@@ -45,10 +45,10 @@
             const row = document.createElement('tr');
             const disabledSelf = user.id === state.currentUserId;
             row.innerHTML = `
-                <td><strong></strong><small></small></td>
-                <td></td><td></td><td><span class="role-badge"></span></td>
-                <td><span class="account-state"></span></td>
-                <td class="admin-user-actions"><button type="button" class="icon-btn edit-user" title="Chỉnh sửa" aria-label="Chỉnh sửa"><i class="fas fa-pen"></i></button><button type="button" class="icon-btn delete-user" title="Xóa tài khoản" aria-label="Xóa tài khoản"><i class="fas fa-trash"></i></button></td>`;
+                <td data-label="Tài khoản"><strong></strong><small></small></td>
+                <td data-label="Email"></td><td data-label="Số điện thoại"></td><td data-label="Vai trò"><span class="role-badge"></span></td>
+                <td data-label="Trạng thái"><span class="account-state"></span></td>
+                <td class="admin-user-actions" data-label="Thao tác"><button type="button" class="icon-btn edit-user" title="Chỉnh sửa" aria-label="Chỉnh sửa"><i class="fas fa-pen"></i></button><button type="button" class="icon-btn delete-user" title="Xóa tài khoản" aria-label="Xóa tài khoản"><i class="fas fa-trash"></i></button></td>`;
             row.querySelector('strong').textContent = user.fullName;
             row.querySelector('small').textContent = user.username || 'Tài khoản seed';
             row.children[1].textContent = user.email;
