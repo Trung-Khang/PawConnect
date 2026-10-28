@@ -32,7 +32,7 @@
             body.replaceChildren();
             for (const branch of branches) {
                 const row = document.createElement('tr');
-                row.innerHTML = '<td></td><td></td><td></td><td></td><td class="branch-row-actions"><button class="edit-branch" type="button">Sửa</button><button class="delete-branch" type="button">Xóa</button></td>';
+                row.innerHTML = '<td data-label="Mã"></td><td data-label="Tên"></td><td data-label="Địa chỉ"></td><td data-label="Điện thoại"></td><td class="branch-row-actions" data-label="Thao tác"><button class="edit-branch" type="button">Sửa</button><button class="delete-branch" type="button">Xóa</button></td>';
                 [branch.code || '', branch.name, branch.address, branch.phone || '—'].forEach((value, index) => { row.children[index].textContent = value; });
                 row.querySelector('.edit-branch').addEventListener('click', () => openDialog(branch));
                 row.querySelector('.delete-branch').addEventListener('click', () => remove(branch));

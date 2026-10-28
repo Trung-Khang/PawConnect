@@ -116,17 +116,17 @@
         const reasonHtml = booking.reason ? `<div class="reason-box"><strong>Lý do:</strong> ${escapeHtml(booking.reason)}</div>` : '';
 
         tr.innerHTML = `
-            <td><strong>#${booking.id}</strong></td>
-            <td><strong>${escapeHtml(custName)}</strong>${custPhone}${custEmail}</td>
-            <td><strong>${escapeHtml(sName)}</strong>${sPrice}${sDuration}</td>
-            <td>${escapeHtml(booking.branchName || `Chi nhánh #${booking.branchId}`)}</td>
-            <td><strong style="color:#d35400;">${formatDateTime(booking.bookingTime)}</strong></td>
-            <td><small style="color:var(--text-muted);">${formatDateTime(booking.createdAt)}</small></td>
-            <td>
+            <td data-label="Mã lịch"><strong>#${booking.id}</strong></td>
+            <td data-label="Khách hàng"><strong>${escapeHtml(custName)}</strong>${custPhone}${custEmail}</td>
+            <td data-label="Dịch vụ"><strong>${escapeHtml(sName)}</strong>${sPrice}${sDuration}</td>
+            <td data-label="Chi nhánh">${escapeHtml(booking.branchName || `Chi nhánh #${booking.branchId}`)}</td>
+            <td data-label="Ngày & giờ hẹn"><strong style="color:#d35400;">${formatDateTime(booking.bookingTime)}</strong></td>
+            <td data-label="Thời điểm đặt"><small style="color:var(--text-muted);">${formatDateTime(booking.createdAt)}</small></td>
+            <td data-label="Trạng thái">
                 <span class="status-badge ${booking.status}">${statusText}</span>
                 ${reasonHtml}
             </td>
-            <td class="action-cell"></td>
+            <td class="action-cell" data-label="Thao tác"></td>
         `;
 
         const actionCell = tr.querySelector('.action-cell');

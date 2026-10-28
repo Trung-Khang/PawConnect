@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="/css/shop.css">
     <link rel="stylesheet" href="/css/header.css?v=20261026-5">
     <link rel="stylesheet" href="/css/admin-users.css">
+    <link rel="stylesheet" href="/css/mobile-admin-tables.css?v=20261027-1">
 </head>
 <body>
 <div th:replace="~{fragments/header :: header}"></div>
@@ -30,8 +31,8 @@
             <h2 id="accounts-title">Danh sách tài khoản</h2>
             <span id="account-total" class="account-total">0 tài khoản</span>
         </div>
-        <div class="admin-users-table-scroll">
-            <table>
+        <div class="admin-users-table-scroll mobile-admin-table-container">
+            <table class="mobile-admin-table">
                 <thead>
                 <tr><th>Tài khoản</th><th>Email</th><th>Số điện thoại</th><th>Vai trò</th><th>Trạng thái</th><th><span class="sr-only">Thao tác</span></th></tr>
                 </thead>
