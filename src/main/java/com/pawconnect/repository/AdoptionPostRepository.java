@@ -26,4 +26,6 @@ public interface AdoptionPostRepository extends JpaRepository<AdoptionPost, Long
     boolean existsByDogProfileId(Long dogProfileId);
 
     boolean existsByDogProfileIdAndStatus(Long dogProfileId, AdoptionPostStatus status);
+
+    boolean existsByCreatedById(Long createdById);
 }

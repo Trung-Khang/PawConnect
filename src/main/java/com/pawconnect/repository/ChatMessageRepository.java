@@ -13,6 +13,7 @@ import java.util.Optional;
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
     Page<ChatMessage> findByConversationIdOrderBySentAtDesc(Long conversationId, Pageable pageable);
     Optional<ChatMessage> findFirstByConversationIdOrderBySentAtDesc(Long conversationId);
+    boolean existsBySenderId(Long senderId);
 
     @Modifying
     @Query("update ChatMessage message set message.read = true where message.conversation.id = :conversationId "

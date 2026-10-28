@@ -20,6 +20,8 @@ public interface AdoptionApplicationRepository extends JpaRepository<AdoptionApp
 
     List<AdoptionApplication> findByApplicantIdOrderByCreatedAtDesc(Long applicantId);
 
+    boolean existsByApplicantId(Long applicantId);
+
     List<AdoptionApplication> findByAdoptionPostDogProfileBranchId(Long branchId);
 
     boolean existsByAdoptionPostIdAndApplicantIdAndStatus(

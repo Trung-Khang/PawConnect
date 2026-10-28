@@ -15,6 +15,8 @@ import org.springframework.data.repository.query.Param;
 public interface ConversationRepository extends JpaRepository<Conversation, Long> {
     Optional<Conversation> findByCustomerIdAndAdoptionPostId(Long customerId, Long adoptionPostId);
     Optional<Conversation> findByCustomerId(Long customerId);
+    boolean existsByCustomerId(Long customerId);
+    boolean existsByAssignedStaffId(Long assignedStaffId);
     Optional<Conversation> findFirstByCustomerIdAndTypeAndBranchIdAndStatusInOrderByLastMessageAtDesc(
             Long customerId, ConversationType type, Long branchId, List<ConversationStatus> statuses);
     List<Conversation> findByCustomerEmailIgnoreCaseOrderByLastMessageAtDesc(String email);

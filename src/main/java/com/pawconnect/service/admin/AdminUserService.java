@@ -5,6 +5,16 @@ import com.pawconnect.dto.admin.AdminUserUpdateRequest;
 import com.pawconnect.entity.User;
 import com.pawconnect.exception.BusinessException;
 import com.pawconnect.exception.ResourceNotFoundException;
+import com.pawconnect.repository.AdoptionApplicationRepository;
+import com.pawconnect.repository.AdoptionPostRepository;
+import com.pawconnect.repository.AuthOtpRepository;
+import com.pawconnect.repository.CartRepository;
+import com.pawconnect.repository.ChatMessageRepository;
+import com.pawconnect.repository.ConversationRepository;
+import com.pawconnect.repository.NotificationRepository;
+import com.pawconnect.repository.OrderRepository;
+import com.pawconnect.repository.PasswordResetSessionRepository;
+import com.pawconnect.repository.ServiceBookingRepository;
 import com.pawconnect.repository.UserRepository;
 import com.pawconnect.security.SecurityUtils;
 import com.pawconnect.util.UserDisplayName;
@@ -19,9 +29,39 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminUserService {
 
     private final UserRepository userRepository;
+    private final AuthOtpRepository authOtpRepository;
+    private final PasswordResetSessionRepository passwordResetSessionRepository;
+    private final NotificationRepository notificationRepository;
+    private final CartRepository cartRepository;
+    private final OrderRepository orderRepository;
+    private final ServiceBookingRepository serviceBookingRepository;
+    private final AdoptionApplicationRepository adoptionApplicationRepository;
+    private final AdoptionPostRepository adoptionPostRepository;
+    private final ConversationRepository conversationRepository;
+    private final ChatMessageRepository chatMessageRepository;
 
-    public AdminUserService(UserRepository userRepository) {
+    public AdminUserService(UserRepository userRepository,
+                            AuthOtpRepository authOtpRepository,
+                            PasswordResetSessionRepository passwordResetSessionRepository,
+                            NotificationRepository notificationRepository,
+                            CartRepository cartRepository,
+                            OrderRepository orderRepository,
+                            ServiceBookingRepository serviceBookingRepository,
+                            AdoptionApplicationRepository adoptionApplicationRepository,
+                            AdoptionPostRepository adoptionPostRepository,
+                            ConversationRepository conversationRepository,
+                            ChatMessageRepository chatMessageRepository) {
         this.userRepository = userRepository;
+        this.authOtpRepository = authOtpRepository;
+        this.passwordResetSessionRepository = passwordResetSessionRepository;
+        this.notificationRepository = notificationRepository;
+        this.cartRepository = cartRepository;
+        this.orderRepository = orderRepository;
+        this.serviceBookingRepository = serviceBookingRepository;
+        this.adoptionApplicationRepository = adoptionApplicationRepository;
+        this.adoptionPostRepository = adoptionPostRepository;
+        this.conversationRepository = conversationRepository;
+        this.chatMessageRepository = chatMessageRepository;
     }
 
     /** Returns account information safe for administration; password hashes are never mapped to the response. */
@@ -57,12 +97,35 @@ public class AdminUserService {
         if (user.getId().equals(SecurityUtils.getCurrentUserId())) {
             throw new BusinessException("Không thể xóa tài khoản quản trị đang đăng nhập.");
         }
+        if (hasBusinessData(userId)) {
+            throw new BusinessException("Không thể xóa tài khoản vì dữ liệu nghiệp vụ liên quan vẫn còn. Hãy khóa tài khoản thay vì xóa.");
+        }
+
+        // Clean up auxiliary account artifacts (cart, otps, reset sessions, notifications)
+        cartRepository.findByUserId(userId).ifPresent(cart -> {
+            cartRepository.delete(cart);
+            cartRepository.flush();
+        });
+        authOtpRepository.deleteByUserId(userId);
+        passwordResetSessionRepository.deleteByUserId(userId);
+        notificationRepository.deleteByRecipientId(userId);
+
         try {
             userRepository.delete(user);
             userRepository.flush();
         } catch (DataIntegrityViolationException exception) {
             throw new BusinessException("Không thể xóa tài khoản vì dữ liệu nghiệp vụ liên quan vẫn còn. Hãy khóa tài khoản thay vì xóa.");
         }
+    }
+
+    private boolean hasBusinessData(Long userId) {
+        return orderRepository.existsByUserId(userId)
+                || serviceBookingRepository.existsByUserId(userId)
+                || adoptionApplicationRepository.existsByApplicantId(userId)
+                || adoptionPostRepository.existsByCreatedById(userId)
+                || conversationRepository.existsByCustomerId(userId)
+                || conversationRepository.existsByAssignedStaffId(userId)
+                || chatMessageRepository.existsBySenderId(userId);
     }
 
     private User requireUser(Long userId) {
