@@ -226,31 +226,31 @@
             const itemKey = `${item.itemType}_${item.id}`;
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td class="selection-cell">
+                <td class="selection-cell" data-label="Chọn">
                     <input class="product-selector" type="checkbox" value="${itemKey}" aria-label="Chọn ${escapeHtml(item.name)}">
                 </td>
-                <td>
+                <td data-label="Hình ảnh">
                     <img src="${escapeAttribute(item.imageUrl || defaultImage)}" class="product-img-cell" alt="">
                 </td>
-                <td>
+                <td data-label="Tên mặt hàng">
                     <strong>${escapeHtml(item.name)}</strong>
                 </td>
-                <td>
+                <td data-label="Phân loại">
                     ${item.itemType === 'puppy'
                         ? `<span class="badge" style="background:#fff3ed;color:#e27b58;border:1.5px solid #e27b58;padding:3px 10px;border-radius:12px;font-weight:700;font-size:0.8rem;">Chó con · ${escapeHtml(item.breedCode || 'Chưa rõ')}</span>`
                         : `<span class="badge" style="background:#f0fdf4;color:#16a34a;border:1.5px solid #16a34a;padding:3px 10px;border-radius:12px;font-weight:700;font-size:0.8rem;">Thức ăn, phụ kiện</span>`
                     }
                 </td>
-                <td>
+                <td data-label="Chi nhánh">
                     <span>${escapeHtml(item.branchName || ('Chi nhánh #' + item.branchId))}</span>
                 </td>
-                <td style="font-weight:700;color:#e27b58;">
+                <td data-label="Giá" style="font-weight:700;color:#e27b58;">
                     ${formatCurrency(item.price)}
                 </td>
-                <td>
+                <td data-label="Tồn kho">
                     <strong>${item.stock}</strong>
                 </td>
-                <td class="row-actions">
+                <td class="row-actions" data-label="Thao tác">
                     <button class="btn btn-secondary edit-product" type="button">Sửa</button>
                     <button class="btn btn-danger delete-product" type="button">Xóa</button>
                 </td>

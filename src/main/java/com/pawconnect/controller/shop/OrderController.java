@@ -37,8 +37,32 @@ public class OrderController {
 
     @PreAuthorize("hasRole('CUSTOMER')")
     @PostMapping("/{id}/cancel")
-    public OrderResponse cancelMyOrder(@PathVariable Long id) {
-        return orderService.cancelMyOrder(id);
+    public OrderResponse cancelMyOrder(@PathVariable Long id, @RequestParam(required = false) String reason) {
+        return orderService.cancelMyOrder(id, reason);
+    }
+
+    @PreAuthorize("hasRole('CUSTOMER')")
+    @PostMapping("/{id}/cancellation-request")
+    public OrderResponse requestCancellation(@PathVariable Long id, @RequestParam(required = false) String reason) {
+        return orderService.requestCancellation(id, reason);
+    }
+
+    @PreAuthorize("hasAnyRole('BRANCH_MANAGER', 'ADMIN')")
+    @PostMapping("/{id}/cancellation-request/approve")
+    public OrderResponse approveCancellation(@PathVariable Long id, @RequestParam(required = false) String reason) {
+        return orderService.resolveCancellation(id, true, reason);
+    }
+
+    @PreAuthorize("hasAnyRole('BRANCH_MANAGER', 'ADMIN')")
+    @PostMapping("/{id}/cancellation-request/reject")
+    public OrderResponse rejectCancellation(@PathVariable Long id, @RequestParam(required = false) String reason) {
+        return orderService.resolveCancellation(id, false, reason);
+    }
+
+    @PreAuthorize("hasAnyRole('BRANCH_MANAGER', 'ADMIN')")
+    @PostMapping("/{id}/confirm-payment")
+    public OrderResponse confirmPayment(@PathVariable Long id) {
+        return orderService.confirmPayment(id);
     }
 
     @PreAuthorize("hasAnyRole('BRANCH_MANAGER', 'ADMIN')")

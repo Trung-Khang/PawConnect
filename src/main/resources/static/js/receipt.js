@@ -1,7 +1,7 @@
 (() => {
     const token = localStorage.getItem('pawconnect.accessToken');
     const orderId = window.location.pathname.match(/^\/orders\/(\d+)\/receipt$/)?.[1];
-    const statusLabels = { PAID: 'Đã thanh toán', CONFIRMED: 'Đã xác nhận', PREPARING: 'Đang chuẩn bị', SHIPPING: 'Đang giao', COMPLETED: 'Hoàn tất', CANCELLED: 'Đã hủy', PENDING: 'Chờ xác nhận', SHIPPED: 'Đang giao', DELIVERED: 'Đã giao' };
+    const statusLabels = { PAYMENT_REPORTED: 'Chờ chi nhánh xác nhận thanh toán', PROCESSING: 'Đang xử lý', PAID: 'Đang xử lý', CONFIRMED: 'Đang xử lý', PREPARING: 'Đang xử lý', SHIPPING: 'Đang giao', COMPLETED: 'Hoàn tất', CANCELLED: 'Đã hủy' };
 
     document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('print-receipt').addEventListener('click', () => window.print());
@@ -18,6 +18,9 @@
     });
 
     function render(order) {
+        const paid = ['PAID', 'REFUNDED'].includes(order.paymentStatus);
+        setText('receipt-heading-title', paid ? 'Biên lai đơn hàng' : 'Thông tin đơn hàng');
+        document.title = `${paid ? 'Biên lai' : 'Đơn hàng'} #${order.id} | PawConnect`;
         setText('receipt-number', `Mã đơn #${order.id}`);
         setText('receipt-time', `Ngày đặt: ${formatDate(order.createdAt)}`);
         setText('receipt-customer', `Người đặt: ${order.customerName || 'Chưa ghi nhận'}`);
@@ -27,9 +30,21 @@
         setText('receipt-branch', order.branchName || `Chi nhánh #${order.branchId}`);
         setText('receipt-branch-address', order.branchAddress || 'Chưa ghi nhận địa chỉ');
         setText('receipt-branch-phone', order.branchPhone ? `Điện thoại: ${order.branchPhone}` : '');
-        setText('receipt-payment-method', `Phương thức: ${order.paymentMethod === 'SIMULATED' ? 'Thanh toán trực tuyến' : 'Chưa ghi nhận'}`);
-        setText('receipt-payment-status', `Trạng thái thanh toán: ${order.paymentStatus === 'REFUNDED' ? 'Đã hoàn tiền' : order.paymentStatus === 'PAID' ? 'Đã thanh toán' : 'Chưa ghi nhận'}`);
+        setText('receipt-payment-method', `Phương thức: ${order.paymentMethod === 'SIMULATED' ? 'Thanh toán xác nhận bởi chi nhánh' : 'Chưa ghi nhận'}`);
+        setText('receipt-payment-status', `Trạng thái thanh toán: ${paymentLabel(order.paymentStatus)}`);
         setText('receipt-order-status', `Trạng thái đơn: ${statusLabels[order.status] || order.status}`);
+        const history = Array.isArray(order.statusHistory) ? order.statusHistory : [];
+        const customerEvent = history.find(event => event.status === 'PAYMENT_REPORTED');
+        const sellerEvent = history.find(event => event.paymentStatus === 'PAID'
+            && ['PROCESSING', 'PAID', 'CONFIRMED', 'PREPARING'].includes(event.status));
+        if (customerEvent) {
+            setText('receipt-customer-confirmed', `Khách xác nhận: ${formatDate(customerEvent.createdAt)}`);
+            document.getElementById('receipt-customer-confirmed').hidden = false;
+            setText('receipt-seller-confirmed', sellerEvent
+                ? `Chi nhánh xác nhận đã nhận: ${formatDate(sellerEvent.createdAt)}`
+                : 'Chi nhánh chưa xác nhận đã nhận thanh toán.');
+            document.getElementById('receipt-seller-confirmed').hidden = false;
+        }
         const body = document.getElementById('receipt-items');
         body.replaceChildren();
         (order.items || []).forEach(item => {
@@ -44,9 +59,16 @@
         });
         setText('receipt-total', formatMoney(order.totalAmount));
         document.getElementById('receipt').hidden = false;
-        document.getElementById('print-receipt').hidden = false;
+        document.getElementById('print-receipt').hidden = !paid;
     }
 
+    function paymentLabel(status) {
+        if (status === 'PAID') return 'Chi nhánh đã ghi nhận thanh toán';
+        if (status === 'REFUNDED') return 'Đã hoàn tiền';
+        if (status === 'CUSTOMER_CONFIRMED') return 'Khách đã xác nhận, chờ chi nhánh xác nhận đã nhận';
+        if (status === 'CANCELLED') return 'Đã hủy trước khi ghi nhận thanh toán';
+        return 'Chưa ghi nhận';
+    }
     function setText(id, text) { document.getElementById(id).textContent = text; }
     function formatMoney(value) { return `${new Intl.NumberFormat('vi-VN').format(value || 0)} VND`; }
     function formatDate(value) { return value ? new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)) : '—'; }

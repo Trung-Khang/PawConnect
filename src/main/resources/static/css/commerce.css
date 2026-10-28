@@ -19,11 +19,17 @@
 .commerce-total strong { color: var(--primary-color, #e27b58); font-size: 1.3rem; }
 .commerce-submit { width: 100%; border: 0; cursor: pointer; }
 .commerce-submit:disabled { opacity: .55; cursor: not-allowed; }
+.commerce-confirm-dialog { width: min(100% - 2rem, 30rem); max-height: calc(100vh - 2rem); padding: 0; border: 0; border-radius: 16px; box-shadow: 0 20px 70px rgba(0, 0, 0, .2); }
+.commerce-confirm-dialog::backdrop { background: rgba(21, 30, 39, .55); }
 .commerce-list { display: grid; gap: 1rem; }
 .commerce-list[hidden], .commerce-page [hidden] { display: none !important; }
 .commerce-order { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; }
 .commerce-order h2 { margin-bottom: .5rem; }
 .commerce-order p { margin: .3rem 0; color: #69727c; }
+.commerce-order-card { min-width: 0; }
+.commerce-order-card .order-title { margin: 0 0 .4rem; }
+.commerce-order-card p { margin: .3rem 0; color: #69727c; overflow-wrap: anywhere; }
+.commerce-order-card .order-side { width: auto; }
 .order-side { display: flex; flex-direction: column; align-items: flex-end; gap: .75rem; min-width: 10rem; }
 .order-side a { text-align: center; text-decoration: none; }
 .receipt-actions { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
@@ -43,6 +49,8 @@
     .commerce-page > .row, .receipt .receipt-details { grid-template-columns: minmax(0, 1fr); }
     .commerce-order, .commerce-item, .receipt-heading { flex-direction: column; align-items: stretch; }
     .commerce-item-right, .order-side { align-items: flex-start; }
+    .commerce-order-card .order-side { align-items: stretch; }
+    .commerce-order-card .order-side .btn-pill { display: block; }
     .receipt-heading > div:last-child { text-align: left; }
     .receipt-table th, .receipt-table td { font-size: .8rem; padding: .5rem .2rem; }
     .receipt-table th:first-child, .receipt-table td:first-child { min-width: 7rem; }

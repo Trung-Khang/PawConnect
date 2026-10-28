@@ -9,6 +9,9 @@ public interface OrderService {
     List<OrderResponse> getMyOrders();
     List<OrderResponse> getManagedOrders();
     OrderResponse getOrder(Long orderId);
-    OrderResponse cancelMyOrder(Long orderId);
+    OrderResponse cancelMyOrder(Long orderId, String reason);
+    OrderResponse requestCancellation(Long orderId, String reason);
+    OrderResponse resolveCancellation(Long orderId, boolean approve, String reason);
+    OrderResponse confirmPayment(Long orderId);
     OrderResponse updateOrderStatus(Long orderId, String status, String reason);
 }

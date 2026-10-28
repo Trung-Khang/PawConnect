@@ -22,6 +22,8 @@
 
     <link rel="stylesheet" href="/css/header.css?v=20261026-5">
 
+    <link rel="stylesheet" href="/css/mobile-admin-tables.css?v=20261027-1">
+
 </head>
 
 <body>
@@ -35,6 +37,8 @@
                 <h1>Sản phẩm & Chó giống</h1>
 
                 <div class="top-header-actions">
+
+                    <label class="select-all-products"><input id="selectAllProducts" type="checkbox" aria-label="Chọn tất cả mặt hàng"> Chọn tất cả</label>
 
                     <select id="adminBranchFilter" class="form-control" style="display:none; width:auto; font-size:0.9rem; padding:0.4rem 0.8rem; border-radius:8px;">
                         <option value="">Tất cả Chi nhánh</option>
@@ -51,15 +55,15 @@
 
             <section class="content-section">
 
-                <div class="table-container table-responsive">
+                <div class="table-container table-responsive mobile-admin-table-container">
 
-                    <table class="data-table">
+                    <table class="data-table mobile-admin-table">
 
                         <thead>
 
                             <tr>
 
-                                <th class="selection-cell"><input id="selectAllProducts" type="checkbox" aria-label="Chọn tất cả mặt hàng"></th>
+                                <th class="selection-cell">Chọn</th>
 
                                 <th>Hình ảnh</th>
 

@@ -102,8 +102,9 @@ public class CartAndOrderServiceTest {
         
         // 3. Kiểm tra
         assertNotNull(orderResponse);
-        assertEquals("PAID", orderResponse.getStatus());
+        assertEquals("PAYMENT_REPORTED", orderResponse.getStatus());
         assertEquals("SIMULATED", orderResponse.getPaymentMethod());
+        assertEquals("CUSTOMER_CONFIRMED", orderResponse.getPaymentStatus());
         
         // Giá 1 bịch là 200,000 => 2 bịch là 400,000
         assertEquals(0, new BigDecimal("400000").compareTo(orderResponse.getTotalAmount()));
