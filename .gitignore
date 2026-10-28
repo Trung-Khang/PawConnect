@@ -47,6 +47,9 @@ desktop.ini
 .env
 .env.*
 !.env.example
+/railway/Cachchay.md
+/railway/RunLocalSafe.ps1
+/railway/Hướng dẫn kết nối railway.md
 
 # ==============================
 # Application local configuration
