@@ -6,6 +6,8 @@
 .auth-form h1 { margin: 0; font-size: 30px; }.auth-form p { margin: 0 0 8px; color: #62718a; }
 .auth-form label { display: grid; gap: 6px; color: #273548; font-weight: 700; }.auth-form input { min-height: 44px; padding: 10px 12px; border: 1px solid #d8dfeb; border-radius: 6px; font: inherit; }
 .auth-form .btn-pill { justify-self: start; border: 0; cursor: pointer; }.auth-form small { color: #66768f; }.auth-message { margin-bottom: 18px; padding: 12px; border-left: 4px solid var(--primary-color); background: #fff1eb; color: #5d382b; }.auth-message.error { border-color: #d9493d; background: #fff0ef; }.auth-message.success { border-color: #32a66b; background: #effbf4; }
+.auth-form input[aria-invalid="true"] { border-color: #d9493d; box-shadow: 0 0 0 1px #d9493d; }
+.auth-form .auth-field-error { color: #b42318; font-weight: 500; }
 .password-checklist { display: grid; gap: 4px; margin: -4px 0 2px; padding: 0; list-style: none; color: #6e7d92; font-size: 14px; }.password-checklist .met { color: #178b57; }.password-checklist .met::before { content: '✓ '; }.password-checklist li:not(.met)::before { content: '○ '; }.auth-link-button { justify-self: start; padding: 0; border: 0; background: transparent; color: var(--primary-color); font: inherit; font-weight: 700; cursor: pointer; }.auth-link-button:disabled { opacity: .55; cursor: not-allowed; }
 @media (max-width: 390px) {
     .auth-page { padding: 2rem 1rem; }

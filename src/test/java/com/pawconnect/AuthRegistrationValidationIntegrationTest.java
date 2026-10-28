@@ -1,6 +1,7 @@
 package com.pawconnect;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.pawconnect.repository.UserRepository;
@@ -36,11 +37,19 @@ class AuthRegistrationValidationIntegrationTest {
 
     @Test
     void rejectsInvalidUsernameEmailPhoneAndPasswordPolicy() throws Exception {
-        register("bad name", "valid@example.com", "0912345680").andExpect(status().isBadRequest());
+        register("bad name", "valid@example.com", "0912345680")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.username").value("Tên đăng nhập cần 3–50 ký tự, chỉ dùng chữ không dấu, số, dấu chấm (.), gạch dưới (_) hoặc gạch ngang (-); không có dấu cách."));
         register("valid.name", "not-an-email", "0912345681").andExpect(status().isBadRequest());
         register("valid.name", "valid2@example.com", "0212345681").andExpect(status().isBadRequest());
         request("valid.name", "valid3@example.com", "0912345682", "password123!", "password123!").andExpect(status().isBadRequest());
         request("valid.name", "valid4@example.com", "0912345683", "Password123!", "Password124!").andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void acceptsValidAsciiUsernameLikeThuHuyen() throws Exception {
+        register("ThuHuyen", "thuhuyen.test@example.com", "0701234567")
+                .andExpect(status().isCreated());
     }
 
     private org.springframework.test.web.servlet.ResultActions register(String username, String email, String phone) throws Exception {
