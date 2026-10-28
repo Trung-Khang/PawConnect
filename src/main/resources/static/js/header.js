@@ -757,7 +757,10 @@
                 }
                 closeNotificationDropdown();
                 if (item.link) {
-                    window.location.assign(item.link);
+                    let targetUrl = item.link;
+                    if (targetUrl === '/my-orders') targetUrl = '/orders';
+                    if (targetUrl === '/adoption') targetUrl = '/adoptions';
+                    window.location.assign(targetUrl);
                 }
             });
 

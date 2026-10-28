@@ -80,6 +80,11 @@ public class AdoptionService {
         return AdoptionMapper.toResponse(post);
     }
 
+    public AdoptionPostResponse getPublicPost(Long postId) {
+        AdoptionPost post = findPost(postId);
+        return AdoptionMapper.toResponse(post);
+    }
+
     public List<AdoptionPostResponse> listManagedPosts(String actorEmail) {
         User actor = currentUser(actorEmail);
         requireStaff(actor);
@@ -289,7 +294,7 @@ public class AdoptionService {
                         "Đơn nhận nuôi bé " + dogName + " đã được gửi",
                         "Đơn đăng ký nhận nuôi bé " + dogName + " của bạn đã được chuyển tới " + branchName + ". Vui lòng chờ nhân viên xét duyệt nhé!",
                         "ADOPTION_APPLIED",
-                        "/adoption",
+                        "/orders",
                         saved.getId()
                 );
 
@@ -300,7 +305,7 @@ public class AdoptionService {
                             "Đơn nhận nuôi mới: Bé " + dogName,
                             "Khách hàng " + applicant.getFullName() + " vừa nộp đơn đăng ký nhận nuôi bé " + dogName + ". Hãy kiểm tra hồ sơ và xét duyệt.",
                             "ADOPTION_APPLIED",
-                            "/adoption",
+                            "/adoptions/manage",
                             saved.getId()
                     );
                 }
@@ -368,7 +373,7 @@ public class AdoptionService {
 
         String approveTitle = "Đơn nhận nuôi bé " + dogName + " đã được duyệt 🎉";
         String approveContent = "Chúc mừng bạn! Đơn nhận nuôi bé " + dogName + " đã được duyệt. Vui lòng kiểm tra mục tin nhắn (inbox) để trao đổi thêm với nhân viên về thời gian và thủ tục qua nhận bé.";
-        notificationService.createNotification(application.getApplicant(), approveTitle, approveContent, "ADOPTION_APPROVED", "/my-orders", application.getId());
+        notificationService.createNotification(application.getApplicant(), approveTitle, approveContent, "ADOPTION_APPROVED", "/orders", application.getId());
 
         return AdoptionMapper.toResponse(application);
     }
@@ -395,7 +400,7 @@ public class AdoptionService {
         String dogName = post.getDogProfile() != null ? post.getDogProfile().getName() : "cún";
         String rejectTitle = "Đơn nhận nuôi bé " + dogName + " chưa được duyệt";
         String rejectContent = "Rất tiếc, đơn nhận nuôi bé " + dogName + " của bạn chưa được duyệt. Lý do: " + effectiveReason;
-        notificationService.createNotification(application.getApplicant(), rejectTitle, rejectContent, "ADOPTION_REJECTED", "/my-orders", application.getId());
+        notificationService.createNotification(application.getApplicant(), rejectTitle, rejectContent, "ADOPTION_REJECTED", "/orders", application.getId());
         return AdoptionMapper.toResponse(application);
     }
 
@@ -419,7 +424,7 @@ public class AdoptionService {
                     notificationService.createNotification(application.getApplicant(),
                             "Đơn nhận nuôi bé " + dogName + " đã đóng",
                             "Đơn nhận nuôi bé " + dogName + " đã đóng do bé đã tìm được chủ nhân phù hợp. Bạn hãy tham khảo thêm các bé khác nhé!",
-                            "ADOPTION_REJECTED", "/adoptions", application.getId());
+                            "ADOPTION_REJECTED", "/orders", application.getId());
                 });
     }
 

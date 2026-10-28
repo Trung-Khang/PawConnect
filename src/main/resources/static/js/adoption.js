@@ -78,9 +78,9 @@ const state = { posts: [], branches: [], user: null, currentPost: null, managedA
         await loadCurrentUser();
         updateNavigation();
         bindEvents();
-        if (path === '/adoptions/my-applications') return showMyApplications();
-        if (path === '/adoptions/manage') return showManagement();
-        const id = path.match(/^\/adoptions\/(\d+)$/)?.[1];
+        if (path === '/adoptions/my-applications' || path === '/adoption/my-applications') return showMyApplications();
+        if (path === '/adoptions/manage' || path === '/adoption/manage') return showManagement();
+        const id = path.match(/^\/adoptions?\/(\d+)$/)?.[1];
         if (id) return showDetail(id);
         return showList();
     }
@@ -241,6 +241,13 @@ const state = { posts: [], branches: [], user: null, currentPost: null, managedA
         const content = document.createElement('div');
         content.className = 'detail-content';
         content.append(statusElement(post.status));
+        if (post.status === 'CLOSED') {
+            const closedBanner = document.createElement('div');
+            closedBanner.className = 'adoption-closed-banner';
+            closedBanner.style.cssText = 'background: #e6fffa; color: #234e52; border: 1px solid #b2f5ea; border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-weight: 600; display: flex; align-items: center; gap: 8px; font-size: 0.95rem;';
+            closedBanner.innerHTML = '🎉 Bé đã tìm được mái ấm và hoàn tất nhận nuôi thành công!';
+            content.append(closedBanner);
+        }
         content.append(textElement('h2', post.title));
         content.append(textElement('p', post.description));
         const meta = document.createElement('div');
@@ -960,7 +967,7 @@ Sau khi duyệt, thông tin khách hàng sẽ được lưu tại mục "Đã du
     function statusElement(status) {
         const badge = document.createElement('span');
         badge.className = `status ${String(status || '').toLowerCase()}`;
-        badge.textContent = ({ AVAILABLE: 'Đang cần được nhận nuôi', CLOSED: 'Đã đóng nhận nuôi', PENDING: 'Đang chờ', APPROVED: 'Đã duyệt', REJECTED: 'Đã từ chối' })[status] || status;
+        badge.textContent = ({ AVAILABLE: 'Đang cần được nhận nuôi', CLOSED: 'Bé đã được nhận nuôi', PENDING: 'Đang chờ', APPROVED: 'Đã duyệt', REJECTED: 'Đã từ chối' })[status] || status;
         return badge;
     }
 

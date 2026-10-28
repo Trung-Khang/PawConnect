@@ -44,8 +44,8 @@ public class AdoptionController {
     }
 
     @GetMapping("/{id}")
-    public AdoptionPostResponse getAvailable(@PathVariable Long id) {
-        return adoptionService.getAvailablePost(id);
+    public AdoptionPostResponse getPublicPost(@PathVariable Long id) {
+        return adoptionService.getPublicPost(id);
     }
 
     @GetMapping("/manage/posts")

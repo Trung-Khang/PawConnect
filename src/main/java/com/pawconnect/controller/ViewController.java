@@ -46,12 +46,12 @@ public class ViewController {
         return "shop/checkout";
     }
 
-    @GetMapping("/orders")
+    @GetMapping({"/orders", "/my-orders"})
     public String myOrdersPage() {
         return "shop/my-orders";
     }
 
-    @GetMapping("/orders/{orderId:\\d+}/receipt")
+    @GetMapping({"/orders/{orderId:\\d+}/receipt", "/my-orders/{orderId:\\d+}/receipt"})
     public String receiptPage() {
         return "shop/receipt";
     }

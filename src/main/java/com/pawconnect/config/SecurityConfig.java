@@ -35,10 +35,10 @@ public class SecurityConfig {
                                 "/api/v1/auth/register", "/api/v1/auth/verify-email", "/api/v1/auth/resend-verification",
                                 "/api/v1/auth/login", "/api/v1/auth/refresh-token", "/api/v1/auth/forgot-password",
                                 "/api/v1/auth/verify-reset-otp", "/api/v1/auth/reset-password").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/adoptions", "/api/adoptions/*").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/adoptions", "/adoptions/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/adoptions", "/api/adoptions/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/adoptions", "/adoptions/**", "/adoption", "/adoption/**").permitAll()
                         .requestMatchers("/ws/**").permitAll()
-                        .requestMatchers("/", "/shop", "/service", "/profile", "/checkout", "/orders", "/orders/**", "/admin/**", "/auth/**", "/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/", "/shop", "/service", "/profile", "/checkout", "/orders", "/orders/**", "/my-orders", "/my-orders/**", "/adoption", "/adoption/**", "/adoptions", "/adoptions/**", "/admin/**", "/auth/**", "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/branches", "/api/categories", "/api/products", "/api/products/*", "/api/service-types").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/puppy-listings", "/api/puppy-listings/*").permitAll()
                         .anyRequest().authenticated())

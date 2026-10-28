@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class AdoptionViewController {
 
-    @GetMapping({"/adoptions", "/adoptions/{postId:\\d+}", "/adoptions/my-applications", "/adoptions/manage"})
+    @GetMapping({"/adoptions", "/adoptions/{postId:\\d+}", "/adoptions/my-applications", "/adoptions/manage", "/adoption", "/adoption/{postId:\\d+}", "/adoption/my-applications", "/adoption/manage"})
     public String adoptionPage() {
         return "community/adoptions";
     }

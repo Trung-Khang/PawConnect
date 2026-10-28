@@ -159,7 +159,8 @@ class AdoptionControllerIntegrationTest {
                 .andExpect(jsonPath("$.status").value("APPROVED"));
 
         mockMvc.perform(get("/api/adoptions/{id}", availablePost.getId()))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CLOSED"));
         mockMvc.perform(get("/api/adoptions/manage/posts").with(user(HCM_MANAGER).roles("BRANCH_MANAGER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(availablePost.getId()))
