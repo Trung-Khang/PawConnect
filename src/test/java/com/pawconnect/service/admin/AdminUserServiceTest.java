@@ -155,3 +155,4 @@ class AdminUserServiceTest {
         verify(userRepository).delete(user);
     }
 }
+
