@@ -471,3 +471,41 @@ Người phụ trách xác nhận đã được nhóm trưởng cho phép commit
 - Khi nhập sai hoặc rời khỏi ô, giao diện đánh dấu đỏ đúng trường và hiển thị thông báo tiếng Việt. Khi người dùng sửa thành giá trị hợp lệ như `ThuHuyen`, thông báo lỗi và trạng thái lỗi tự mất; thông báo định dạng cũ ở đầu form cũng được xóa khi người dùng chỉnh lại.
 - Backend dùng cùng quy tắc và trả thông báo tiếng Việt nếu request bỏ qua kiểm tra giao diện. Đã bổ sung test xác nhận tên có khoảng trắng bị từ chối đúng thông báo và `ThuHuyen` được chấp nhận.
 - Kiểm thử ngày 28/10/2026: `mvn test` PASS — **104 tests, 0 failures, 0 errors, 1 skipped**; `node --check src/main/resources/static/js/auth.js` và `git diff --check` PASS. Kiểm tra Chrome headless ở desktop và viewport 375 px: lỗi hiện đúng vị trí, giá trị hợp lệ xóa lỗi và không tràn ngang. Ảnh kiểm tra cục bộ ở `target/username-validation-evidence/`, không đưa vào Git.
+
+## 23. Mã giảm giá theo khách hàng và checkout (29/10/2026)
+
+**Phạm vi đã duyệt:** thêm quản lý mã cho ADMIN, ba chiến dịch mặc định và ưu đãi một mã/đơn tại checkout. Người phụ trách được phép commit trực tiếp `main`; đã đồng bộ nền `7e2f9ae`, không tạo nhánh mới.
+
+| Phần việc | Commit | Nội dung |
+| --- | --- | --- |
+| Backend và migration | `9995303` | API admin, báo giá từ giỏ của khách đăng nhập, điều kiện/quota tại server, snapshot giá đơn, chống dùng lặp và hoàn lượt khi hủy; SQL V4.9 và test nghiệp vụ/concurrency. |
+| Giao diện web/mobile | `1395f9e` | Menu và form admin thêm/tạm ngưng mã; checkout gợi ý ưu đãi lợi nhất, chọn/đổi/bỏ một mã, hiển thị số lượt và tiền trước/sau giảm; biên lai lưu giảm giá; kiểm thử Chrome thật. |
+
+### Nghiệp vụ
+
+`DON500K`: giảm 10% khi tiền hàng **lớn hơn** 500.000 VND. `LANDAU15`: giảm 15% cho đơn mua đầu tiên. `SPA50K`: giảm 50.000 VND khi có lịch spa đã hoàn tất thuộc khách. Mặc định mỗi loại một lượt/khách, không dùng kho lượt chung. Admin tạo chiến dịch mới được cấu hình số lượt; chiến dịch mua lần đầu chỉ một lượt.
+
+Đặt đơn giữ lượt ngay để không tiêu cùng mã ở hai tab; đơn chờ xác nhận cũng giữ vị trí mua lần đầu. Hủy trực tiếp hoặc chấp nhận yêu cầu hủy hoàn lại lượt; yêu cầu đang chờ hoặc bị từ chối không hoàn lượt. Không thay chính sách hủy/vận chuyển hiện có. Chỉ một mã/đơn; mức giảm không vượt tiền hàng, tổng không âm; phần trăm làm tròn xuống đơn vị VND. Thanh toán và hoàn tiền tiếp tục là mô phỏng.
+
+Backend không nhận tiền giảm hoặc user ID do client quyết định. Báo giá và tạo đơn đều kiểm tra dữ liệu thật; khóa giỏ và `READ_COMMITTED` chống tiêu quá lượt khi chờ khóa. Client gửi tổng dự kiến để phát hiện giá/ưu đãi đã thay đổi và yêu cầu xác nhận lại. Mã, tên ưu đãi, tiền hàng và tiền giảm được snapshot; đơn cũ giữ nguyên tổng lịch sử. Chi tiết tại [discount_coupons.md](../Project/discount_coupons.md).
+
+### Bằng chứng kiểm thử và database
+
+| Kiểm tra | Kết quả thực tế |
+| --- | --- |
+| Hồi quy checkout và mã giảm giá | 34 ca qua, gồm 11 ca chuyên biệt coupon và ca hai tab tranh một lượt trên hai nhóm sản phẩm. |
+| Hai lượt toàn bộ test và đóng gói Java 17 | Mỗi lượt **120 tests, 0 failures, 0 errors, 1 skipped**; JAR build thành công. Ca MySQL chuyên biệt có sẵn không chạy do thiếu môi trường test riêng; không coi H2 là test đặt đơn production. |
+| Chrome headless thật, database H2 local riêng | **17 kiểm tra qua**: tự gợi ý 15%, đổi sang 10%, bỏ mã trả giá gốc, không chọn hai mã, spa chưa đủ điều kiện bị khóa, hộp xác nhận đúng tổng, đặt đơn/biên lai có tiền giảm, lần sau mã đã dùng còn 0, admin thêm và tạm ngưng mã; không exception JavaScript chưa bắt. |
+| Responsive | Checkout/admin ở **320, 375, 390, 768, 1024, 1440 px** không tràn ngang toàn trang hoặc khung điều khiển. Ảnh thật và JSON ở `target/coupon-ui/`, không commit. Đây là mô phỏng Chrome, không phải thiết bị vật lý. |
+| Sao lưu và khôi phục bản sao MySQL | Snapshot **22 bảng / 383 dòng**, đối chiếu số dòng trong cùng transaction và SHA-256; giữ riêng ở `backups/coupon-db-backup-20261029/` đã Git-ignore. Đã khôi phục vào schema tạm riêng, đối chiếu đủ số dòng và tổng tiền, chạy migration lặp; schema test đã xóa, không xóa production hoặc backup. Không có view/routine/trigger/event trong phạm vi snapshot bảng/dữ liệu này. |
+| Migration V4.9 trên MySQL Railway | Đã chạy **hai lần** để kiểm tra idempotency; có bảng `discount_coupons` và đủ 5 cột snapshot mới trên `orders`; số lượng **13 đơn** và tổng tiền lịch sử không thay đổi. Không reseed user/catalog hoặc thay cấu hình Railway. |
+| Coupon trên MySQL thật, schema tạm | Chạy lại `CouponCheckoutIntegrationTest` với MySQL và `ddl-auto=validate`: **11 tests, 0 failures, 0 errors, 0 skipped**, hoàn tất lúc **12:23 ngày 29/10/2026**. Không tạo đơn thử trên database production. Log riêng: `target/coupon-isolated-mysql-test.log`. |
+| Kiểm tra tĩnh | `git diff --check` và `node --check` các script coupon/checkout/receipt qua. |
+
+### Phát hành
+
+Hai commit tính năng đã push lên `origin/main`. Railway/GitHub Deployment **`7404508530`**, source **`1395f9e`**, được tạo lúc **12:03 ngày 29/10/2026** và vẫn **`in_progress`** khi chốt bàn giao. Trang public `/checkout` vẫn phục vụ bản chưa có `checkout-coupons`, nên **chưa xác nhận coupon đã deploy hoặc smoke public thành công**. Không xác định nguyên nhân khi chưa có log build/deploy; kết nối tài khoản Railway trong phiên này chưa được thiết lập. Website bản cũ vẫn trả HTTP 200.
+
+**Việc chuyển nhóm trưởng:** vào backend Railway → Deployments của `main`, đọc Build/Deploy logs và xử lý/redeploy theo nguyên nhân; khi success, hard refresh `/admin/coupons` và `/checkout`, kiểm tra ba mã mặc định, số lượt cá nhân, chọn một mã/tổng tiền/biên lai và responsive bằng dữ liệu demo được phép. **Database V4.9 đã chuẩn bị xong, không cần cấp lại credential hoặc chạy lại user/catalog seed; coupon không có biến môi trường mới.** Hướng dẫn chi tiết ở mục Bàn giao Railway trong [discount_coupons.md](../Project/discount_coupons.md).
+
+Các file Word, ảnh cá nhân, cấu hình riêng, credential và backup không đưa lên Git. Thanh toán vẫn mô phỏng; yêu cầu OTP Apps Script trước đó tiếp tục tạm dừng, không nằm trong thay đổi coupon.
