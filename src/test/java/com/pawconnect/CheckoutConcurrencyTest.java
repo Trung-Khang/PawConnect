@@ -43,6 +43,39 @@ class CheckoutConcurrencyTest {
     @Autowired private RoleRepository roles;
     @Autowired private OrderRepository orderRepository;
     @Autowired private JdbcTemplate jdbc;
+    @Autowired private com.pawconnect.repository.DiscountCouponRepository coupons;
+
+    @Test
+    void twoTabsCannotSpendOneCouponOnTwoDifferentCartSelections() throws Exception {
+        Branch branch = branches.save(Branch.builder().name("Coupon race branch").address("Address").build());
+        Product first = products.save(Product.builder().name("Coupon race A").price(new BigDecimal("600000")).stock(2).branch(branch).build());
+        Product second = products.save(Product.builder().name("Coupon race B").price(new BigDecimal("600000")).stock(2).branch(branch).build());
+        CustomUserDetails buyer = customer("coupon-race-buyer@test.local");
+        authenticate(buyer);
+        Long firstItem = carts.addItem(first.getId(), null, 1).getId();
+        Long secondItem = carts.addItem(second.getId(), null, 1).getId();
+        SecurityContextHolder.clearContext();
+        Long couponId = coupons.findAll().stream().filter(c -> c.getCode().equals("DON500K")).findFirst().orElseThrow().getId();
+        int successful = race(
+                () -> placeWithCoupon(buyer, branch.getId(), firstItem, couponId, "coupon-race-first-0001"),
+                () -> placeWithCoupon(buyer, branch.getId(), secondItem, couponId, "coupon-race-second-0001"));
+        assertEquals(1, successful);
+        assertEquals(1, orderRepository.countByUserIdAndCouponIdAndStatusNot(buyer.getId(), couponId, "CANCELLED"));
+        assertEquals(3, stock(first.getId()) + stock(second.getId()));
+    }
+
+    private boolean placeWithCoupon(CustomUserDetails buyer, Long branch, Long item, Long coupon, String key) {
+        authenticate(buyer);
+        try {
+            OrderRequest request = new OrderRequest();
+            request.setBranchId(branch); request.setIdempotencyKey(key);
+            request.setRecipientName("Coupon buyer"); request.setRecipientPhone("0901234567"); request.setDeliveryAddress("Test address");
+            request.setItemIds(List.of(item)); request.setCouponId(coupon);
+            orders.createOrder(request);
+            return true;
+        } catch (RuntimeException expected) { return false; }
+        finally { SecurityContextHolder.clearContext(); }
+    }
 
     @Test
     void twoCustomersCannotBuyTheLastUnitTwice() throws Exception {

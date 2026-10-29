@@ -13,6 +13,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class ApiExceptionHandler {
 
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    ResponseEntity<Map<String, Object>> invalidJson(org.springframework.http.converter.HttpMessageNotReadableException exception) {
+        return response(HttpStatus.BAD_REQUEST, "Dữ liệu gửi lên không đúng định dạng hoặc giá trị cho phép.");
+    }
+
     @ExceptionHandler(ResourceConflictException.class)
     ResponseEntity<Map<String, Object>> conflict(ResourceConflictException exception) {
         return response(HttpStatus.CONFLICT, exception.getMessage());

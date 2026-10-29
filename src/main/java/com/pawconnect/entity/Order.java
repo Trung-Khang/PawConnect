@@ -7,7 +7,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "orders", uniqueConstraints = @UniqueConstraint(name = "uk_orders_user_idempotency", columnNames = {"user_id", "idempotency_key"}))
+@Table(name = "orders", uniqueConstraints = @UniqueConstraint(name = "uk_orders_user_idempotency", columnNames = {"user_id", "idempotency_key"}),
+        indexes = @Index(name = "idx_orders_customer_coupon_status", columnList = "user_id,coupon_id,status"))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -59,6 +60,16 @@ public class Order {
     private String deliveryAddress;
 
     private BigDecimal totalAmount;
+
+    @Column(precision = 19, scale = 2)
+    private BigDecimal subtotalAmount;
+    @Column(precision = 19, scale = 2)
+    private BigDecimal discountAmount;
+    private Long couponId;
+    @Column(length = 40)
+    private String couponCode;
+    @Column(length = 160)
+    private String couponName;
 
     @Column(name = "created_at")
     @org.hibernate.annotations.CreationTimestamp

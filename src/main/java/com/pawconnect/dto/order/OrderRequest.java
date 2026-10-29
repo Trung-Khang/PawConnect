@@ -23,5 +23,12 @@ public class OrderRequest {
     @NotBlank @Size(max = 500)
     private String deliveryAddress;
 
-    private java.util.List<Long> itemIds;
+    @Size(max = 200)
+    private java.util.List<@NotNull Long> itemIds;
+
+    @jakarta.validation.constraints.Positive
+    private Long couponId;
+
+    @jakarta.validation.constraints.DecimalMin("0")
+    private java.math.BigDecimal expectedTotalAmount;
 }

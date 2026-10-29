@@ -9,6 +9,8 @@ import java.util.List;
 
 @Repository
 public interface ServiceBookingRepository extends JpaRepository<ServiceBooking, Long> {
+    @org.springframework.data.jpa.repository.Query("SELECT CASE WHEN COUNT(b) > 0 THEN true ELSE false END FROM ServiceBooking b WHERE b.userId = :userId AND b.status = 'COMPLETED' AND LOWER(b.serviceType.name) LIKE '%spa%'")
+    boolean hasCompletedSpa(@org.springframework.data.repository.query.Param("userId") Long userId);
     List<ServiceBooking> findByUserId(Long userId);
     List<ServiceBooking> findByUserIdOrderByBookingTimeDesc(Long userId);
     List<ServiceBooking> findAllByOrderByBookingTimeDesc();

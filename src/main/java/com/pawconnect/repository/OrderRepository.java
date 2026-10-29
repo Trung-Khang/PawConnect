@@ -19,6 +19,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByBranchIdOrderByCreatedAtDesc(Long branchId);
     Optional<Order> findByUserIdAndIdempotencyKey(Long userId, String idempotencyKey);
     boolean existsByUserId(Long userId);
+    boolean existsByUserIdAndStatusNot(Long userId, String status);
+    long countByUserIdAndCouponIdAndStatusNot(Long userId, Long couponId, String status);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT o FROM Order o WHERE o.id = :id")

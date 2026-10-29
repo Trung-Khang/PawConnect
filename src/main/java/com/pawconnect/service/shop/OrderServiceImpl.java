@@ -64,10 +64,11 @@ public class OrderServiceImpl implements OrderService {
     private final OrderStatusEventRepository statusEventRepository;
     private final OrderCancellationRequestRepository cancellationRequestRepository;
     private final CartService cartService;
+    private final CouponService couponService;
     private final com.pawconnect.service.notification.NotificationService notificationService;
 
     @Override
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public OrderResponse createOrder(OrderRequest request) {
         Long userId = SecurityUtils.getCurrentUserId();
         if (!SecurityUtils.hasRole("CUSTOMER")) throw new AccessDeniedException("Chỉ khách hàng được đặt mua.");
@@ -122,7 +123,7 @@ public class OrderServiceImpl implements OrderService {
             itemsToOrder = cart.getItems().stream()
                     .filter(item -> request.getItemIds().contains(item.getId()))
                     .toList();
-            if (itemsToOrder.isEmpty()) {
+            if (itemsToOrder.isEmpty() || itemsToOrder.size() != new java.util.HashSet<>(request.getItemIds()).size()) {
                 throw new BusinessException("Không tìm thấy sản phẩm đã chọn trong giỏ hàng.");
             }
         }
@@ -141,11 +142,6 @@ public class OrderServiceImpl implements OrderService {
             }
             BigDecimal price = product != null ? product.getPrice() : puppy.getPricePerPuppyVnd();
             if (price == null || price.signum() < 0) throw new BusinessException("Giá sản phẩm không hợp lệ.");
-            int updated = product != null
-                    ? productRepository.decreaseStockBy(product.getId(), cartItem.getQuantity())
-                    : puppyListingRepository.decrementStock(puppy.getId(), cartItem.getQuantity());
-            if (updated != 1) throw new BusinessException("Sản phẩm đã hết hàng hoặc vừa thay đổi tồn kho.");
-
             OrderItem item = OrderItem.builder()
                     .order(order)
                     .product(product)
@@ -157,7 +153,16 @@ public class OrderServiceImpl implements OrderService {
             order.getOrderItems().add(item);
             total = total.add(price.multiply(BigDecimal.valueOf(cartItem.getQuantity())));
         }
-        order.setTotalAmount(total);
+        couponService.apply(order, request.getCouponId(), total);
+        if (request.getExpectedTotalAmount() != null && request.getExpectedTotalAmount().compareTo(order.getTotalAmount()) != 0) {
+            throw new BusinessException("Giá hoặc ưu đãi đã thay đổi. Vui lòng kiểm tra lại tổng thanh toán.");
+        }
+        for (OrderItem item : order.getOrderItems()) {
+            int updated = item.getProduct() != null
+                    ? productRepository.decreaseStockBy(item.getProduct().getId(), item.getQuantity())
+                    : puppyListingRepository.decrementStock(item.getPuppyListing().getId(), item.getQuantity());
+            if (updated != 1) throw new BusinessException("Sản phẩm đã hết hàng hoặc vừa thay đổi tồn kho.");
+        }
         orderRepository.saveAndFlush(order);
         recordEvent(order, null, PAYMENT_REPORTED, userId, "Khách xác nhận thanh toán");
         if (request.getItemIds() != null && !request.getItemIds().isEmpty()) {
@@ -168,7 +173,7 @@ public class OrderServiceImpl implements OrderService {
 
         try {
             if (notificationService != null && buyer != null) {
-                String amountStr = String.format("%,d", total.longValue());
+                String amountStr = String.format("%,d", order.getTotalAmount().longValue());
                 // Gửi thông báo đến chuông của khách hàng
                 notificationService.createNotification(
                         buyer,
@@ -419,6 +424,10 @@ public class OrderServiceImpl implements OrderService {
         response.setRecipientPhone(order.getRecipientPhone());
         response.setDeliveryAddress(order.getDeliveryAddress());
         response.setTotalAmount(order.getTotalAmount());
+        response.setSubtotalAmount(order.getSubtotalAmount() != null ? order.getSubtotalAmount() : order.getTotalAmount());
+        response.setDiscountAmount(order.getDiscountAmount() != null ? order.getDiscountAmount() : BigDecimal.ZERO);
+        response.setCouponCode(order.getCouponCode());
+        response.setCouponName(order.getCouponName());
         response.setCreatedAt(order.getCreatedAt());
         response.setStatusHistory(statusEventRepository.findByOrder_IdOrderByCreatedAtAscIdAsc(order.getId())
                 .stream().map(event -> {

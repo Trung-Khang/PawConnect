@@ -22,6 +22,10 @@ public class OrderResponse {
     private String recipientPhone;
     private String deliveryAddress;
     private BigDecimal totalAmount;
+    private BigDecimal subtotalAmount;
+    private BigDecimal discountAmount;
+    private String couponCode;
+    private String couponName;
     private LocalDateTime createdAt;
     private List<OrderItemResponse> items;
     private List<StatusEventResponse> statusHistory;
