@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/shop.css">
     <link rel="stylesheet" href="/css/header.css?v=20261026-5">
-    <link rel="stylesheet" href="/css/commerce.css?v=20261026-2">
+    <link rel="stylesheet" href="/css/commerce.css?v=20261029-coupons">
 </head>
 <body class="commerce-screen">
 <div th:replace="~{fragments/header :: header}"></div>
@@ -21,7 +21,17 @@
             <div class="commerce-panel">
                 <h2 id="checkout-items-heading">Sản phẩm trong đơn</h2>
                 <div id="checkout-items" class="commerce-items" aria-live="polite">Đang tải giỏ hàng…</div>
-                <p class="commerce-total"><span>Tổng thanh toán</span><strong id="checkout-total">—</strong></p>
+                <section class="coupon-section mt-4" aria-labelledby="coupons-heading">
+                    <h2 id="coupons-heading">Mã giảm giá của bạn</h2>
+                    <p class="small text-muted">Chọn tối đa một mã. Mã có lợi nhất được gợi ý theo đơn hiện tại.</p>
+                    <p id="coupon-loading" role="status">Đang kiểm tra ưu đãi…</p>
+                    <div id="checkout-coupons" class="coupon-list"></div>
+                </section>
+                <div class="coupon-summary mt-3" aria-live="polite">
+                    <p><span>Tiền hàng</span><span id="checkout-subtotal">—</span></p>
+                    <p id="checkout-discount-row" hidden><span id="checkout-coupon-label">Giảm giá</span><strong id="checkout-discount"></strong></p>
+                </div>
+                <p class="commerce-total"><span>Tổng thanh toán</span><strong><del id="checkout-original" class="coupon-original" hidden></del><span id="checkout-total">—</span></strong></p>
             </div>
         </section>
         <section class="col-12 col-lg-5" aria-labelledby="checkout-details-heading">
@@ -56,6 +66,6 @@
     </form>
 </dialog>
 <div th:replace="~{fragments/footer :: footer}"></div>
-<script src="/js/checkout.js?v=20261026-2" defer></script>
+<script src="/js/checkout.js?v=20261029-coupons" defer></script>
 </body>
 </html>

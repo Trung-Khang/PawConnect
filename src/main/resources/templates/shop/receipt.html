@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/shop.css">
     <link rel="stylesheet" href="/css/header.css?v=20261026-5">
-    <link rel="stylesheet" href="/css/commerce.css?v=20261026-2">
+    <link rel="stylesheet" href="/css/commerce.css?v=20261029-coupons">
 </head>
 <body class="commerce-screen">
 <div th:replace="~{fragments/header :: header}"></div>
@@ -30,10 +30,14 @@
         <div class="table-responsive">
             <table class="table receipt-table"><thead><tr><th>Sản phẩm</th><th class="text-end">SL</th><th class="text-end">Đơn giá</th><th class="text-end">Thành tiền</th></tr></thead><tbody id="receipt-items"></tbody></table>
         </div>
+        <div id="receipt-discount-summary" class="coupon-summary mt-3" hidden>
+            <p><span>Tiền hàng trước giảm</span><span id="receipt-subtotal"></span></p>
+            <p><span id="receipt-coupon"></span><strong id="receipt-discount"></strong></p>
+        </div>
         <p class="commerce-total receipt-total"><span>Tổng thanh toán</span><strong id="receipt-total"></strong></p>
     </article>
 </main>
 <div th:replace="~{fragments/footer :: footer}"></div>
-<script src="/js/receipt.js?v=20261027-1" defer></script>
+<script src="/js/receipt.js?v=20261029-coupons" defer></script>
 </body>
 </html>

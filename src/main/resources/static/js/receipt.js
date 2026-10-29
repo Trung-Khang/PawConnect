@@ -58,6 +58,12 @@
             body.append(row);
         });
         setText('receipt-total', formatMoney(order.totalAmount));
+        if (order.couponCode) {
+            document.getElementById('receipt-discount-summary').hidden = false;
+            setText('receipt-subtotal', formatMoney(order.subtotalAmount));
+            setText('receipt-coupon', `Giảm giá (${order.couponCode})`);
+            setText('receipt-discount', `−${formatMoney(order.discountAmount)}`);
+        }
         document.getElementById('receipt').hidden = false;
         document.getElementById('print-receipt').hidden = !paid;
     }

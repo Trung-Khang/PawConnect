@@ -36,6 +36,9 @@ public class ViewController {
         return "admin/users";
     }
 
+    @GetMapping("/admin/coupons")
+    public String adminCouponsPage() { return "admin/coupons"; }
+
     @GetMapping("/admin/branches")
     public String adminBranchesPage() {
         return "admin/branches";

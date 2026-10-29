@@ -19,6 +19,24 @@
 .commerce-total strong { color: var(--primary-color, #e27b58); font-size: 1.3rem; }
 .commerce-submit { width: 100%; border: 0; cursor: pointer; }
 .commerce-submit:disabled { opacity: .55; cursor: not-allowed; }
+.coupon-list { display: grid; gap: .75rem; min-width: 0; }
+.coupon-choice { display: flex; align-items: flex-start; gap: .75rem; padding: .85rem; border: 1px solid #eadfd9; border-radius: 12px; cursor: pointer; min-width: 0; }
+.coupon-choice:has(input:checked) { border-color: #e27b58; background: #fff7f2; }
+.coupon-choice > input { flex: 0 0 auto; margin-top: .25rem; }
+.coupon-choice > span { display: grid; gap: .2rem; min-width: 0; overflow-wrap: anywhere; }
+.coupon-choice small { color: #68717b; }
+.coupon-unavailable { background: #f6f6f6; cursor: default; }
+.coupon-choice .coupon-recommended { color: #257442; font-weight: 700; }
+.coupon-summary p { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem; margin: .4rem 0; }
+.coupon-summary p > * { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.commerce-total { flex-wrap: wrap; }
+.commerce-total > strong { margin-left: auto; max-width: 100%; overflow-wrap: anywhere; text-align: right; }
+.coupon-summary strong { color: #257442; }
+.coupon-original { display: block; color: #7a828b; font-size: .9rem; font-weight: 400; }
+.coupon-admin-item { display: flex; justify-content: space-between; gap: 1rem; padding: 1rem; border: 1px solid #eadfd9; border-radius: 12px; min-width: 0; }
+.coupon-admin-item > div { min-width: 0; overflow-wrap: anywhere; }
+.coupon-admin-item > button { flex-shrink: 0; align-self: flex-start; }
+@media (max-width: 575px) { .coupon-admin-item { flex-direction: column; } .coupon-admin-item > button { width: 100%; } }
 .commerce-confirm-dialog { width: min(100% - 2rem, 30rem); max-height: calc(100vh - 2rem); padding: 0; border: 0; border-radius: 16px; box-shadow: 0 20px 70px rgba(0, 0, 0, .2); }
 .commerce-confirm-dialog::backdrop { background: rgba(21, 30, 39, .55); }
 .commerce-list { display: grid; gap: 1rem; }

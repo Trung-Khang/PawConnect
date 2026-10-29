@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <th:block th:replace="~{fragments/bootstrap :: assets}"></th:block>
+    <title>Mã giảm giá | PawConnect</title>
+    <link rel="stylesheet" href="/css/shop.css"><link rel="stylesheet" href="/css/header.css?v=20261026-5">
+    <link rel="stylesheet" href="/css/commerce.css?v=20261029-coupons">
+</head>
+<body class="commerce-screen">
+<div th:replace="~{fragments/header :: header}"></div>
+<main class="commerce-page container py-4 py-md-5">
+    <h1>Quản lý mã giảm giá</h1>
+    <p id="coupons-notice" class="commerce-notice" role="status" hidden></p>
+    <div id="coupons-admin" hidden>
+        <section class="commerce-panel mb-4">
+            <h2>Thêm mã giảm giá</h2>
+            <p class="small text-muted">Mỗi khách có số lượt riêng. Điều kiện và mức giảm của mã đã tạo được giữ nguyên để bảo toàn lịch sử đơn.</p>
+            <form id="coupon-form" class="row g-3">
+                <div class="col-12 col-md-6"><label for="coupon-code" class="form-label">Mã (chữ in hoa, số, _ hoặc -)</label><input id="coupon-code" name="code" class="form-control" required pattern="[A-Z0-9_-]{3,40}" maxlength="40"></div>
+                <div class="col-12 col-md-6"><label for="coupon-name" class="form-label">Tên ưu đãi</label><input id="coupon-name" name="name" class="form-control" required maxlength="160"></div>
+                <div class="col-12 col-md-6"><label for="coupon-condition" class="form-label">Đối tượng</label><select id="coupon-condition" name="condition" class="form-select"><option value="ORDER_MINIMUM">Theo giá trị đơn</option><option value="FIRST_ORDER">Mua lần đầu</option><option value="COMPLETED_SPA">Đã hoàn tất dịch vụ spa</option></select></div>
+                <div class="col-12 col-md-6"><label for="coupon-minimum" class="form-label">Tiền hàng phải lớn hơn (VND, 0 = không giới hạn)</label><input id="coupon-minimum" name="minimumSubtotal" type="number" class="form-control" min="0" max="1000000000" step="1" value="0" required></div>
+                <div class="col-12 col-md-4"><label for="coupon-type" class="form-label">Kiểu giảm</label><select id="coupon-type" name="discountType" class="form-select"><option value="PERCENT">Phần trăm (%)</option><option value="FIXED">Số tiền (VND)</option></select></div>
+                <div class="col-12 col-md-4"><label for="coupon-value" class="form-label">Giá trị giảm</label><input id="coupon-value" name="discountValue" type="number" class="form-control" min="1" max="100" step="1" required></div>
+                <div class="col-12 col-md-4"><label for="coupon-uses" class="form-label">Lượt / khách</label><input id="coupon-uses" name="usesPerCustomer" type="number" class="form-control" min="1" max="100" value="1" required></div>
+                <div class="col-12"><button type="submit" class="btn btn-primary" id="create-coupon">Thêm mã giảm giá</button></div>
+            </form>
+        </section>
+        <section class="commerce-panel"><h2>Mã hiện có</h2><div id="admin-coupon-list" class="coupon-list"></div></section>
+    </div>
+</main>
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script src="/js/admin-coupons.js?v=20261029-1" defer></script>
+</body></html>
