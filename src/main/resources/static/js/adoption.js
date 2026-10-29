@@ -665,19 +665,25 @@ Sau khi duyệt, thông tin khách hàng sẽ được lưu tại mục "Đã du
         }
         try {
             const applications = await request('/api/adoptions/applications/my');
-            const existing = applications.find((application) => Number(application.adoptionPostId) === Number(state.currentPost.id));
-            if (!existing) return;
-            form.hidden = true;
-            hint.hidden = false;
-            if (existing.status === 'PENDING') {
-                hint.className = 'customer-adoption-banner pending';
-                hint.innerHTML = '<i class="fas fa-hourglass-half"></i> <div><strong>Đơn đang chờ xét duyệt</strong><p style="margin: 2px 0 0; font-size: 0.9rem;">Bạn đã gửi đơn đăng ký cho bài này. Đơn đang chờ nhân viên chi nhánh xử lý.</p></div>';
-            } else if (existing.status === 'APPROVED') {
+            const postApplications = (applications || []).filter((app) => Number(app.adoptionPostId) === Number(state.currentPost.id));
+            const approvedApp = postApplications.find((app) => app.status === 'APPROVED');
+            const pendingApp = postApplications.find((app) => app.status === 'PENDING');
+
+            if (approvedApp) {
+                form.hidden = true;
+                hint.hidden = false;
                 hint.className = 'customer-adoption-banner approved';
                 hint.innerHTML = '<i class="fas fa-check-circle"></i> <div><strong>🎉 Đơn đăng ký đã được duyệt!</strong><p style="margin: 2px 0 0; font-size: 0.9rem;">Vui lòng kiểm tra inbox (tin nhắn) hoặc đợi nhân viên chi nhánh liên hệ để trao đổi thêm về việc đón bé.</p></div>';
+            } else if (pendingApp) {
+                form.hidden = true;
+                hint.hidden = false;
+                hint.className = 'customer-adoption-banner pending';
+                hint.innerHTML = '<i class="fas fa-hourglass-half"></i> <div><strong>Đơn đang chờ xét duyệt</strong><p style="margin: 2px 0 0; font-size: 0.9rem;">Bạn đã gửi đơn đăng ký cho bài này. Đơn đang chờ nhân viên chi nhánh xử lý.</p></div>';
             } else {
-                hint.className = 'customer-adoption-banner rejected';
-                hint.innerHTML = `<i class="fas fa-times-circle"></i> <div><strong>Đơn đăng ký đã bị từ chối</strong><p style="margin: 2px 0 0; font-size: 0.9rem;"><strong>Lý do:</strong> ${escapeHtml(existing.rejectionReason || 'Chưa đáp ứng điều kiện nhận nuôi.')}</p></div>`;
+                // Đơn bị từ chối (hoặc chưa gửi): chỉ lưu vết trong 'Đơn của tôi => Đơn nhận nuôi',
+                // còn ở chi tiết bài viết thì vẫn mở form để khách có thể gửi lại đơn mới nếu bài còn AVAILABLE
+                hint.hidden = true;
+                form.hidden = state.currentPost.status !== 'AVAILABLE';
             }
         } catch (_) {
             // Keep the form available if the status lookup temporarily fails.
